@@ -19,6 +19,7 @@ class gx84100Spider(scrapy.Spider):
     custom_settings = {}
 
     def start_requests(self):
+        
         url = "http://www.84100.com/"
         a=requests.get(url)
         res = a.content
@@ -26,11 +27,13 @@ class gx84100Spider(scrapy.Spider):
         #print b[0][1:-1]
         #print type(b[0])
         provinceInfo=json.loads(b[0][1:-1])
-        print provinceInfo
-        print provinceInfo['450000']
-
+#         print provinceInfo
+#         print provinceInfo['450000']
+        count_city=0
+        start_city_count=0
+        port_count=0
         for province in provinceInfo['450000']:
-            
+            count_city=+1 
             cityId = province['cityId']
             city_name = province['cityName']
             
@@ -42,6 +45,7 @@ class gx84100Spider(scrapy.Spider):
             
             
             for j in  province['countyList']:
+                start_city_count=+1
                 start_city_name = j['countyName']
                 start_city_id  = j['countyId']
                 
@@ -52,22 +56,22 @@ class gx84100Spider(scrapy.Spider):
                 target_url ='http://www.84100.com/getEndPortList/ajax?cityId=%s'%int(str(start_city_id))
                 print target_url
                 targetCityInfo=requests.get(target_url)
-                print targetCityInfo
+#                 print targetCityInfo
                 targetCity= targetCityInfo.json()
                 print targetCity
                 ports = targetCity.get('ports',[])
         
                 if ports:
                     for port in ports:
+                        port_count=+1
                         target_city_name = port['portName']
                         
                         item['target_city_name'] = target_city_name
                         
                         today = datetime.date.today()
-                        for i in range(0, 15):
+                        for i in range(0, 20):
                             sdate = str(today+datetime.timedelta(days=i))
                             queryline_url='http://www.84100.com/getTrainList/ajax'
-                            print '333333333333333333333'
                                       
                             payload={
                                 'companyNames'    :'',
@@ -83,16 +87,20 @@ class gx84100Spider(scrapy.Spider):
                                 'ttsId':''
                                 }
                             
-                            print '222'
-#                             trainListInfo = requests.post(queryline_url, data=payload)
-#                             print '333333333333', trainListInfo.json()
+
                             yield scrapy.FormRequest(queryline_url, formdata=payload, callback=self.parse_line, meta={"payload": payload,'item':item})
-                            
+        
+        
+        print  count_city
+        print  start_city_count
+        print  port_count
+        
+                         
 #                             trainListInfo = requests.post(queryline_url, data=payload)
-                            
+#     def parse_line1(self, response):    
+#         pass                    
     def parse_line(self, response):
         
-        print '3333333331222222222222'
         trainListInfo = json.loads(response.body)
                         
 #         trainListInfo= trainListInfo.json()
@@ -102,7 +110,7 @@ class gx84100Spider(scrapy.Spider):
         payload = response.meta["payload"]
         sdate=payload['sendDate']
         if trainListInfo:
-            print trainListInfo
+#             print trainListInfo
             nextPage  = trainListInfo['nextPage']
             pageNo = trainListInfo['pageNo']
             
@@ -143,12 +151,11 @@ class gx84100Spider(scrapy.Spider):
     
                 item['flag'] = flag
                 item['shiftid'] = shiftid
-                print item
+#                 print item
                 yield  item     
                                    
-                if nextPage>pageNo:
-                    url=response.url+'?pageNo=%s'%nextPage
-                    print url
-                    yield scrapy.FormRequest(url, formdata=payload, callback=self.parse_line, meta={"payload": payload,'item':item_bak})
-                    
+            if nextPage>pageNo:
+                url=response.url.split('?')[0]+'?pageNo=%s'%nextPage
+                yield scrapy.FormRequest(url, formdata=payload, callback=self.parse_line, meta={"payload": payload,'item':item_bak})
+                
             

@@ -8,7 +8,7 @@
 import pymongo
 
 from pymongo import MongoClient
-from BusCrawl.items.scqcp import StartCityItem, TargetCityItem, LineItem
+from BusCrawl.items.gx84100 import  LineItem
 
 
 class MongoGx84100Pipeline(object):
@@ -29,6 +29,5 @@ class MongoGx84100Pipeline(object):
                    "target_city_name":item["target_city_name"],
                    "departure_time":item["departure_time"],
                    }
-            
             self.db.line.update(query,{"$set":dict(item)},upsert=True)
         return item

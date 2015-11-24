@@ -64,15 +64,9 @@ DOWNLOADER_MIDDLEWARES = {}
 
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
-<<<<<<< HEAD
-ITEM_PIPELINES = {
-    'BusCrawl.pipelines.scqcp.MongoPipeline': 300,
-    'BusCrawl.pipelines.gx84100.MongoGx84100Pipeline': 300,
-    
-}
-=======
+
 ITEM_PIPELINES = {}
->>>>>>> origin/develop
+
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See http://doc.scrapy.org/en/latest/topics/autothrottle.html

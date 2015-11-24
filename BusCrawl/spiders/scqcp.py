@@ -15,7 +15,7 @@ class ScqcpSpider(scrapy.Spider):
 
         "DOWNLOADER_MIDDLEWARES": {
             'scrapy.contrib.downloadermiddleware.useragent.UserAgentMiddleware': None,
-            'BusCrawl.middlewares.common.MobileRandomUserAgentMiddleware': 400,
+            'BusCrawl.middlewares.common.BrowserRandomUserAgentMiddleware': 400,
             'BusCrawl.middlewares.common.ProxyMiddleware': 410,
             'BusCrawl.middlewares.scqcp.HeaderMiddleware': 410,
         }

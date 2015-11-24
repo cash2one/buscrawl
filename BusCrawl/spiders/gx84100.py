@@ -16,7 +16,19 @@ from BusCrawl.items.gx84100 import LineItem
 
 class gx84100Spider(scrapy.Spider):
     name = "gx84100"
-    custom_settings = {}
+    
+    custom_settings = {
+        "ITEM_PIPELINES": {
+            'BusCrawl.pipelines.gx84100.MongoGx84100Pipeline': 300,
+        },
+
+        "DOWNLOADER_MIDDLEWARES": {
+            'scrapy.contrib.downloadermiddleware.useragent.UserAgentMiddleware': None,
+            'BusCrawl.middlewares.common.BrowserRandomUserAgentMiddleware': 400,
+#             'BusCrawl.middlewares.common.ProxyMiddleware': 410,
+#             'BusCrawl.middlewares.scqcp.HeaderMiddleware': 410,
+        }
+    }
 
     def start_requests(self):
         

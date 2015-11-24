@@ -7,7 +7,16 @@ import random
 from scrapy.contrib.downloadermiddleware.useragent import UserAgentMiddleware
 
 
+class ProxyMiddleware(object):
+    "代理ip切换"
+
+    def process_request(self, request, spider):
+        pass
+        # request.meta['proxy'] = "http://%s" % ip
+
+
 class MobileRandomUserAgentMiddleware(UserAgentMiddleware):
+    "移动端UserAgent"
 
     user_agent_list = [
         "Mozilla/5.0 (Linux; U; Android 4.0.3; ko-kr; LG-L160L Build/IML74K) AppleWebkit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30",
@@ -59,6 +68,8 @@ class MobileRandomUserAgentMiddleware(UserAgentMiddleware):
 
 
 class BrowserRandomUserAgentMiddleware(UserAgentMiddleware):
+
+    "pc浏览器serAgent"
 
     user_agent_list = [
         "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/22.0.1207.1 Safari/537.1",

@@ -2,18 +2,26 @@
 import scrapy
 import json
 import datetime
-import urllib
-import sys
 
 from BusCrawl.items.scqcp import StartCityItem, TargetCityItem, LineItem
 
+
 class ScqcpSpider(scrapy.Spider):
     name = "scqcp"
-    custom_settings = {}
+    custom_settings = {
+        "ITEM_PIPELINES": {
+            'BusCrawl.pipelines.scqcp.MongoPipeline': 300,
+        },
+
+        "DOWNLOADER_MIDDLEWARES": {
+            'scrapy.contrib.downloadermiddleware.useragent.UserAgentMiddleware': None,
+            'BusCrawl.middlewares.common.MobileRandomUserAgentMiddleware': 400,
+            'BusCrawl.middlewares.scqcp.BaseHeaderMiddleware': 400,
+        }
+    }
 
     def start_requests(self):
         url = "http://java.cdqcp.com/scqcp/api/v2/ticket/get_start_city"
-        body = {"city_name": ""}
         return [scrapy.FormRequest(url, formdata={'city_name': ''}, callback=self.parse_start_city)]
 
     def parse_start_city(self, response):
@@ -64,5 +72,4 @@ class ScqcpSpider(scrapy.Spider):
             self.logger.error("parse_line: Unexpected return, %s" % str(res))
             return
         for d in res["ticket_lines_query"]:
-            sjson = json.dumps(d)
-            yield LineItem(json_str=sjson, json_str_hash=hash(sjson))
+            yield LineItem(**d)

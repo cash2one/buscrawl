@@ -32,5 +32,33 @@ class TargetCityItem(scrapy.Item):
 
 
 class LineItem(scrapy.Item):
-    json_str_hash = scrapy.Field()
-    json_str = scrapy.Field()
+    """
+    Primary Key:  carry_sta_id, sign_id, stop_name, drv_date_time
+    """
+    carry_sta_id = scrapy.Field()
+    carry_sta_name = scrapy.Field()
+    city = scrapy.Field()
+    sign_id = scrapy.Field()
+    sch_id = scrapy.Field()
+    drv_date_time = scrapy.Field()
+    end_sta_name = scrapy.Field()
+    full_price = scrapy.Field(serializer=float)
+    half_price = scrapy.Field(serializer=float)
+    amount = scrapy.Field()
+    child_amount = scrapy.Field()
+    sch_type_id = scrapy.Field()
+    mile = scrapy.Field()
+    extra_flag = scrapy.Field()
+    bus = scrapy.Field()
+    sch_type_name = scrapy.Field()
+    bus_type_name = scrapy.Field()
+    pass_id = scrapy.Field()
+    mot_name = scrapy.Field()
+    stop_name = scrapy.Field()
+    stop_code = scrapy.Field()
+    stop_alias_name = scrapy.Field()
+    booking_url = scrapy.Field()
+    stop_num = scrapy.Field()
+    max_sell_num = scrapy.Field()
+    is_insure = scrapy.Field(serializer=int)
+    service_price = scrapy.Field()

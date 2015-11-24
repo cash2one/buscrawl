@@ -54,11 +54,7 @@ NEWSPIDER_MODULE = 'BusCrawl.spiders'
 
 # Enable or disable downloader middlewares
 # See http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
-DOWNLOADER_MIDDLEWARES = {
-    'scrapy.contrib.downloadermiddleware.useragent.UserAgentMiddleware': None,
-    'BusCrawl.middlewares.scqcp.RotateUserAgentMiddleware': 400,
-    'BusCrawl.middlewares.scqcp.BaseHeaderMiddleware': 400,
-}
+DOWNLOADER_MIDDLEWARES = {}
 
 # Enable or disable extensions
 # See http://scrapy.readthedocs.org/en/latest/topics/extensions.html
@@ -68,9 +64,7 @@ DOWNLOADER_MIDDLEWARES = {
 
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
-ITEM_PIPELINES = {
-    'BusCrawl.pipelines.scqcp.MongoPipeline': 300,
-}
+ITEM_PIPELINES = {}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See http://doc.scrapy.org/en/latest/topics/autothrottle.html
@@ -100,10 +94,10 @@ LOG_LEVEL = "INFO"
 LOG_STDOUT = False  # if true, print will also appear in scrapy log.
 
 # ===== memory debug ======
-MEMDEBUG_ENABLED =  True
+MEMDEBUG_ENABLED = True
 MEMDEBUG_NOTIFY = ['luojunping@12308.com']
 
-#scrapy.extensions.memusage
+# scrapy.extensions.memusage
 MEMUSAGE_ENABLED = True
 MEMUSAGE_LIMIT_MB = 2048
 MEMUSAGE_NOTIFY_MAIL = ['luojunping@12308.com']

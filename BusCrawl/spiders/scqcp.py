@@ -72,5 +72,7 @@ class ScqcpSpider(scrapy.Spider):
         if int(res["status"]) != 1:
             self.logger.error("parse_line: Unexpected return, %s" % str(res))
             return
+        start = response.meta["start"]
         for d in res["ticket_lines_query"]:
+            d["city_id"] = start["city_id"]
             yield LineItem(**d)

@@ -82,7 +82,7 @@ class gx84100Spider(scrapy.Spider):
                         
                         
                         today = datetime.date.today()
-                        for i in range(0, 10):
+                        for i in range(0, 5):
                             sdate = str(today+datetime.timedelta(days=i))
                             queryline_url='http://www.84100.com/getTrainList/ajax'
                                       

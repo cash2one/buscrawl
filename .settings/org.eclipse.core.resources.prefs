@@ -6,3 +6,4 @@ encoding//BusCrawl/pipelines/scqcp.py=utf-8
 encoding//BusCrawl/settings.py=utf-8
 encoding//BusCrawl/spiders/gx84100.py=utf-8
 encoding//BusCrawl/spiders/scqcp.py=utf-8
+encoding//migrate/migrate_scqcp.py=utf-8

@@ -74,5 +74,8 @@ class ScqcpSpider(scrapy.Spider):
             return
         start = response.meta["start"]
         for d in res["ticket_lines_query"]:
+            line_id = hash("%s%s%s%s" % (d["carry_sta_id"], d["sign_id"], d["stop_name"], d["drv_date_time"]))
             d["city_id"] = start["city_id"]
+            d["line_id"] = line_id
+            d["create_datetime"] = datetime.datetime.now()
             yield LineItem(**d)

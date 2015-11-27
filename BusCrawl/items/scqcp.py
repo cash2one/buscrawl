@@ -35,6 +35,7 @@ class LineItem(scrapy.Item):
     """
     Primary Key:  carry_sta_id, sign_id, stop_name, drv_date_time
     """
+    line_id = scrapy.Field()
     carry_sta_id = scrapy.Field()
     carry_sta_name = scrapy.Field()
     city_id = scrapy.Field(serializer=int)
@@ -63,3 +64,4 @@ class LineItem(scrapy.Item):
     max_sell_num = scrapy.Field()
     is_insure = scrapy.Field(serializer=int)
     service_price = scrapy.Field()
+    create_datetime = scrapy.Field()

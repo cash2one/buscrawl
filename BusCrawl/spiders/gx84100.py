@@ -12,11 +12,10 @@ import requests
 from lxml import etree
 
 
-from BusCrawl.items.gx84100 import LineItem
+from BusCrawl.items.gx84100 import LineItem, StartCityItem, TargetCityItem
 
 class gx84100Spider(scrapy.Spider):
     name = "gx84100"
-    
     custom_settings = {
         "ITEM_PIPELINES": {
             'BusCrawl.pipelines.gx84100.MongoGx84100Pipeline': 300,
@@ -31,64 +30,47 @@ class gx84100Spider(scrapy.Spider):
     }
 
     def start_requests(self):
-        
         url = "http://www.84100.com/"
-        a=requests.get(url)
-        res = a.content
-        b= re.findall('var startCityJson = (.*);',res)
+        res = requests.get(url)
+        res = res.content
+        matchObj = re.findall('var startCityJson = (.*);', res)
         #print b[0][1:-1]
         #print type(b[0])
-        provinceInfo=json.loads(b[0][1:-1])
+        provinceInfo = json.loads(matchObj[0][1:-1])
 #         print provinceInfo
 #         print provinceInfo['450000']
-        count_city=0
-        start_city_count=0
-        port_count=0
-        province_id='450000'
+
+        province_id = '450000'
         for province in provinceInfo[province_id]:
-            count_city=+1 
             cityId = province['cityId']
             city_name = province['cityName']
-            
-                
-            
-#             item = LineItem()      
+#             item = LineItem()
 #             item['province_id']='450000'
 #             item['city_id'] = cityId
 #             item['city_name'] = city_name
-            
-            
-            for j in  province['countyList']:
-                start_city_count=+1
+            for j in province['countyList']:
                 start_city_name = j['countyName']
-                start_city_id  = j['countyId']
+                start_city_id = j['countyId']
 #                 item['start_city_name'] = start_city_name
 #                 item['start_city_id'] = start_city_id
-                
-                
-                target_url ='http://www.84100.com/getEndPortList/ajax?cityId=%s'%int(str(start_city_id))
+                target_url = 'http://www.84100.com/getEndPortList/ajax?cityId=%s'%int(str(start_city_id))
                 print target_url
-                targetCityInfo=requests.get(target_url)
+                targetCityInfo = requests.get(target_url)
 #                 print targetCityInfo
-                targetCity= targetCityInfo.json()
-                ports = targetCity.get('ports',[])
-        
+                targetCity = targetCityInfo.json()
+                ports = targetCity.get('ports', [])
                 if ports:
                     for port in ports:
-                        port_count=+1
                         target_city_name = port['portName']
 #                         target_city_name=u'北海'
 #                         item['target_city_name'] = target_city_name
-                        
-                        
                         today = datetime.date.today()
                         for i in range(0, 5):
                             sdate = str(today+datetime.timedelta(days=i))
-                            queryline_url='http://www.84100.com/getTrainList/ajax'
-                                      
-                            payload={
-                                'companyNames'    :'',
-                                'endName'    :target_city_name,
+                            queryline_url = 'http://www.84100.com/getTrainList/ajax'
+                            payload = {
+                                'companyNames': '',
+                                'endName': target_city_name,
                                 "isExpressway"   :'', 
                                 "sendDate"    :sdate,
                                 "sendTimes"  :''  ,
@@ -99,24 +81,15 @@ class gx84100Spider(scrapy.Spider):
                                 'stationIds':'',
                                 'ttsId':''
                                 }
-                            
 
                             yield scrapy.FormRequest(queryline_url, formdata=payload, callback=self.parse_line, 
                                                      meta={"payload": payload,'province_id':province_id,"city_id":cityId,"city_name":city_name})
-        
-        
-        print  count_city
-        print  start_city_count
-        print  port_count
-        
-                         
+
 #                             trainListInfo = requests.post(queryline_url, data=payload)
 #     def parse_line1(self, response):    
 #         pass                    
     def parse_line(self, response):
-        
         trainListInfo = json.loads(response.body)
-                        
 #         trainListInfo= trainListInfo.json()
 
         if trainListInfo:
@@ -125,14 +98,13 @@ class gx84100Spider(scrapy.Spider):
             item['city_id'] = response.meta["city_id"]
             item['city_name'] = response.meta["city_name"]
             
-            
             payload = response.meta["payload"]
             sdate=payload['sendDate']
             item['start_city_name'] = payload['startName']
             item['start_city_id'] = payload['startId']
             item['target_city_name'] = payload['endName']
    
-            nextPage  = int(trainListInfo['nextPage'])
+            nextPage = int(trainListInfo['nextPage'])
             pageNo = int(trainListInfo['pageNo'])
     #                             print m['msg']
             sel = etree.HTML(trainListInfo['msg'])
@@ -140,7 +112,6 @@ class gx84100Spider(scrapy.Spider):
             for n in trains:
                 time = n.xpath('ul/li[@class="time"]/p/strong/text()')
                 item['departure_time'] = sdate+' '+time[0]
-                
     #             print 'time->',time[0]
                 banci = n.xpath('ul/li[@class="time"]/p[@class="banci"]/text()')
     #             print 'banci->',banci[0]
@@ -152,10 +123,9 @@ class gx84100Spider(scrapy.Spider):
                 distance = infor[1].replace('\r\n','').replace(' ','')
     #             print 'distance->',distance
                 item['distance'] = distance
-                
                 buy = n.xpath('ul/li[@class="buy"]')
-                flag=0
-                shiftid=0
+                flag = 0
+                shiftid = 0
                 for b in buy:
                     flag= b.xpath('a[@class="btn"]/text()') #判断可以买票
                     if flag:

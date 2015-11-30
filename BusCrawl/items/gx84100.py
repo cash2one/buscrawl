@@ -8,28 +8,36 @@
 import scrapy
 
 
+class StartCityItem(scrapy.Item):
+    province_id = scrapy.Field(serializer=int)
+    city_id = scrapy.Field(serializer=int)
+    city_name = scrapy.Field()
+    city_short_name = scrapy.Field()
+    start_city_name = scrapy.Field()
+    start_city_id = scrapy.Field()
+    full_name = scrapy.Field()
+    short_name = scrapy.Field()
+
+
+class TargetCityItem(scrapy.Item):
+    starting_id = scrapy.Field()
+    target_name = scrapy.Field()
+    short_name = scrapy.Field()
+    full_name = scrapy.Field()
+
+
+
 class LineItem(scrapy.Item):
-    
     province_id = scrapy.Field(serializer=int)
     city_name = scrapy.Field()
     city_id = scrapy.Field()
-    
     start_city_name = scrapy.Field()
     start_city_id = scrapy.Field()
     target_city_name = scrapy.Field()
 #     target_city_id = scrapy.Field()
-    
-    
     departure_time = scrapy.Field()
-    
     price = scrapy.Field()
     banci = scrapy.Field()
     distance = scrapy.Field()
     flag = scrapy.Field(serializer=int)
     shiftid = scrapy.Field()
-
-
-
-
-
-

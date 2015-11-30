@@ -104,3 +104,9 @@ MEMUSAGE_NOTIFY_MAIL = ['luojunping@12308.com']
 MEMUSAGE_REPORT = True
 MEMUSAGE_WARNING_MB = 1024
 
+# mongodb settings
+MONGODB_CONFIG = {
+    "url": "mongodb://localhost:27017/",
+    "db": "crawl12308",
+}
+

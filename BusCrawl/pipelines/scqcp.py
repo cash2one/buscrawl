@@ -7,14 +7,16 @@
 
 import pymongo
 
+from scrapy.conf import settings
 from pymongo import MongoClient
 from BusCrawl.items.scqcp import StartCityItem, TargetCityItem, LineItem
 
 
 class MongoPipeline(object):
     def open_spider(self, spider):
-        self.client = MongoClient('mongodb://localhost:27017/')
-        self.db = self.client["crawl12308"]
+        db_config = settings.get("MONGODB_CONFIG")
+        self.client = MongoClient(db_config["url"])
+        self.db = self.client[db_config["db"]]
 
         start_pks = [("city_id", pymongo.ASCENDING)]
         self.db.scqcp_start_city.create_index(start_pks, unique=True)

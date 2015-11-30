@@ -52,6 +52,7 @@ class ScqcpSpider(scrapy.Spider):
         url = "http://java.cdqcp.com/scqcp/api/v2/ticket/query"
         start = response.meta["start"]
         for d in res["target_city"]:
+            d["starting_city_id"] = start["city_id"]
             yield TargetCityItem(**d)
 
             # 预售期5天, 节假日预售期10天
@@ -73,9 +74,12 @@ class ScqcpSpider(scrapy.Spider):
             self.logger.error("parse_line: Unexpected return, %s" % str(res))
             return
         start = response.meta["start"]
+        end = response.meta["end"]
         for d in res["ticket_lines_query"]:
             line_id = hash("%s%s%s%s" % (d["carry_sta_id"], d["sign_id"], d["stop_name"], d["drv_date_time"]))
             d["city_id"] = start["city_id"]
-            d["line_id"] = line_id
+            d["city"] = start["city_name"]
+            d["stop_name"] = end["stop_name"]
             d["create_datetime"] = datetime.datetime.now()
+            d["line_id"] = hash("%s-%s-%s-%s" % (d["carry_sta_id"], d["carry_sta_name"], d["stop_name"], d["drv_date_time"]))
             yield LineItem(**d)

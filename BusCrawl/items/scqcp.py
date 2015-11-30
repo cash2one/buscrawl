@@ -9,6 +9,9 @@ import scrapy
 
 
 class StartCityItem(scrapy.Item):
+    """
+    Primary Key: city_id
+    """
     city_id = scrapy.Field(serializer=int)
     city_name = scrapy.Field()
     alias_name = scrapy.Field()
@@ -22,6 +25,9 @@ class StartCityItem(scrapy.Item):
 
 
 class TargetCityItem(scrapy.Item):
+    """
+    Primary Key: starting_city_id, stop_name
+    """
     carry_sta_id = scrapy.Field()
     carry_sta_name = scrapy.Field()
     stop_name = scrapy.Field()
@@ -33,7 +39,7 @@ class TargetCityItem(scrapy.Item):
 
 class LineItem(scrapy.Item):
     """
-    Primary Key:  carry_sta_id, sign_id, stop_name, drv_date_time
+    Primary Key: line_id
     """
     line_id = scrapy.Field()
     carry_sta_id = scrapy.Field()

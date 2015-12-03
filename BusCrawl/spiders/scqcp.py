@@ -4,7 +4,7 @@ import json
 import datetime
 
 from BusCrawl.items.scqcp import StartCityItem, TargetCityItem, LineItem
-from BusCrawl.utils import md5
+from BusCrawl.utils.tool import md5
 
 
 class ScqcpSpider(scrapy.Spider):

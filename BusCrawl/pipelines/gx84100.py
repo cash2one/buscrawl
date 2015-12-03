@@ -20,10 +20,10 @@ class MongoGx84100Pipeline(object):
         self.client.close()
 
     def process_item(self, item, spider):
-        if not spider.name == "crawl12308":
+        if not spider.name == "gx84100":
             return
         if isinstance(item, StartCityItem):
-            pk = {"city_name": item["city_name"]}
+            pk = {"start_city_name": item["start_city_name"], "start_city_id": item["start_city_id"]}
             self.db.start_city_gx84100.replace_one(pk, dict(item), upsert=True)
         elif isinstance(item, TargetCityItem):
             pk = {
@@ -32,11 +32,8 @@ class MongoGx84100Pipeline(object):
             }
             self.db.target_city_gx84100.replace_one(pk, dict(item), upsert=True)
         if isinstance(item, LineItem):
-            query={
-                   'start_city_name': item["start_city_name"],
-                   "start_city_id": item["start_city_id"],
-                   "target_city_name": item["target_city_name"],
-                   "departure_time": item["departure_time"],
+            query = {
+                    "line_id": item["line_id"],
                    }
-            self.db.line_gx84100.update(query,{"$set":dict(item)},upsert=True)
+            self.db.line_gx84100.update(query, {"$set": dict(item)}, upsert=True)
         return item

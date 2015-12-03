@@ -4,6 +4,7 @@ import json
 import datetime
 
 from BusCrawl.items.scqcp import StartCityItem, TargetCityItem, LineItem
+from BusCrawl.utils import md5
 
 
 class ScqcpSpider(scrapy.Spider):
@@ -52,11 +53,12 @@ class ScqcpSpider(scrapy.Spider):
         url = "http://java.cdqcp.com/scqcp/api/v2/ticket/query"
         start = response.meta["start"]
         for d in res["target_city"]:
+            d["starting_city_id"] = start["city_id"]
             yield TargetCityItem(**d)
 
             # 预售期5天, 节假日预售期10天
             today = datetime.date.today()
-            for i in range(0, 5):
+            for i in range(0, 10):
                 sdate = str(today+datetime.timedelta(days=i))
                 fd = {
                     "city_id": unicode(start["city_id"]),
@@ -75,4 +77,7 @@ class ScqcpSpider(scrapy.Spider):
         start = response.meta["start"]
         for d in res["ticket_lines_query"]:
             d["city_id"] = start["city_id"]
+            d["city"] = start["city_name"]
+            d["create_datetime"] = datetime.datetime.now()
+            d["line_id"] = md5("%s-%s-%s-%s" % (d["carry_sta_id"], d["carry_sta_name"], d["stop_name"], d["drv_date_time"]))
             yield LineItem(**d)

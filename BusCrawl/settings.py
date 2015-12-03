@@ -64,7 +64,9 @@ DOWNLOADER_MIDDLEWARES = {}
 
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
+
 ITEM_PIPELINES = {}
+
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See http://doc.scrapy.org/en/latest/topics/autothrottle.html
@@ -90,7 +92,7 @@ LOG_ENABLED = True
 LOG_FILE = None
 LOG_FORMAT = '%(asctime)s [%(name)s] %(levelname)s: %(message)s'
 LOG_DATEFORMAT = '%Y-%m-%d %H:%M:%S'
-LOG_LEVEL = "INFO"
+LOG_LEVEL = "DEBUG"
 LOG_STDOUT = False  # if true, print will also appear in scrapy log.
 
 # ===== memory debug ======

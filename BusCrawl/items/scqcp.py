@@ -41,6 +41,7 @@ class LineItem(scrapy.Item):
     """
     Primary Key: line_id
     """
+
     line_id = scrapy.Field()
     carry_sta_id = scrapy.Field()
     carry_sta_name = scrapy.Field()

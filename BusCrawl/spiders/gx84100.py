@@ -4,6 +4,7 @@ import json
 import datetime
 import urllib
 import sys
+from BusCrawl.utils.tool import md5
 
 
 import re
@@ -90,7 +91,7 @@ class gx84100Spider(scrapy.Spider):
                         targetCityItem['target_name'] = target_city_name
                         yield targetCityItem
                         today = datetime.date.today()
-                        for i in range(0, 5):
+                        for i in range(0, 2):
                             sdate = str(today+datetime.timedelta(days=i))
                             queryline_url = 'http://www.84100.com/getTrainList/ajax'
                             payload = {
@@ -160,8 +161,8 @@ class gx84100Spider(scrapy.Spider):
                 item['flag'] = flag
                 item['shiftid'] = shiftid
                 item['crawl_time'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                line_id = str(hash("%s-%s-%s-%s-%s-%s" % \
-                    (item["start_city_name"], item["start_city_id"], item["target_city_name"], item["departure_time"],item['banci'], 'gx84100')))
+                line_id = md5("%s-%s-%s-%s-%s-%s" % \
+                    (item["start_city_name"], item["start_city_id"], item["target_city_name"], item["departure_time"],item['banci'], 'gx84100'))
                 item['line_id'] = line_id
                 yield item
             if nextPage > pageNo:

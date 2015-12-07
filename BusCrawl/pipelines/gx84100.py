@@ -16,6 +16,21 @@ class MongoGx84100Pipeline(object):
         self.client = MongoClient('mongodb://localhost:27017/')
         self.db = self.client["crawl12308"]
 
+        start_pks = [("start_city_id", pymongo.ASCENDING)]
+        self.db.start_city_gx84100.create_index(start_pks, unique=True)
+
+        end_pks = [
+            ("target_name", pymongo.ASCENDING),
+            ("starting_id", pymongo.ASCENDING),
+        ]
+        self.db.target_city_gx84100.create_index(end_pks, unique=True)
+
+        line_pks = [
+            ("line_id", pymongo.ASCENDING)
+        ]
+        self.db.line_gx84100.create_index(line_pks, unique=True)
+
+
     def close_spider(self, spider):
         self.client.close()
 

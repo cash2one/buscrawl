@@ -13,20 +13,20 @@ import requests
 from lxml import etree
 
 
-from BusCrawl.items.gx84100 import LineItem, StartCityItem, TargetCityItem
+from BusCrawl.items.bus100 import LineItem, StartCityItem, TargetCityItem
 from BusCrawl.utils.tool import get_pinyin_first_litter
 
 
-class gx84100Spider(scrapy.Spider):
-    name = "gx84100"
+class bus100Spider(scrapy.Spider):
+    name = "bus100"
     custom_settings = {
         "ITEM_PIPELINES": {
-            'BusCrawl.pipelines.gx84100.MongoGx84100Pipeline': 300,
+            'BusCrawl.pipelines.bus100.MongoBus100Pipeline': 300,
         },
 
         "DOWNLOADER_MIDDLEWARES": {
             'scrapy.contrib.downloadermiddleware.useragent.UserAgentMiddleware':None,
-            'BusCrawl.middlewares.common.BrowserRandomUserAgentMiddleware': 400 ,
+            'BusCrawl.middlewares.common.BrowserRandomUserAgentMiddleware': 400,
 #             'BusCrawl.middlewares.common.ProxyMiddleware': 410,
 #             'BusCrawl.middlewares.scqcp.HeaderMiddleware': 410,
         }
@@ -47,6 +47,7 @@ class gx84100Spider(scrapy.Spider):
 #         print provinceInfo['450000']
 
         province_id = '450000'
+        province_name = '广西'
         for province in provinceInfo[province_id]:
             cityId = province['cityId']
             city_name = province['cityName']
@@ -66,6 +67,7 @@ class gx84100Spider(scrapy.Spider):
 #                 item['start_city_name'] = start_city_name
 #                 item['start_city_id'] = start_city_id
                 startCityItem['province_id'] = province_id
+                startCityItem['province_name'] = province_name
                 startCityItem['city_id'] = cityId
                 startCityItem['city_name'] = city_name
                 startCityItem['city_short_name'] = city_short_name
@@ -91,7 +93,7 @@ class gx84100Spider(scrapy.Spider):
                         targetCityItem['target_name'] = target_city_name
                         yield targetCityItem
                         today = datetime.date.today()
-                        for i in range(0, 2):
+                        for i in range(0, 10):
                             sdate = str(today+datetime.timedelta(days=i))
                             queryline_url = 'http://www.84100.com/getTrainList/ajax'
                             payload = {
@@ -109,7 +111,7 @@ class gx84100Spider(scrapy.Spider):
                                 }
 
                             yield scrapy.FormRequest(queryline_url, formdata=payload, callback=self.parse_line, 
-                                                     meta={"payload": payload, 'province_id':province_id, "city_id":cityId,"city_name":city_name})
+                                                     meta={"payload": payload, 'province_id':province_id,'province_name':province_name, "city_id":cityId,"city_name":city_name})
 
     def parse_line(self, response):
         trainListInfo = json.loads(response.body)
@@ -118,6 +120,7 @@ class gx84100Spider(scrapy.Spider):
         if trainListInfo:
             item = LineItem()
             item['province_id'] = response.meta["province_id"]
+            item['province_name'] = response.meta["province_name"]
             item['city_id'] = response.meta["city_id"]
             item['city_name'] = response.meta["city_name"]
             payload = response.meta["payload"]
@@ -162,11 +165,11 @@ class gx84100Spider(scrapy.Spider):
                 item['shiftid'] = shiftid
                 item['crawl_time'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 line_id = md5("%s-%s-%s-%s-%s-%s" % \
-                    (item["start_city_name"], item["start_city_id"], item["target_city_name"], item["departure_time"],item['banci'], 'gx84100'))
+                    (item["start_city_name"], item["start_city_id"], item["target_city_name"], item["departure_time"],item['banci'], 'bus100'))
                 item['line_id'] = line_id
                 yield item
             if nextPage > pageNo:
                 url = response.url.split('?')[0]+'?pageNo=%s'%nextPage
                 yield scrapy.FormRequest(url, formdata=payload, callback=self.parse_line, meta={"payload": payload,
-                    'province_id':response.meta["province_id"], "city_id":response.meta["city_id"], "city_name":response.meta["city_name"]})
+                    'province_id':response.meta["province_id"],'province_name':response.meta["province_name"], "city_id":response.meta["city_id"], "city_name":response.meta["city_name"]})
             

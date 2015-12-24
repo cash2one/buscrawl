@@ -19,7 +19,7 @@ class StartCityItem(scrapy.Item):
     short_name = scrapy.Field()
     full_name = scrapy.Field()
     en_name = scrapy.Field()
-    provider = scrapy.Field(serializer=int)
+    provider = scrapy.Field()
     is_pre_sell = scrapy.Field(serializer=int)
     is_connected = scrapy.Field(serializer=int)
 

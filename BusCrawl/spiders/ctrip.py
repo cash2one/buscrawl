@@ -20,7 +20,9 @@ class CTripSpider(scrapy.Spider):
             'BusCrawl.middlewares.common.MobileRandomUserAgentMiddleware': 400,
             'BusCrawl.middlewares.common.ProxyMiddleware': 410,
             'BusCrawl.middlewares.ctrip.HeaderMiddleware': 410,
-        }
+        },
+        "DOWNLOAD_DELAY": 0.5,
+        "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
     base_url = "http://m.ctrip.com/restapi/busphp/app/index.php"
 

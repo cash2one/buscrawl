@@ -7,19 +7,11 @@ class LineItem(scrapy.Item):
     # 出发
     s_province = scrapy.Field()
     s_city_name = scrapy.Field()
-    s_city_pinyin = scrapy.Field()
-    s_city_short_pinyin = scrapy.Field()
     s_sta_name = scrapy.Field()
-    s_sta_pinyin = scrapy.Field()
-    s_sta_short_pinyin = scrapy.Field()
 
     # 到达
     d_city_name = scrapy.Field()
-    d_city_pinyin = scrapy.Field()
-    d_city_short_pinyin = scrapy.Field()
     d_sta_name = scrapy.Field()
-    d_sta_pinyin = scrapy.Field()
-    d_sta_short_pinyin = scrapy.Field()
 
     line_id = scrapy.Field()
     drv_date = scrapy.Field()
@@ -35,3 +27,4 @@ class LineItem(scrapy.Item):
     crawl_datetime = scrapy.Field()
     extra_info = scrapy.Field()
     left_tickets = scrapy.Field(serializer=int)
+    crawl_source = scrapy.Field()

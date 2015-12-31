@@ -14,6 +14,7 @@ class MongoPipeline(object):
 
         line_pks = [
             ("line_id", pymongo.ASCENDING),
+            ("drv_date", pymongo.ASCENDING),
             ("drv_datetime", pymongo.ASCENDING),
         ]
         self.db.ctrip_line.create_index(line_pks, unique=True)

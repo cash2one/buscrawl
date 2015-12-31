@@ -50,14 +50,23 @@ class CTripSpider(scrapy.Spider):
             if province not in ['四川']:
                 continue
             self.logger.info("start province: %s" % province)
-            for ci in pro["citys"]:
-                d = {
-                    "province": province,
-                    "name": ci,
-                }
-                params.update(fromCity=ci)
-                url = "%s?%s" % (self.base_url, urllib.urlencode(params))
-                yield scrapy.Request(url, callback=self.parse_target_city, meta={"start": d})
+            ci = "成都"
+            d = {
+                "province": province,
+                "name": ci,
+            }
+            params.update(fromCity=ci)
+            url = "%s?%s" % (self.base_url, urllib.urlencode(params))
+            yield scrapy.Request(url, callback=self.parse_target_city, meta={"start": d})
+
+            #for ci in pro["citys"]:
+            #    d = {
+            #        "province": province,
+            #        "name": ci,
+            #    }
+            #    params.update(fromCity=ci)
+            #    url = "%s?%s" % (self.base_url, urllib.urlencode(params))
+            #    yield scrapy.Request(url, callback=self.parse_target_city, meta={"start": d})
 
     def parse_target_city(self, response):
         res = json.loads(response.body)

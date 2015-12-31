@@ -137,7 +137,7 @@ class CTripSpider(scrapy.Spider):
                 bus_num = d["busNumber"],
                 full_price = float(d["fullPrice"]),
                 half_price = float(d["fullPrice"])/2,
-                fee = 3,
+                fee = 0,
                 crawl_datetime = dte.now(),
                 extra_info = {},
                 left_tickets = left_tickets,

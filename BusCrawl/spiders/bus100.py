@@ -45,73 +45,75 @@ class bus100Spider(scrapy.Spider):
         provinceInfo = json.loads(matchObj[0][1:-1])
 #         print provinceInfo
 #         print provinceInfo['450000']
+        crawl_province_list = [{"province_id":'450000','province_name':"广西"},{"province_id":'370000','province_name':"山东"},{"province_id":'210000','province_name':"辽宁"}]
 
-        province_id = '450000'
-        province_name = '广西'
-        for province in provinceInfo[province_id]:
-            cityId = province['cityId']
-            city_name = province['cityName']
-            city_short_name = get_pinyin_first_litter(city_name)
-#             item = LineItem()
-#             item['province_id']='450000'
-#             item['city_id'] = cityId
-#             item['city_name'] = city_name
-            for j in province['countyList']:
-                startCityItem = StartCityItem()
-                start_city_name = j['countyName']
-                start_city_id = j['countyId']
-                start_full_name = j['pinyin']
-                start_short_name = j['pinyinPrefix']
-                if not start_short_name or start_short_name == 'null':
-                    start_short_name = get_pinyin_first_litter(start_city_name)
-#                 item['start_city_name'] = start_city_name
-#                 item['start_city_id'] = start_city_id
-                startCityItem['province_id'] = province_id
-                startCityItem['province_name'] = province_name
-                startCityItem['city_id'] = cityId
-                startCityItem['city_name'] = city_name
-                startCityItem['city_short_name'] = city_short_name
-                startCityItem['start_city_name'] = start_city_name
-                startCityItem['start_city_id'] = start_city_id
-                startCityItem['start_full_name'] = start_full_name
-                startCityItem['start_short_name'] = start_short_name
-                yield startCityItem
-                target_url = 'http://www.84100.com/getEndPortList/ajax?cityId=%s'%int(str(start_city_id))
-                targetCityInfo = requests.get(target_url)
-#                 print targetCityInfo
-                targetCity = targetCityInfo.json()
-                ports = targetCity.get('ports', [])
-
-                if ports:
-                    for port in ports:
-                        targetCityItem = TargetCityItem()
-                        target_city_name = port['portName']
-                        targetCityItem['starting_id'] = start_city_id
-                        targetCityItem['full_name'] = port['pinyin']
-                        targetCityItem['short_name'] = port['pinyinPrefix']
-                        targetCityItem['short_name'] = port['pinyinPrefix']
-                        targetCityItem['target_name'] = target_city_name
-                        yield targetCityItem
-                        today = datetime.date.today()
-                        for i in range(0, 10):
-                            sdate = str(today+datetime.timedelta(days=i))
-                            queryline_url = 'http://www.84100.com/getTrainList/ajax'
-                            payload = {
-                                'companyNames': '',
-                                'endName': target_city_name,
-                                "isExpressway": '',
-                                "sendDate": sdate,
-                                "sendTimes": '',
-                                "showRemainOnly": '',
-                                "sort": "1",
-                                "startId": start_city_id,
-                                'startName': start_city_name,
-                                'stationIds': '',
-                                'ttsId': ''
-                                }
-
-                            yield scrapy.FormRequest(queryline_url, formdata=payload, callback=self.parse_line, 
-                                                     meta={"payload": payload, 'province_id':province_id,'province_name':province_name, "city_id":cityId,"city_name":city_name})
+        for crawl_province in crawl_province_list:
+            province_id = crawl_province['province_id']
+            province_name = crawl_province['province_name']
+            for province in provinceInfo[province_id]:
+                cityId = province['cityId']
+                city_name = province['cityName']
+                city_short_name = get_pinyin_first_litter(city_name)
+    #             item = LineItem()
+    #             item['province_id']='450000'
+    #             item['city_id'] = cityId
+    #             item['city_name'] = city_name
+                for j in province['countyList']:
+                    startCityItem = StartCityItem()
+                    start_city_name = j['countyName']
+                    start_city_id = j['countyId']
+                    start_full_name = j['pinyin']
+                    start_short_name = j['pinyinPrefix']
+                    if not start_short_name or start_short_name == 'null':
+                        start_short_name = get_pinyin_first_litter(start_city_name)
+    #                 item['start_city_name'] = start_city_name
+    #                 item['start_city_id'] = start_city_id
+                    startCityItem['province_id'] = province_id
+                    startCityItem['province_name'] = province_name
+                    startCityItem['city_id'] = cityId
+                    startCityItem['city_name'] = city_name
+                    startCityItem['city_short_name'] = city_short_name
+                    startCityItem['start_city_name'] = start_city_name
+                    startCityItem['start_city_id'] = start_city_id
+                    startCityItem['start_full_name'] = start_full_name
+                    startCityItem['start_short_name'] = start_short_name
+                    yield startCityItem
+                    target_url = 'http://www.84100.com/getEndPortList/ajax?cityId=%s'%int(str(start_city_id))
+                    targetCityInfo = requests.get(target_url)
+    #                 print targetCityInfo
+                    targetCity = targetCityInfo.json()
+                    ports = targetCity.get('ports', [])
+    
+                    if ports:
+                        for port in ports:
+                            targetCityItem = TargetCityItem()
+                            target_city_name = port['portName']
+                            targetCityItem['starting_id'] = start_city_id
+                            targetCityItem['full_name'] = port['pinyin']
+                            targetCityItem['short_name'] = port['pinyinPrefix']
+                            targetCityItem['short_name'] = port['pinyinPrefix']
+                            targetCityItem['target_name'] = target_city_name
+                            yield targetCityItem
+                            today = datetime.date.today()
+                            for i in range(0, 10):
+                                sdate = str(today+datetime.timedelta(days=i))
+                                queryline_url = 'http://www.84100.com/getTrainList/ajax'
+                                payload = {
+                                    'companyNames': '',
+                                    'endName': target_city_name,
+                                    "isExpressway": '',
+                                    "sendDate": sdate,
+                                    "sendTimes": '',
+                                    "showRemainOnly": '',
+                                    "sort": "1",
+                                    "startId": start_city_id,
+                                    'startName': start_city_name,
+                                    'stationIds': '',
+                                    'ttsId': ''
+                                    }
+    
+                                yield scrapy.FormRequest(queryline_url, formdata=payload, callback=self.parse_line, 
+                                                         meta={"payload": payload, 'province_id':province_id,'province_name':province_name, "city_id":cityId,"city_name":city_name})
 
     def parse_line(self, response):
         trainListInfo = json.loads(response.body)

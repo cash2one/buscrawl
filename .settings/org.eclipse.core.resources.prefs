@@ -1,11 +1,14 @@
 eclipse.preferences.version=1
 encoding//BusCrawl/items/bus100.py=utf-8
 encoding//BusCrawl/items/common.py=utf-8
+encoding//BusCrawl/items/ctrip.py=utf-8
 encoding//BusCrawl/items/scqcp.py=utf-8
 encoding//BusCrawl/pipelines/bus100.py=utf-8
+encoding//BusCrawl/pipelines/ctrip.py=utf-8
 encoding//BusCrawl/pipelines/scqcp.py=utf-8
 encoding//BusCrawl/settings.py=utf-8
 encoding//BusCrawl/spiders/bus100.py=utf-8
+encoding//BusCrawl/spiders/ctrip.py=utf-8
 encoding//BusCrawl/spiders/scqcp.py=utf-8
 encoding//BusCrawl/utils.py=utf-8
 encoding//BusCrawl/utils/__init__.py=utf-8

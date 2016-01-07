@@ -35,6 +35,8 @@ class ScqcpSpider(scrapy.Spider):
 
         url = "http://java.cdqcp.com/scqcp/api/v2/ticket/query_target_station_by_keyword"
         for d in res["start_city"]:
+            if d["city_name"] != "成都市":
+                continue
             yield StartCityItem(**d)
             fd = {
                 "city_id": unicode(d["city_id"]),

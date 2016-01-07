@@ -4,7 +4,8 @@ import pymongo
 
 from scrapy.conf import settings
 from pymongo import MongoClient
-from BusCrawl.items.ctrip import LineItem
+from BusCrawl.spiders.ctrip import CTripSpider
+from BusCrawl.spiders.cbd import CBDSpider
 
 class MongoPipeline(object):
     def open_spider(self, spider):
@@ -17,7 +18,11 @@ class MongoPipeline(object):
             ("drv_date", pymongo.ASCENDING),
             ("drv_datetime", pymongo.ASCENDING),
         ]
-        self.db.ctrip_line.create_index(line_pks, unique=True)
+        if isinstance(spider, CTripSpider):
+            self.collection = self.db.ctrip_line
+        elif isinstance(spider, CBDSpider):
+            self.collection = self.db.cbd_line
+        self.collection.create_index(line_pks, unique=True)
 
     def close_spider(self, spider):
         self.client.close()
@@ -26,4 +31,4 @@ class MongoPipeline(object):
         pk = {
             "line_id": item["line_id"],
         }
-        self.db.ctrip_line.replace_one(pk, dict(item), upsert=True)
+        self.collection.replace_one(pk, dict(item), upsert=True)

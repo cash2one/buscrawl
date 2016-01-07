@@ -60,12 +60,10 @@ class bus100Spider(scrapy.Spider):
     #                 print targetCityInfo
                     targetCity = targetCityInfo.json()
                     ports = targetCity.get('ports', [])
-    
                     if ports:
                         for port in ports:
-
                             today = datetime.date.today()
-                            for i in range(0, 3):
+                            for i in range(0, 10):
                                 sdate = str(today+datetime.timedelta(days=i))
                                 queryline_url = 'http://www.84100.com/getTrainList/ajax'
                                 payload = {

@@ -22,7 +22,7 @@ class CTripSpider(scrapy.Spider):
             'BusCrawl.middlewares.common.ProxyMiddleware': 410,
             'BusCrawl.middlewares.ctrip.HeaderMiddleware': 410,
         },
-        "DOWNLOAD_DELAY": 0.1,
+        "DOWNLOAD_DELAY": 0.2,
         #"RANDOMIZE_DOWNLOAD_DELAY": True,
     }
     base_url = "http://m.ctrip.com/restapi/busphp/app/index.php"
@@ -51,7 +51,8 @@ class CTripSpider(scrapy.Spider):
             if province not in ['四川']:
                 continue
             self.logger.info("start province: %s" % province)
-            #ci = "成都"
+            #ci = "泸州"
+            #print "start ", ci
             #d = {
             #    "province": province,
             #    "name": ci,

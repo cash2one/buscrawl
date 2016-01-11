@@ -7,6 +7,7 @@ import datetime
 from datetime import datetime as dte
 from BusCrawl.items.ctrip import LineItem
 from BusCrawl.utils.tool import md5
+from scrapy import settings
 
 class CTripSpider(scrapy.Spider):
     name = "ctrip"
@@ -50,23 +51,26 @@ class CTripSpider(scrapy.Spider):
             if province not in ['四川']:
                 continue
             self.logger.info("start province: %s" % province)
-            ci = "成都"
-            d = {
-                "province": province,
-                "name": ci,
-            }
-            params.update(fromCity=ci)
-            url = "%s?%s" % (self.base_url, urllib.urlencode(params))
-            yield scrapy.Request(url, callback=self.parse_target_city, meta={"start": d})
+            #ci = "成都"
+            #d = {
+            #    "province": province,
+            #    "name": ci,
+            #}
+            #params.update(fromCity=ci)
+            #url = "%s?%s" % (self.base_url, urllib.urlencode(params))
+            #yield scrapy.Request(url, callback=self.parse_target_city, meta={"start": d})
 
-            #for ci in pro["citys"]:
-            #    d = {
-            #        "province": province,
-            #        "name": ci,
-            #    }
-            #    params.update(fromCity=ci)
-            #    url = "%s?%s" % (self.base_url, urllib.urlencode(params))
-            #    yield scrapy.Request(url, callback=self.parse_target_city, meta={"start": d})
+            for ci in pro["citys"]:
+                d = {
+                    "province": province,
+                    "name": ci,
+                }
+                if ci in settings["CTRIP_CITY_IGNORE"]:
+                    continue
+                self.logger.info("start province: %s city: %s", province, ci)
+                params.update(fromCity=ci)
+                url = "%s?%s" % (self.base_url, urllib.urlencode(params))
+                yield scrapy.Request(url, callback=self.parse_target_city, meta={"start": d})
 
     def parse_target_city(self, response):
         res = json.loads(response.body)

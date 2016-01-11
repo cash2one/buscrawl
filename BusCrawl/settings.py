@@ -117,3 +117,6 @@ REDIS_CONFIG = {
     "host": "127.0.0.1",
     "port": "6379",
 }
+
+CTRIP_CITY_IGNORE = []
+CBD_CITYS= "苏州,南京"

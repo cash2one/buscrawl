@@ -7,14 +7,16 @@
 
 import pymongo
 
+from scrapy.conf import settings
 from pymongo import MongoClient
 from BusCrawl.items.bus100 import LineItem
 
 
 class MongoBus100Pipeline(object):
     def open_spider(self, spider):
-        self.client = MongoClient('mongodb://localhost:27017/')
-        self.db = self.client["crawl12308"]
+        db_config = settings.get("MONGODB_CONFIG")
+        self.client = MongoClient(db_config["url"])
+        self.db = self.client[db_config["db"]]
 
         line_pks = [
             ("line_id", pymongo.ASCENDING)

@@ -49,67 +49,74 @@ class bus100Spider(scrapy.Spider):
 
         for crawl_province in crawl_province_list:
             province_id = crawl_province['province_id']
-            province_name = crawl_province['province_name']
             for province in provinceInfo[province_id]:
                 cityId = province['cityId']
                 city_name = province['cityName']
-
+                crawl_city = {"city_id": cityId, 'city_name': city_name}
                 for j in province['countyList']:
                     target_url = 'http://www.84100.com/getEndPortList/ajax?cityId=%s'%int(str(j['countyId']))
-                    targetCityInfo = requests.get(target_url)
-    #                 print targetCityInfo
-                    targetCity = targetCityInfo.json()
-                    ports = targetCity.get('ports', [])
-                    if ports:
-                        for port in ports:
-                            today = datetime.date.today()
-                            for i in range(0, 10):
-                                sdate = str(today+datetime.timedelta(days=i))
-                                queryline_url = 'http://www.84100.com/getTrainList/ajax'
-                                payload = {
-                                    'companyNames': '',
-                                    'endName': port['portName'],
-                                    "isExpressway": '',
-                                    "sendDate": sdate,
-                                    "sendTimes": '',
-                                    "showRemainOnly": '',
-                                    "sort": "1",
-                                    "startId": j['countyId'],
-                                    'startName': j['countyName'],
-                                    'stationIds': '',
-                                    'ttsId': ''
-                                    }
-    
-                                yield scrapy.FormRequest(queryline_url, formdata=payload, callback=self.parse_line, 
-                                                         meta={"payload": payload, 'province_id':province_id,'province_name':province_name, "data":j,"city_name":city_name,"city_id":cityId,'port':port})
+                    yield scrapy.Request(target_url, callback=self.parse_target_city, 
+                                         meta={"crawl_province": crawl_province,'crawl_city':crawl_city,"start": j})
+
+    def parse_target_city(self, response):
+        "解析目的地城市"
+        targetCity = json.loads(response.body)
+        start = response.meta["start"]
+        crawl_province = response.meta["crawl_province"]
+        crawl_city = response.meta["crawl_city"]
+        ports = targetCity.get('ports', [])
+        if ports:
+            for port in ports:
+                today = datetime.date.today()
+                for i in range(0, 10):
+                    sdate = str(today+datetime.timedelta(days=i))
+                    queryline_url = 'http://www.84100.com/getTrainList/ajax'
+                    payload = {
+                        'companyNames': '',
+                        'endName': port['portName'],
+                        "isExpressway": '',
+                        "sendDate": sdate,
+                        "sendTimes": '',
+                        "showRemainOnly": '',
+                        "sort": "1",
+                        "startId": start['countyId'],
+                        'startName': start['countyName'],
+                        'stationIds': '',
+                        'ttsId': ''
+                        }
+
+                    yield scrapy.FormRequest(queryline_url, formdata=payload, callback=self.parse_line, 
+                                             meta={"payload": payload, 'crawl_province':crawl_province,'crawl_city':crawl_city,'start':start, "end":port})
 
     def parse_line(self, response):
         trainListInfo = json.loads(response.body)
 #         trainListInfo= trainListInfo.json()
 
         if trainListInfo:
-            data = response.meta["data"]
-            port = response.meta["port"]
+            start = response.meta["start"]
+            end = response.meta["end"]
+            crawl_province = response.meta["crawl_province"]
+            crawl_city = response.meta["crawl_city"]
             payload = response.meta["payload"]
             item = LineItem()
-            item['province_id'] = response.meta["province_id"]
-            item['province_name'] = response.meta["province_name"]
+            item['province_id'] = crawl_province['province_id']
+            item['province_name'] = crawl_province['province_name']
 
-            item['city_id'] = response.meta["city_id"]
-            item['city_name'] = response.meta["city_name"]
+            item['city_id'] = crawl_city["city_id"]
+            item['city_name'] = crawl_city["city_name"]
             item['city_short_name'] = get_pinyin_first_litter(item['city_name'])
 
-            item['start_city_name'] = data['countyName']
-            item['start_city_id'] = data['countyId']
-            item['start_full_name'] = data['pinyin']
-            start_short_name = data['pinyinPrefix']
+            item['start_city_name'] = start['countyName']
+            item['start_city_id'] = start['countyId']
+            item['start_full_name'] = start['pinyin']
+            start_short_name = start['pinyinPrefix']
             if not start_short_name or start_short_name == 'null':
                 start_short_name = get_pinyin_first_litter(item['start_city_name'])
             item['start_short_name'] = start_short_name
 
-            item['target_city_name'] = port['portName']
-            item['target_short_name'] = port['pinyinPrefix']
-            item['target_full_name'] = port['pinyin']
+            item['target_city_name'] = end['portName']
+            item['target_short_name'] = end['pinyinPrefix']
+            item['target_full_name'] = end['pinyin']
 
             sdate = payload['sendDate']
 
@@ -160,6 +167,6 @@ class bus100Spider(scrapy.Spider):
                 yield item
             if nextPage > pageNo:
                 url = response.url.split('?')[0]+'?pageNo=%s'%nextPage
-                yield scrapy.FormRequest(url, formdata=payload, callback=self.parse_line, meta={"payload": payload,
-                    'province_id':response.meta["province_id"],'province_name':response.meta["province_name"], "data":data,"city_id":response.meta["city_id"], "city_name":response.meta["city_name"],'port':port})
+                yield scrapy.FormRequest(url, formdata=payload, callback=self.parse_line, 
+                                         meta={"payload": payload, 'crawl_province':crawl_province,'crawl_city':crawl_city,'start':start, "end":end})
             

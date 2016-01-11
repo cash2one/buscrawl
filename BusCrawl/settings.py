@@ -119,4 +119,4 @@ REDIS_CONFIG = {
 }
 
 CTRIP_CITY_IGNORE = []
-CBD_CITYS= "南京"
+CBD_CITYS= "苏州,南京"

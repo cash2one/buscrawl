@@ -147,8 +147,8 @@ class bus100Spider(scrapy.Spider):
                 time = n.xpath('ul/li[@class="time"]/p/strong/text()')
                 item['departure_time'] = sdate+' '+time[0]
     #             print 'time->',time[0]
-                banci = n.xpath('ul/li[@class="time"]/p[@class="carNum"]/text()')
                 banci = ''
+                banci = n.xpath('ul/li[@class="time"]/p[@class="carNum"]/text()')
                 if banci:
                     banci = banci[0].replace('\r\n', '').replace(' ',  '')
                 else:

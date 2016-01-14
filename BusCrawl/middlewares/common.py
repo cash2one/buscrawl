@@ -15,6 +15,13 @@ class ProxyMiddleware(object):
         # request.meta['proxy'] = "http://%s" % ip
 
 
+class JskyHeaderMiddleware(object):
+
+    def process_request(self, request, spider):
+        request.headers.setdefault("Content-Type", "application/json; charset=UTF-8")
+        request.headers.setdefault("reqdata", "f3939b9644340ad093b70a09d2e3cc3c")
+
+
 class MobileRandomUserAgentMiddleware(UserAgentMiddleware):
     "移动端UserAgent"
 

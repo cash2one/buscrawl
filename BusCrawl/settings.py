@@ -111,3 +111,12 @@ MONGODB_CONFIG = {
     "url": "mongodb://localhost:27017/",
     "db": "crawl12308",
 }
+
+# redis settings
+REDIS_CONFIG = {
+    "host": "127.0.0.1",
+    "port": "6379",
+}
+
+CTRIP_CITY_IGNORE = []
+CBD_CITYS= "苏州,南京"

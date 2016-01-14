@@ -59,9 +59,9 @@ class bus100Spider(scrapy.Spider):
         if self.province_id:
             province_id = self.province_id
             crawl_province_dict = {
-                              '450000': {"province_id": '450000', 'province_name': "广西"},
-                              '370000': {"province_id": '370000', 'province_name': "山东"},
-                              '210000': {"province_id": '210000', 'province_name': "辽宁"}
+                              '450000': {"province_id": '450000', 'province_name': u"广西"},
+                              '370000': {"province_id": '370000', 'province_name': u"山东"},
+                              '210000': {"province_id": '210000', 'province_name': u"辽宁"}
                               }
             crawl_province = crawl_province_dict.get(province_id)
         for province in provinceInfo[province_id]:
@@ -99,14 +99,12 @@ class bus100Spider(scrapy.Spider):
                         'stationIds': '',
                         'ttsId': ''
                         }
-
                     yield scrapy.FormRequest(queryline_url, formdata=payload, callback=self.parse_line, 
                                              meta={"payload": payload, 'crawl_province':crawl_province,'crawl_city':crawl_city,'start':start, "end":port})
 
     def parse_line(self, response):
         trainListInfo = json.loads(response.body)
 #         trainListInfo= trainListInfo.json()
-
         if trainListInfo:
             start = response.meta["start"]
             end = response.meta["end"]
@@ -141,22 +139,30 @@ class bus100Spider(scrapy.Spider):
             sel = etree.HTML(trainListInfo['msg'])
             trains = sel.xpath('//div[@class="trainList"]')
             for n in trains:
+#                 d = n.xpath('@data-list')[0]
                 station = n.xpath('ul/li[@class="start"]/p/text()')
-                item['start_station'] =station[0]
-                item['end_station'] =station[1]
-    
+                item['start_station'] = station[0]
+                item['end_station'] = station[1]
+
                 time = n.xpath('ul/li[@class="time"]/p/strong/text()')
                 item['departure_time'] = sdate+' '+time[0]
     #             print 'time->',time[0]
-                banci = n.xpath('ul/li[@class="time"]/p[@class="banci"]/text()')
-    #             print 'banci->',banci[0]
-                item['banci'] = banci[0]
+                banci = n.xpath('ul/li[@class="time"]/p[@class="carNum"]/text()')
+                banci = ''
+                if banci:
+                    banci = banci[0].replace('\r\n', '').replace(' ',  '')
+                else:
+                    ord_banci = n.xpath('ul/li[@class="time"]/p[@class="banci"]/text()')
+                    if ord_banci:
+                        banci = ord_banci[0]
+                item['banci'] = banci
                 price = n.xpath('ul/li[@class="price"]/strong/text()')
     #             print 'price->',price[0]
                 item['price'] = price[0]
-                infor = n.xpath('ul/li[@class="infor"]/p/text()')
-                distance = infor[1].replace('\r\n', '').replace(' ',  '')
-    #             print 'distance->',distance
+                infor = n.xpath('ul/li[@class="carriers"]/p[@class="info"]/text()')
+                distance = ''
+                if infor:
+                    distance = infor[0].replace('\r\n', '').replace(' ',  '')
                 item['distance'] = distance
                 buyInfo = n.xpath('ul/li[@class="buy"]')
                 flag = 0

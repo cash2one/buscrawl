@@ -5,6 +5,7 @@ import json
 import datetime
 import os
 import time
+import requests
 
 from datetime import datetime as dte
 from BusCrawl.items.ctrip import LineItem
@@ -28,7 +29,7 @@ class JskySpider(scrapy.Spider):
             'BusCrawl.middlewares.common.ProxyMiddleware': 410,
             'BusCrawl.middlewares.common.JskyHeaderMiddleware': 410,
         },
-        "DOWNLOAD_DELAY": 0.2,
+        #"DOWNLOAD_DELAY": 0.2,
         "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
     def __init__(self, target="", *args, **kwargs):
@@ -76,12 +77,24 @@ class JskySpider(scrapy.Spider):
 
     def parse_target_city(self, response):
         res = json.loads(response.body)
+        start = response.meta["start"]
         if res["header"]["rspCode"] != "0000":
-            self.logger.error("parse_target_city: Unexpected return, %s" % res)
+            self.logger.error("parse_target_city: Unexpected return, %s %s", start["name"], res)
             return
 
         line_url = "http://api.jskylwsp.cn/ticket-interface/rest/query/getbusschedule"
-        start = response.meta["start"]
+
+        days_url = "http://api.jskylwsp.cn/ticket-interface/rest/query/getbussaleday"
+        body={"departure": start["name"]}
+        data = self.post_data_templ("getbussaleday", body)
+        headers = {
+            "User-Agent": "Dalvik/1.6.0 (Linux; U; Android 4.4.4; MI 4W MIUI/V7.1.3.0.KXDCNCK)",
+            "Content-Type": "application/json; charset=UTF-8",
+        }
+        r = requests.post(days_url, data=json.dumps(data), headers=headers)
+        sale_day_info = r.json()
+        days = int(sale_day_info["body"]["saleDays"])
+
         for info in res["body"]["destinationList"]:
             for city in info["cities"]:
                 end = {
@@ -93,29 +106,30 @@ class JskySpider(scrapy.Spider):
 
                 # 预售期10天
                 today = datetime.date.today()
-                for i in range(0, 10):
+                for i in range(0, days+1):
                     sdate = str(today+datetime.timedelta(days=i))
                     body = {
                         "departure": start["name"],
                         "destination": end["name"],
                         "dptDate": sdate,
                         "pageIndex": 1,
-                        "pageSize": 20,
+                        "pageSize": 1025,
                     }
                     fd = self.post_data_templ("getbusschedule", body)
-                    yield scrapy.Request(line_url, method="POST", body=json.dumps(fd), callback=self.parse_line, meta={"start": start, "end": end})
+                    yield scrapy.Request(line_url, method="POST", body=json.dumps(fd), callback=self.parse_line, meta={"start": start, "end": end, "date": sdate})
 
     def parse_line(self, response):
         "解析班车"
+        start = response.meta["start"]
+        end = response.meta["end"]
+        sdate =  response.meta["date"]
         try:
             res = json.loads(response.body)
         except Exception, e:
-            print response.body
             raise e
         if int(res["header"]["rspCode"]) != 0:
-            self.logger.error("parse_target_city: Unexpected return, %s" % res["header"])
+            self.logger.error("parse_line: Unexpected return, %s, %s->%s, %s", sdate, start["name"], end["name"], res["header"])
             return
-        start = response.meta["start"]
         for d in res["body"]["scheduleList"]:
             if int(d["canBooking"]) != 1:
                 continue

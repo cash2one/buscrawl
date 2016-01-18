@@ -61,7 +61,8 @@ class bus100Spider(scrapy.Spider):
             crawl_province_dict = {
                               '450000': {"province_id": '450000', 'province_name': u"广西"},
                               '370000': {"province_id": '370000', 'province_name': u"山东"},
-                              '210000': {"province_id": '210000', 'province_name': u"辽宁"}
+                              '210000': {"province_id": '210000', 'province_name': u"辽宁"},
+                              '410000': {"province_id": '410000', 'province_name': u"河南"}
                               }
             crawl_province = crawl_province_dict.get(province_id)
         for province in provinceInfo[province_id]:

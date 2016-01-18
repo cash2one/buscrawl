@@ -6,6 +6,8 @@ from scrapy.conf import settings
 from pymongo import MongoClient
 from BusCrawl.spiders.ctrip import CTripSpider
 from BusCrawl.spiders.cbd import CBDSpider
+from BusCrawl.spiders.jsky import JskySpider
+
 
 class MongoPipeline(object):
     def open_spider(self, spider):
@@ -22,6 +24,8 @@ class MongoPipeline(object):
             self.collection = self.db.ctrip_line
         elif isinstance(spider, CBDSpider):
             self.collection = self.db.cbd_line
+        elif isinstance(spider, JskySpider):
+            self.collection = self.db.jsky_line
         self.collection.create_index(line_pks, unique=True)
 
     def close_spider(self, spider):

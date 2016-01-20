@@ -5,12 +5,10 @@ import scrapy
 import json
 import datetime
 import time
-import requests
 
 from datetime import datetime as dte
-from BusCrawl.items.ctrip import LineItem
-from BusCrawl.utils.tool import md5
-from scrapy.conf import settings
+from BusCrawl.item import LineItem
+from BusCrawl.utils.tool import get_redis
 
 
 class BabaSpider(scrapy.Spider):
@@ -69,7 +67,7 @@ class BabaSpider(scrapy.Spider):
         dest_url = "http://s4mdata.bababus.com:80/app/v3/ticket/cityAllList.htm"
         start_list = map(lambda s: s.strip(), self.target.split(","))
         for info in res["content"]["cityList"]:
-            if info["cityName"] not in start_list:
+            if start_list and info["cityName"] not in start_list:
                 continue
             start = {
                 "province": "浙江",
@@ -86,6 +84,22 @@ class BabaSpider(scrapy.Spider):
                                  callback=self.parse_target_city,
                                  meta={"start": start})
 
+    def mark_done(self, s_name, d_name, sdate):
+        r = get_redis()
+        t = time.time()
+        k = "%s_%s_%s" % (s_name, d_name, sdate)
+        r.hset("line:done:baba", k, t)
+
+    def has_done(self, s_name, d_name, sdate):
+        r = get_redis()
+        k = "%s_%s_%s" % (s_name, d_name, sdate)
+        now = time.time()
+        t = r.hget("line:done:baba", k)
+        t = float(t or 0)
+        if now - t>12 * 60 * 60:
+            return False
+        return True
+
     def parse_target_city(self, response):
         res = json.loads(response.body)
         start = response.meta["start"]
@@ -95,7 +109,7 @@ class BabaSpider(scrapy.Spider):
 
         line_url = "http://s4mdata.bababus.com:80/app/v3/ticket/busList.htm"
         days = 10
-        if start["name"] == "杭州":
+        if start["city_name"] == "杭州":
             days = 20
         for info in res["content"]["cityList"]:
             end = {
@@ -108,6 +122,9 @@ class BabaSpider(scrapy.Spider):
             today = datetime.date.today()
             for i in range(0, days):
                 sdate = str(today+datetime.timedelta(days=i))
+                if self.has_done(start["city_name"], end["city_name"], sdate):
+                    self.logger.info("ignore %s ==> %s %s" % (start["city_name"], end["city_name"], sdate))
+                    continue
                 content = {
                     "pageSize": 1025,
                     "beginCityName": start["city_name"],
@@ -126,7 +143,7 @@ class BabaSpider(scrapy.Spider):
         "解析班车"
         start = response.meta["start"]
         end = response.meta["end"]
-        sdate =  response.meta["date"]
+        sdate = response.meta["date"]
         try:
             res = json.loads(response.body)
         except Exception, e:
@@ -134,14 +151,17 @@ class BabaSpider(scrapy.Spider):
         if res["returnNo"] != "0000":
             self.logger.error("parse_line: Unexpected return, %s, %s->%s, %s", sdate, start["city_name"], end["city_name"], res["header"])
             return
+        self.mark_done(start["city_name"], end["city_name"], sdate)
         for d in res["content"]["busList"]:
             attrs = dict(
                 s_province = start["province"],
                 s_city_name = start["city_name"],
                 s_city_id = start["city_id"],
+                s_city_code=start["city_code"],
                 s_sta_name = d["beginStation"],
                 s_sta_id = d["beginStationId"],
                 d_city_name = end["city_name"],
+                d_city_code=end["city_code"],
                 d_city_id = end["city_id"],
                 d_sta_name = d["endStation"],
                 d_sta_id = d["endStationId"],

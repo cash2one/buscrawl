@@ -42,6 +42,6 @@ class LineItem(scrapy.Item):
                           "d_city_name",
                           "d_city_code"]
         for attr in required_attrs:
-            if not getattr(self, attr):
+            if not self[attr]:
                 return "%s required"
         return ""

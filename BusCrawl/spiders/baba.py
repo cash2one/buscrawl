@@ -179,5 +179,6 @@ class BabaSpider(scrapy.Spider):
                 extra_info = {"depotName": d["depotName"], "sbId": d["sbId"], "stId": d["stId"], "depotId": d["depotId"]},
                 left_tickets = int(d["remainCount"]),
                 crawl_source = "baba",
+                shift_id="",
             )
             yield LineItem(**attrs)

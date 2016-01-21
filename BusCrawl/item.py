@@ -32,6 +32,7 @@ class LineItem(scrapy.Item):
     extra_info = scrapy.Field()
     left_tickets = scrapy.Field(serializer=int)
     crawl_source = scrapy.Field()
+    shift_id = scrapy.Field()
 
     def valid(self):
         # 必须有值的属性

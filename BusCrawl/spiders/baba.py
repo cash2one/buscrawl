@@ -65,10 +65,15 @@ class BabaSpider(scrapy.Spider):
             self.logger.error("parse_start_city: Unexpected return, %s", res)
             return
         dest_url = "http://s4mdata.bababus.com:80/app/v3/ticket/getStationList.htm"
-        letters = [chr(i) for i in range(97,123)]
-        start_list = map(lambda s: s.strip(), self.target.split(","))
+        letters = [chr(i) for i in range(97, 123)]
+        start_list = []
+        if self.target:
+            start_list = map(lambda s: s.strip(), self.target.split(","))
         for info in res["content"]["cityList"]:
-            if start_list and info["cityName"] not in start_list:
+            name = info["cityName"]
+            if start_list and name not in start_list:
+                continue
+            elif name in ["绍兴", "德清", "龙泉", "丽水", "庆元", "嵊州", "宁波"]:
                 continue
             start = {
                 "province": "浙江",

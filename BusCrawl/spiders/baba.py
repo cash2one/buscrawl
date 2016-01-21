@@ -59,37 +59,6 @@ class BabaSpider(scrapy.Spider):
                              body=json.dumps(fd),
                              callback=self.parse_start_city)
 
-    def parse_start_city(self, response):
-        res = json.loads(response.body)
-        if res["returnNo"] != "0000":
-            self.logger.error("parse_start_city: Unexpected return, %s", res)
-            return
-        dest_url = "http://s4mdata.bababus.com:80/app/v3/ticket/getStationList.htm"
-        letters = [chr(i) for i in range(97, 123)]
-        start_list = []
-        if self.target:
-            start_list = map(lambda s: s.strip(), self.target.split(","))
-        for info in res["content"]["cityList"]:
-            name = info["cityName"]
-            if start_list and name not in start_list:
-                continue
-            elif name in ["绍兴", "德清", "龙泉", "丽水", "庆元", "嵊州", "宁波"]:
-                continue
-            start = {
-                "province": "浙江",
-                "city_name": info["cityName"],
-                "city_code": info["allSpell"],
-                "city_id": info["cityId"],
-            }
-            for c in letters:
-                content = {"searchType": "1", "dataName": c}
-                fd = self.post_data_templ(content)
-                yield scrapy.Request(dest_url,
-                                    method="POST",
-                                    body=json.dumps(fd),
-                                    callback=self.parse_target_city,
-                                    meta={"start": start})
-
     def mark_done(self, s_name, d_name, sdate):
         r = get_redis()
         t = time.time()
@@ -106,45 +75,75 @@ class BabaSpider(scrapy.Spider):
             return False
         return True
 
-    def parse_target_city(self, response):
-        res = json.loads(response.body)
-        start = response.meta["start"]
-        if res["returnNo"] != "0000":
-            self.logger.error("parse_target_city: Unexpected return, %s %s", start["name"], res)
-            return
-
-        line_url = "http://s4mdata.bababus.com:80/app/v3/ticket/busList.htm"
-        days = 10
-        city_list = res["content"]["toStationList"]
-        if start["city_name"] == "杭州":
-            days = 20
-        for info in city_list:
-            end = {
-                "city_name": info["stationName"],
-                "city_code": info["firstSpell"].lower(),
-                "city_id": info["stationId"],
-            }
-            self.logger.info("start %s ==> %s" % (start["city_name"], end["city_name"]))
-
-            today = datetime.date.today()
-            for i in range(0, days):
-                sdate = str(today+datetime.timedelta(days=i))
-                if self.has_done(start["city_name"], end["city_name"], sdate):
-                    self.logger.info("ignore %s ==> %s %s" % (start["city_name"], end["city_name"], sdate))
-                    continue
-                content = {
-                    "pageSize": 1025,
-                    "beginCityName": start["city_name"],
-                    "currentPage": 1,
-                    "endCityName": end["city_name"],
-                    "leaveDate": sdate,
-                }
+    def get_dest_list(self):
+        if not hasattr(self, "dest_list"):
+            dest_url = "http://s4mdata.bababus.com:80/app/v3/ticket/getStationList.htm"
+            dest_list = []
+            for c in [chr(i) for i in range(97, 123)]:
+                content = {"searchType": "1", "dataName": c}
                 fd = self.post_data_templ(content)
-                yield scrapy.Request(line_url,
-                                     method="POST",
-                                     body=json.dumps(fd),
-                                     callback=self.parse_line,
-                                     meta={"start": start, "end": end, "date": sdate})
+
+                ua = "Mozilla/5.0 (Linux; U; Android 2.2; fr-lu; HTC Legend Build/FRF91) AppleWebKit/533.1 (KHTML, like Gecko)  Version/4.0 Mobile Safari/533.1"
+                headers = {"User-Agent": ua}
+                import requests
+                r = requests.post(dest_url, data=json.dumps(fd), headers=headers)
+                res = r.json()
+                dest_list.extend(res["content"]["toStationList"])
+            self.dest_list = dest_list
+        return self.dest_list
+
+    def parse_start_city(self, response):
+        res = json.loads(response.body)
+        if res["returnNo"] != "0000":
+            self.logger.error("parse_start_city: Unexpected return, %s", res)
+            return
+        line_url = "http://s4mdata.bababus.com:80/app/v3/ticket/busList.htm"
+        start_list = []
+        if self.target:
+            start_list = map(lambda s: s.strip(), self.target.split(","))
+        for info in res["content"]["cityList"]:
+            name = info["cityName"]
+            if start_list and name not in start_list:
+                continue
+            elif name in ["绍兴", "德清", "龙泉", "丽水", "庆元", "嵊州", "宁波"]:
+                continue
+            start = {
+                "province": "浙江",
+                "city_name": info["cityName"],
+                "city_code": info["allSpell"],
+                "city_id": info["cityId"],
+            }
+            days = 7
+            if name == "杭州":
+                days = 20
+
+            for info in self.get_dest_list():
+                end = {
+                    "city_name": info["stationName"],
+                    "city_code": info["firstSpell"].lower(),
+                    "city_id": info["stationId"],
+                }
+                self.logger.info("start %s ==> %s" % (start["city_name"], end["city_name"]))
+
+                today = datetime.date.today()
+                for i in range(0, days):
+                    sdate = str(today+datetime.timedelta(days=i))
+                    if self.has_done(start["city_name"], end["city_name"], sdate):
+                        #self.logger.info("ignore %s ==> %s %s" % (start["city_name"], end["city_name"], sdate))
+                        continue
+                    content = {
+                        "pageSize": 1025,
+                        "beginCityName": start["city_name"],
+                        "currentPage": 1,
+                        "endCityName": end["city_name"],
+                        "leaveDate": sdate,
+                    }
+                    fd = self.post_data_templ(content)
+                    yield scrapy.Request(line_url,
+                                        method="POST",
+                                        body=json.dumps(fd),
+                                        callback=self.parse_line,
+                                        meta={"start": start, "end": end, "date": sdate})
 
     def parse_line(self, response):
         "解析班车"

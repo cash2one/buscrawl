@@ -67,13 +67,13 @@ class bus100Spider(scrapy.Spider):
             crawl_province = crawl_province_dict.get(province_id)
         for province in provinceInfo[province_id]:
             cityId = province['cityId']
-            if province_id != "410000" or (province_id == "410000" and cityId == '410100') :
-                city_name = province['cityName']
-                crawl_city = {"city_id": cityId, 'city_name': city_name}
-                for j in province['countyList']:
-                    target_url = 'http://www.84100.com/getEndPortList/ajax?cityId=%s'%int(str(j['countyId']))
-                    yield scrapy.Request(target_url, callback=self.parse_target_city, 
-                                         meta={"crawl_province": crawl_province,'crawl_city':crawl_city,"start": j})
+#             if province_id != "410000" or (province_id == "410000" and cityId == '410100') :
+            city_name = province['cityName']
+            crawl_city = {"city_id": cityId, 'city_name': city_name}
+            for j in province['countyList']:
+                target_url = 'http://www.84100.com/getEndPortList/ajax?cityId=%s'%int(str(j['countyId']))
+                yield scrapy.Request(target_url, callback=self.parse_target_city, 
+                                     meta={"crawl_province": crawl_province,'crawl_city':crawl_city,"start": j})
 
     def parse_target_city(self, response):
         "解析目的地城市"

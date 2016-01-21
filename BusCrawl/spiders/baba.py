@@ -109,8 +109,10 @@ class BabaSpider(scrapy.Spider):
 
         line_url = "http://s4mdata.bababus.com:80/app/v3/ticket/busList.htm"
         days = 10
+        city_list = res["content"]["cityList"]
         if start["city_name"] == "杭州":
             days = 20
+            city_list.append({"cityId": "310100", "cityName": "上海", "allSpell": "sh", "firstSpell": "s"})
         for info in res["content"]["cityList"]:
             end = {
                 "city_name": info["cityName"],

@@ -64,7 +64,8 @@ class BabaSpider(scrapy.Spider):
         if res["returnNo"] != "0000":
             self.logger.error("parse_start_city: Unexpected return, %s", res)
             return
-        dest_url = "http://s4mdata.bababus.com:80/app/v3/ticket/cityAllList.htm"
+        dest_url = "http://s4mdata.bababus.com:80/app/v3/ticket/getStationList.htm"
+        letters = [chr(i) for i in range(97,123)]
         start_list = map(lambda s: s.strip(), self.target.split(","))
         for info in res["content"]["cityList"]:
             if start_list and info["cityName"] not in start_list:
@@ -75,14 +76,14 @@ class BabaSpider(scrapy.Spider):
                 "city_code": info["allSpell"],
                 "city_id": info["cityId"],
             }
-            self.logger.info("start crawl city %s", start["city_name"])
-            content = {"dataVersion": ""}
-            fd = self.post_data_templ(content)
-            yield scrapy.Request(dest_url,
-                                 method="POST",
-                                 body=json.dumps(fd),
-                                 callback=self.parse_target_city,
-                                 meta={"start": start})
+            for c in letters:
+                content = {"searchType": "1", "dataName": c}
+                fd = self.post_data_templ(content)
+                yield scrapy.Request(dest_url,
+                                    method="POST",
+                                    body=json.dumps(fd),
+                                    callback=self.parse_target_city,
+                                    meta={"start": start})
 
     def mark_done(self, s_name, d_name, sdate):
         r = get_redis()
@@ -109,15 +110,14 @@ class BabaSpider(scrapy.Spider):
 
         line_url = "http://s4mdata.bababus.com:80/app/v3/ticket/busList.htm"
         days = 10
-        city_list = res["content"]["cityList"]
+        city_list = res["content"]["toStationList"]
         if start["city_name"] == "杭州":
             days = 20
-            city_list.append({"cityId": "310100", "cityName": "上海", "allSpell": "sh", "firstSpell": "s"})
-        for info in res["content"]["cityList"]:
+        for info in city_list:
             end = {
-                "city_name": info["cityName"],
-                "city_code": info["allSpell"],
-                "city_id": info["cityId"],
+                "city_name": info["stationName"],
+                "city_code": info["firstSpell"].lower(),
+                "city_id": info["stationId"],
             }
             self.logger.info("start %s ==> %s" % (start["city_name"], end["city_name"]))
 

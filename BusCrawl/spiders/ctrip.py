@@ -5,25 +5,26 @@ import urllib
 import datetime
 
 from datetime import datetime as dte
-from BusCrawl.items.ctrip import LineItem
-from BusCrawl.utils.tool import md5
-from scrapy import settings
+from BusCrawl.item import LineItem
+from base import SpiderBase
+from BusCrawl.utils.tool import get_pinyin_first_litter
 
-class CTripSpider(scrapy.Spider):
+
+class CTripSpider(SpiderBase):
     name = "ctrip"
     custom_settings = {
         "ITEM_PIPELINES": {
-            'BusCrawl.pipelines.ctrip.MongoPipeline': 300,
+            'BusCrawl.pipeline.MongoPipeline': 300,
         },
 
         "DOWNLOADER_MIDDLEWARES": {
             'scrapy.contrib.downloadermiddleware.useragent.UserAgentMiddleware': None,
-            'BusCrawl.middlewares.common.MobileRandomUserAgentMiddleware': 400,
-            'BusCrawl.middlewares.common.ProxyMiddleware': 410,
-            'BusCrawl.middlewares.ctrip.HeaderMiddleware': 410,
+            'BusCrawl.middleware.MobileRandomUserAgentMiddleware': 400,
+            'BusCrawl.middleware.ProxyMiddleware': 410,
+            'BusCrawl.middleware.CtripHeaderMiddleware': 410,
         },
-        "DOWNLOAD_DELAY": 0.2,
-        #"RANDOMIZE_DOWNLOAD_DELAY": True,
+        #"DOWNLOAD_DELAY": 0.2,
+        "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
     base_url = "http://m.ctrip.com/restapi/busphp/app/index.php"
 
@@ -46,27 +47,21 @@ class CTripSpider(scrapy.Spider):
             fromCity="",
             contentType="json",
         )
+        start_list = []
+        if self.target:
+            start_list = map(lambda s: s.strip(), self.target.split(","))
         for pro in res['hotFromCity']['province']:
             province = pro["province_name"]
             if province not in ['四川']:
                 continue
             self.logger.info("start province: %s" % province)
-            #ci = "泸州"
-            #print "start ", ci
-            #d = {
-            #    "province": province,
-            #    "name": ci,
-            #}
-            #params.update(fromCity=ci)
-            #url = "%s?%s" % (self.base_url, urllib.urlencode(params))
-            #yield scrapy.Request(url, callback=self.parse_target_city, meta={"start": d})
 
             for ci in pro["citys"]:
                 d = {
                     "province": province,
                     "name": ci,
                 }
-                if ci in settings["CTRIP_CITY_IGNORE"]:
+                if start_list and ci not in start_list:
                     continue
                 self.logger.info("start province: %s city: %s", province, ci)
                 params.update(fromCity=ci)
@@ -85,10 +80,12 @@ class CTripSpider(scrapy.Spider):
                 "name": tar["name"],
             }
 
-            # 预售期10天
             today = datetime.date.today()
-            for i in range(0, 10):
+            for i in range(1, 10):
                 sdate = str(today+datetime.timedelta(days=i))
+                if self.has_done(start["name"], d["name"], sdate):
+                    self.logger.info("ignore %s ==> %s %s" % (start["name"], d["name"], sdate))
+                    continue
                 params = dict(
                     param="/api/home",
                     method="product.getBusList",
@@ -117,6 +114,7 @@ class CTripSpider(scrapy.Spider):
         start = response.meta["start"]
         end = response.meta["end"]
         drv_date = response.meta["drv_date"]
+        self.mark_done(start["name"], end["name"], drv_date)
         for d in res["return"]:
             if not d["bookable"]:
                 continue
@@ -138,10 +136,15 @@ class CTripSpider(scrapy.Spider):
             attrs = dict(
                 s_province = start["province"],
                 s_city_name = d["fromCityName"],
+                s_city_id="",
+                s_city_code=get_pinyin_first_litter(d["fromCityName"]),
                 s_sta_name = from_station,
+                s_sta_id="",
                 d_city_name = d["toCityName"],
+                d_city_id="",
+                d_city_code=get_pinyin_first_litter(d["toCityName"]),
                 d_sta_name = to_station,
-                line_id = md5("%s-%s-%s-%s-%s-%s-%s-ctrip" % (d["fromCityName"], d["toCityName"], d["fromStationName"], d["toStationName"], drv_date, d["fromTime"], d["hashkey"])),
+                d_sta_id="",
                 drv_date = drv_date,
                 drv_time = d["fromTime"],
                 drv_datetime = dte.strptime("%s %s" % (drv_date, d["fromTime"]), "%Y-%m-%d %H:%M"),
@@ -156,5 +159,6 @@ class CTripSpider(scrapy.Spider):
                 extra_info = {},
                 left_tickets = left_tickets,
                 crawl_source = "ctrip",
+                shift_id="",
             )
             yield LineItem(**attrs)

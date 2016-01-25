@@ -4,14 +4,13 @@
 import scrapy
 import json
 import datetime
-import time
 
 from datetime import datetime as dte
 from BusCrawl.item import LineItem
-from BusCrawl.utils.tool import get_redis
+from base import SpiderBase
 
 
-class BabaSpider(scrapy.Spider):
+class BabaSpider(SpiderBase):
     name = "baba"
     custom_settings = {
         "ITEM_PIPELINES": {
@@ -24,13 +23,7 @@ class BabaSpider(scrapy.Spider):
             'BusCrawl.middleware.ProxyMiddleware': 410,
             'BusCrawl.middleware.BabaHeaderMiddleware': 410,
         },
-        #"DOWNLOAD_DELAY": 0.2,
-        #"RANDOMIZE_DOWNLOAD_DELAY": True,
     }
-
-    def __init__(self, target="", *args, **kwargs):
-        self.target = target
-        super(BabaSpider, self).__init__(*args, **kwargs)
 
     def post_data_templ(self, content):
         tmpl = {
@@ -58,22 +51,6 @@ class BabaSpider(scrapy.Spider):
                              method="POST",
                              body=json.dumps(fd),
                              callback=self.parse_start_city)
-
-    def mark_done(self, s_name, d_name, sdate):
-        r = get_redis()
-        t = time.time()
-        k = "%s_%s_%s" % (s_name, d_name, sdate)
-        r.hset("line:done:baba", k, t)
-
-    def has_done(self, s_name, d_name, sdate):
-        r = get_redis()
-        k = "%s_%s_%s" % (s_name, d_name, sdate)
-        now = time.time()
-        t = r.hget("line:done:baba", k)
-        t = float(t or 0)
-        if now - t>12 * 60 * 60:
-            return False
-        return True
 
     def get_dest_list(self):
         if not hasattr(self, "dest_list"):
@@ -126,7 +103,7 @@ class BabaSpider(scrapy.Spider):
                 self.logger.info("start %s ==> %s" % (start["city_name"], end["city_name"]))
 
                 today = datetime.date.today()
-                for i in range(0, days):
+                for i in range(1, days):
                     sdate = str(today+datetime.timedelta(days=i))
                     if self.has_done(start["city_name"], end["city_name"], sdate):
                         #self.logger.info("ignore %s ==> %s %s" % (start["city_name"], end["city_name"], sdate))
@@ -140,10 +117,10 @@ class BabaSpider(scrapy.Spider):
                     }
                     fd = self.post_data_templ(content)
                     yield scrapy.Request(line_url,
-                                        method="POST",
-                                        body=json.dumps(fd),
-                                        callback=self.parse_line,
-                                        meta={"start": start, "end": end, "date": sdate})
+                                         method="POST",
+                                         body=json.dumps(fd),
+                                         callback=self.parse_line,
+                                         meta={"start": start, "end": end, "date": sdate})
 
     def parse_line(self, response):
         "解析班车"

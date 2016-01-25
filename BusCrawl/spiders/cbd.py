@@ -5,24 +5,24 @@ import json
 import datetime
 
 from datetime import datetime as dte
-from BusCrawl.items.ctrip import LineItem
-from BusCrawl.utils.tool import md5
-from scrapy.conf import settings
+from BusCrawl.item import LineItem
+from BusCrawl.utils.tool import md5, get_pinyin_first_litter
+from base import SpiderBase
 
-class CBDSpider(scrapy.Spider):
+class CBDSpider(SpiderBase):
     name = "cbd"
     custom_settings = {
         "ITEM_PIPELINES": {
-            'BusCrawl.pipelines.ctrip.MongoPipeline': 300,
+            'BusCrawl.pipeline.MongoPipeline': 300,
         },
 
         "DOWNLOADER_MIDDLEWARES": {
             'scrapy.contrib.downloadermiddleware.useragent.UserAgentMiddleware': None,
-            'BusCrawl.middlewares.common.MobileRandomUserAgentMiddleware': 400,
-            'BusCrawl.middlewares.common.ProxyMiddleware': 410,
-            'BusCrawl.middlewares.ctrip.HeaderMiddleware': 410,
+            'BusCrawl.middleware.MobileRandomUserAgentMiddleware': 400,
+            'BusCrawl.middleware.ProxyMiddleware': 410,
+            'BusCrawl.middleware.CbdHeaderMiddleware': 410,
         },
-        "DOWNLOAD_DELAY": 0.2,
+        #"DOWNLOAD_DELAY": 0.2,
         "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
     base_url = "http://m.ctrip.com/restapi/busphp/app/index.php"
@@ -30,9 +30,12 @@ class CBDSpider(scrapy.Spider):
     def start_requests(self):
         # 这是个pc网页页面
         dest_url = "http://m.chebada.com/Home/GetBusDestinations"
-        city_str = settings.get("CBD_CITYS")
-        start_list = map(lambda s: s.strip(), city_str.split(","))
-        for name in start_list:
+        start_list = []
+        if self.target:
+            start_list = map(lambda s: s.strip(), self.target.split(","))
+        for name in ["苏州", "南京", "无锡", "常州", "南通"]:
+            if start_list and name not in start_list:
+                continue
             self.logger.info("start crawl city %s", name)
             fd = {
                 "Departure": unicode(name),
@@ -60,10 +63,12 @@ class CBDSpider(scrapy.Spider):
                 }
                 self.logger.info("start %s ==> %s" % (start["name"], city["name"]))
 
-                # 预售期10天
                 today = datetime.date.today()
-                for i in range(0, 20):
+                for i in range(1, 10):
                     sdate = str(today+datetime.timedelta(days=i))
+                    if self.has_done(start["name"], d["name"], sdate):
+                        self.logger.info("ignore %s ==> %s %s" % (start["name"], d["name"], sdate))
+                        continue
                     params = dict(
                         departure=start["name"],
                         destination=d["name"],
@@ -75,7 +80,7 @@ class CBDSpider(scrapy.Spider):
                         dptTimeSpan="0",
                         bookingType="0",
                     )
-                    yield scrapy.FormRequest(line_url, formdata=params, callback=self.parse_line, meta={"start": start, "end": d})
+                    yield scrapy.FormRequest(line_url, formdata=params, callback=self.parse_line, meta={"start": start, "end": d, "sdate": sdate})
 
     def parse_line(self, response):
         "解析班车"
@@ -86,9 +91,12 @@ class CBDSpider(scrapy.Spider):
             raise e
         res = res["response"]
         if int(res["header"]["rspCode"]) != 0:
-            self.logger.error("parse_target_city: Unexpected return, %s" % res["header"])
+            #self.logger.error("parse_target_city: Unexpected return, %s" % res["header"])
             return
         start = response.meta["start"]
+        end= response.meta["end"]
+        sdate = response.meta["sdate"]
+        self.mark_done(start["name"], end["name"], sdate)
 
         for d in res["body"]["scheduleList"]:
             if int(d["canBooking"]) != 1:
@@ -101,11 +109,16 @@ class CBDSpider(scrapy.Spider):
 
             attrs = dict(
                 s_province = start["province"],
+                s_city_id = "",
                 s_city_name = from_city,
                 s_sta_name = from_station,
+                s_city_code=get_pinyin_first_litter(from_city),
+                s_sta_id="",
                 d_city_name = to_city,
+                d_city_id="",
+                d_city_code=end["short_pinyin"],
+                d_sta_id="",
                 d_sta_name = to_station,
-                line_id = md5("%s-%s-%s-%s-%s-cbd" % (from_city, to_city, from_station, to_station, d["dptDateTime"])),
                 drv_date = d["dptDate"],
                 drv_time = d["dptTime"],
                 drv_datetime = dte.strptime("%s %s" % (d["dptDate"], d["dptTime"]), "%Y-%m-%d %H:%M"),
@@ -120,5 +133,6 @@ class CBDSpider(scrapy.Spider):
                 extra_info = {"raw_info": d},
                 left_tickets = left_tickets,
                 crawl_source = "cbd",
+                shift_id="",
             )
             yield LineItem(**attrs)

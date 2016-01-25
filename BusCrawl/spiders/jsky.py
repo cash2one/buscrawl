@@ -8,33 +8,30 @@ import time
 import requests
 
 from datetime import datetime as dte
-from BusCrawl.items.ctrip import LineItem
-from BusCrawl.utils.tool import md5
-from scrapy.conf import settings
+from BusCrawl.item import LineItem
+from BusCrawl.utils.tool import md5, get_pinyin_first_litter
+from base import SpiderBase
 
 
 BASE_URL = "http://api.jskylwsp.cn"
 
 
-class JskySpider(scrapy.Spider):
+class JskySpider(SpiderBase):
     name = "jsky"
     custom_settings = {
         "ITEM_PIPELINES": {
-            'BusCrawl.pipelines.ctrip.MongoPipeline': 300,
+            'BusCrawl.pipeline.MongoPipeline': 300,
         },
 
         "DOWNLOADER_MIDDLEWARES": {
             'scrapy.contrib.downloadermiddleware.useragent.UserAgentMiddleware': None,
-            'BusCrawl.middlewares.common.MobileRandomUserAgentMiddleware': 400,
-            'BusCrawl.middlewares.common.ProxyMiddleware': 410,
-            'BusCrawl.middlewares.common.JskyHeaderMiddleware': 410,
+            'BusCrawl.middleware.MobileRandomUserAgentMiddleware': 400,
+            'BusCrawl.middleware.ProxyMiddleware': 410,
+            'BusCrawl.middleware.JskyHeaderMiddleware': 410,
         },
         #"DOWNLOAD_DELAY": 0.2,
         "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
-    def __init__(self, target="", *args, **kwargs):
-        self.target = target
-        super(JskySpider, self).__init__(*args, **kwargs)
 
     def post_data_templ(self, service_name, body):
         stime = str(int(time.time()*1000))
@@ -64,22 +61,26 @@ class JskySpider(scrapy.Spider):
 
     def start_requests(self):
         dest_url = "http://api.jskylwsp.cn/ticket-interface/rest/query/getbusdestinations"
-        start_list = map(lambda s: s.strip(), self.target.split(","))
-        for name in start_list:
+        start_list = []
+        if self.target:
+            start_list = map(lambda s: s.strip(), self.target.split(","))
+        for name in ["苏州", "南京", "无锡", "常州", "南通"]:
+            if start_list and name not in start_list:
+                continue
             self.logger.info("start crawl city %s", name)
             body={"departure": name}
             fd = self.post_data_templ("getbusdestinations", body)
             yield scrapy.Request(dest_url,
-                                     method="POST",
-                                     body=json.dumps(fd),
-                                     callback=self.parse_target_city,
-                                     meta={"start":{"name": name, "province": "江苏"}})
+                                 method="POST",
+                                 body=json.dumps(fd),
+                                 callback=self.parse_target_city,
+                                 meta={"start":{"name": name, "province": "江苏"}})
 
     def parse_target_city(self, response):
         res = json.loads(response.body)
         start = response.meta["start"]
         if res["header"]["rspCode"] != "0000":
-            self.logger.error("parse_target_city: Unexpected return, %s %s", start["name"], res)
+            #self.logger.error("parse_target_city: Unexpected return, %s %s", start["name"], res)
             return
 
         line_url = "http://api.jskylwsp.cn/ticket-interface/rest/query/getbusschedule"
@@ -104,10 +105,12 @@ class JskySpider(scrapy.Spider):
                 }
                 self.logger.info("start %s ==> %s" % (start["name"], city["name"]))
 
-                # 预售期10天
                 today = datetime.date.today()
-                for i in range(0, days+1):
+                for i in range(1, min(10, days)):
                     sdate = str(today+datetime.timedelta(days=i))
+                    if self.has_done(start["name"], end["name"], sdate):
+                        self.logger.info("ignore %s ==> %s %s" % (start["name"], end["name"], sdate))
+                        continue
                     body = {
                         "departure": start["name"],
                         "destination": end["name"],
@@ -128,8 +131,9 @@ class JskySpider(scrapy.Spider):
         except Exception, e:
             raise e
         if int(res["header"]["rspCode"]) != 0:
-            self.logger.error("parse_line: Unexpected return, %s, %s->%s, %s", sdate, start["name"], end["name"], res["header"])
+            #self.logger.error("parse_line: Unexpected return, %s, %s->%s, %s", sdate, start["name"], end["name"], res["header"])
             return
+        self.mark_done(start["name"], end["name"], sdate)
         for d in res["body"]["scheduleList"]:
             if int(d["canBooking"]) != 1:
                 continue
@@ -141,11 +145,16 @@ class JskySpider(scrapy.Spider):
 
             attrs = dict(
                 s_province = start["province"],
+                s_city_id = "",
                 s_city_name = from_city,
+                s_city_code=get_pinyin_first_litter(from_city),
                 s_sta_name = from_station,
+                s_sta_id="",
                 d_city_name = to_city,
+                d_city_id="",
+                d_city_code=end["short_pinyin"],
                 d_sta_name = to_station,
-                line_id = md5("%s-%s-%s-%s-%s-jsky" % (from_city, to_city, from_station, to_station, d["dptDateTime"])),
+                d_sta_id="",
                 drv_date = d["dptDate"],
                 drv_time = d["dptTime"],
                 drv_datetime = dte.strptime("%s %s" % (d["dptDate"], d["dptTime"]), "%Y-%m-%d %H:%M"),
@@ -160,5 +169,6 @@ class JskySpider(scrapy.Spider):
                 extra_info = {"raw_info": d},
                 left_tickets = left_tickets,
                 crawl_source = "jsky",
+                shift_id="",
             )
             yield LineItem(**attrs)

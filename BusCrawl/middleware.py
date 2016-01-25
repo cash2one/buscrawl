@@ -11,6 +11,12 @@ class ProxyMiddleware(object):
         # request.meta['proxy'] = "http://%s" % ip
 
 
+class CbdHeaderMiddleware(object):
+
+    def process_request(self, request, spider):
+        request.headers.setdefault("Content-Type", "application/json; charset=UTF-8")
+
+
 class BabaHeaderMiddleware(object):
 
     def process_request(self, request, spider):
@@ -24,6 +30,21 @@ class JskyHeaderMiddleware(object):
     def process_request(self, request, spider):
         request.headers.setdefault("Content-Type", "application/json; charset=UTF-8")
         request.headers.setdefault("reqdata", "f3939b9644340ad093b70a09d2e3cc3c")
+
+
+class CtripHeaderMiddleware(object):
+
+    def process_request(self, request, spider):
+        request.headers.setdefault("Content-Type", "application/json; charset=UTF-8")
+        request.headers.setdefault("Authorization", "04b8cef68ef4f2d785150eb671999834")
+        request.headers.setdefault("X-Requested-With", "ctrip.android.view")
+
+
+class ScqcpHeaderMiddleware(object):
+
+    def process_request(self, request, spider):
+        request.headers.setdefault("Content-Type", "application/json; charset=UTF-8")
+        request.headers.setdefault("Authorization", "04b8cef68ef4f2d785150eb671999834")
 
 
 class MobileRandomUserAgentMiddleware(UserAgentMiddleware):

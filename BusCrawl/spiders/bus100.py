@@ -61,11 +61,13 @@ class bus100Spider(scrapy.Spider):
             crawl_province_dict = {
                               '450000': {"province_id": '450000', 'province_name': u"广西"},
                               '370000': {"province_id": '370000', 'province_name': u"山东"},
-                              '210000': {"province_id": '210000', 'province_name': u"辽宁"}
+                              '210000': {"province_id": '210000', 'province_name': u"辽宁"},
+                              '410000': {"province_id": '410000', 'province_name': u"河南"}
                               }
             crawl_province = crawl_province_dict.get(province_id)
         for province in provinceInfo[province_id]:
             cityId = province['cityId']
+#             if province_id != "410000" or (province_id == "410000" and cityId == '410100') :
             city_name = province['cityName']
             crawl_city = {"city_id": cityId, 'city_name': city_name}
             for j in province['countyList']:
@@ -147,8 +149,8 @@ class bus100Spider(scrapy.Spider):
                 time = n.xpath('ul/li[@class="time"]/p/strong/text()')
                 item['departure_time'] = sdate+' '+time[0]
     #             print 'time->',time[0]
-                banci = n.xpath('ul/li[@class="time"]/p[@class="carNum"]/text()')
                 banci = ''
+                banci = n.xpath('ul/li[@class="time"]/p[@class="carNum"]/text()')
                 if banci:
                     banci = banci[0].replace('\r\n', '').replace(' ',  '')
                 else:

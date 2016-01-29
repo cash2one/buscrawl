@@ -25,6 +25,12 @@ class BabaHeaderMiddleware(object):
         request.headers.setdefault("Cookie2", "$Version=1")
 
 
+class TongChengHeaderMiddleware(object):
+
+    def process_request(self, request, spider):
+        request.headers.setdefault("Content-Type", "application/x-www-form-urlencoded")
+
+
 class JskyHeaderMiddleware(object):
 
     def process_request(self, request, spider):

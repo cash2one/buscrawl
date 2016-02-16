@@ -132,7 +132,7 @@ class BabaSpider(SpiderBase):
         except Exception, e:
             raise e
         if res["returnNo"] != "0000":
-            self.logger.error("parse_line: Unexpected return, %s, %s->%s, %s", sdate, start["city_name"], end["city_name"], res["header"])
+            #self.logger.error("parse_line: Unexpected return, %s, %s->%s, %s", sdate, start["city_name"], end["city_name"], res["header"])
             return
         self.mark_done(start["city_name"], end["city_name"], sdate)
         for d in res["content"]["busList"]:

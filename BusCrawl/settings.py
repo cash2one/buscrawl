@@ -114,7 +114,7 @@ MONGODB_CONFIG = {
 
 # redis settings
 REDIS_CONFIG = {
-    "host": "10.51.9.34",
+    "host": "127.0.0.1",
     "port": 6379,
 }
 

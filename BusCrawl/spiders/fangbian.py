@@ -12,7 +12,8 @@ from BusCrawl.item import LineItem
 from base import SpiderBase
 from BusCrawl.utils.tool import md5
 
-API_BASE_URL = "http://testapi.fangbian.com:6801/fbapi.asmx"
+#API_BASE_URL = "http://testapi.fangbian.com:6801/fbapi.asmx"
+API_BASE_URL = "http://qcapi.fangbian.com/fbapi.asmx"
 
 
 class FangBianSpider(SpiderBase):

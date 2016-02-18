@@ -45,5 +45,5 @@ class LineItem(scrapy.Item):
                           "bus_num"]
         for attr in required_attrs:
             if not self[attr]:
-                return "%s required"
+                return "%s required" % attr
         return ""

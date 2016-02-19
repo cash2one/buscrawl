@@ -61,11 +61,13 @@ class FangBianSpider(SpiderBase):
         dest_url = API_BASE_URL + "/Query"
         for info in res["data"]:
             province = info["province"]
-            if province not in ["江苏", "广西", "河南", "四川"]:
+            if not self.is_need_crawl(province=province):
                 continue
             for d in info["cityList"]:
                 city_info = d["city"]
                 if not int(city_info["IsCanOrder"]):
+                    continue
+                if not self.is_need_crawl(city=city_info["Region"]):
                     continue
                 start = {
                     "province": province,

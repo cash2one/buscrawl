@@ -25,7 +25,23 @@ class SpiderBase(scrapy.Spider):
             return False
         return True
 
-    def __init__(self, target="", *args, **kwargs):
-        self.target = target
+    def __init__(self, province="", city="", *args, **kwargs):
+        """
+        province: 要爬取的省份, 多个省份用逗号隔开, 为空时不受限制.
+        city: 要爬取的城市,多个城市用逗号隔开, 为空时不受限制
+        """
+        self.province_list = filter(lambda i: i, map(lambda s: s.strip(), province.split(",")))
+        self.city_list = filter(lambda i: i, map(lambda s: s.strip(), city.split(",")))
         super(SpiderBase, self).__init__(*args, **kwargs)
 
+    def is_need_crawl(self, province="", city=""):
+        """
+        eg:
+            self.is_need_crawl(province="山东")
+            self.is_need_crawl(city="南京")
+        """
+        if self.province_list and province and province not in self.province_list:
+            return False
+        if self.city_list and city and city not in self.city_list:
+            return False
+        return True

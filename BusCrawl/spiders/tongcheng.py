@@ -33,11 +33,8 @@ class TongChengSpider(SpiderBase):
     def start_requests(self):
         # 这是个pc网页页面
         dest_url = "http://m.ly.com/bus/BusJson/DestinationCity"
-        start_list = []
-        if self.target:
-            start_list = map(lambda s: s.strip(), self.target.split(","))
         for name in [u"苏州", u"南京", u"无锡", u"常州", u"南通"]:
-            if start_list and name not in start_list:
+            if not self.is_need_crawl(city=name):
                 continue
             self.logger.info("start crawl city %s", name)
             fd = {

@@ -47,9 +47,6 @@ class CTripSpider(SpiderBase):
             fromCity="",
             contentType="json",
         )
-        start_list = []
-        if self.target:
-            start_list = map(lambda s: s.strip(), self.target.split(","))
         for pro in res['hotFromCity']['province']:
             province = pro["province_name"]
             if province not in ['四川']:
@@ -61,7 +58,7 @@ class CTripSpider(SpiderBase):
                     "province": province,
                     "name": ci,
                 }
-                if start_list and ci not in start_list:
+                if not self.is_need_crawl(ci):
                     continue
                 self.logger.info("start province: %s city: %s", province, ci)
                 params.update(fromCity=ci)

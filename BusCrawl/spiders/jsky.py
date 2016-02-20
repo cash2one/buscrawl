@@ -61,11 +61,8 @@ class JskySpider(SpiderBase):
 
     def start_requests(self):
         dest_url = "http://api.jskylwsp.cn/ticket-interface/rest/query/getbusdestinations"
-        start_list = []
-        if self.target:
-            start_list = map(lambda s: s.strip(), self.target.split(","))
         for name in ["苏州", "南京", "无锡", "常州", "南通"]:
-            if start_list and name not in start_list:
+            if not self.is_need_crawl(city=name):
                 continue
             self.logger.info("start crawl city %s", name)
             body={"departure": name}

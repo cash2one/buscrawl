@@ -62,7 +62,7 @@ class bus100Spider(SpiderBase):
             crawl_province = crawl_province_dict.get(province_id)
         for province in provinceInfo[province_id]:
             cityId = province['cityId']
-#             if province_id != "410000" or (province_id == "410000" and cityId == '410100') :
+#             if province_id != "450000" or (province_id == "450000" or cityId == '450400') :
             city_name = province['cityName']
             crawl_city = {"city_id": cityId, 'city_name': city_name}
             for j in province['countyList']:
@@ -77,6 +77,7 @@ class bus100Spider(SpiderBase):
         crawl_province = response.meta["crawl_province"]
         crawl_city = response.meta["crawl_city"]
         ports = targetCity.get('ports', [])
+#         ports = [{'portName':'夏郢','pinyinPrefix':'rx'}]
         if ports:
             for port in ports:
                 today = datetime.date.today()
@@ -180,9 +181,8 @@ class bus100Spider(SpiderBase):
                 yield item
 
             if nextPage > pageNo:
-                url = response.url.split('?')[0]+'?pageNo=%s' % nextPage
+                url = 'http://84100.com/getBusShift/ajax'+'?pageNo=%s' % nextPage
                 yield scrapy.FormRequest(url, formdata=payload, callback=self.parse_line, 
                                          meta={"payload": payload, 'crawl_province':crawl_province,'crawl_city':crawl_city,'start':start, "end":end})
             elif nextPage and nextPage == pageNo:
                 self.mark_done(start["countyName"], end['portName'], sdate)
-                

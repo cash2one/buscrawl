@@ -49,7 +49,7 @@ class CTripSpider(SpiderBase):
         )
         for pro in res['hotFromCity']['province']:
             province = pro["province_name"]
-            if province not in ['四川']:
+            if not self.is_need_crawl(province=province):
                 continue
             self.logger.info("start province: %s" % province)
 

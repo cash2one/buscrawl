@@ -37,11 +37,8 @@ class ScqcpSpider(SpiderBase):
             return
 
         url = "http://java.cdqcp.com/scqcp/api/v2/ticket/query_target_station_by_keyword"
-        start_list = []
-        if self.target:
-            start_list = map(lambda s: s.strip(), self.target.split(","))
         for d in res["start_city"]:
-            if start_list and d["city_name"] not in start_list:
+            if not self.is_need_crawl(city=d["city_name"]):
                 continue
             if not d["is_pre_sell"]:
                 self.logger.error("%s 没开放售票", d["city_name"])

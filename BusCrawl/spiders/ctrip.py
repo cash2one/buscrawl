@@ -49,7 +49,7 @@ class CTripSpider(SpiderBase):
         )
         for pro in res['hotFromCity']['province']:
             province = pro["province_name"]
-            if province not in ['四川']:
+            if not self.is_need_crawl(province=province):
                 continue
             self.logger.info("start province: %s" % province)
 
@@ -58,7 +58,7 @@ class CTripSpider(SpiderBase):
                     "province": province,
                     "name": ci,
                 }
-                if not self.is_need_crawl(ci):
+                if not self.is_need_crawl(city=ci):
                     continue
                 self.logger.info("start province: %s city: %s", province, ci)
                 params.update(fromCity=ci)
@@ -81,7 +81,7 @@ class CTripSpider(SpiderBase):
             for i in range(1, 10):
                 sdate = str(today+datetime.timedelta(days=i))
                 if self.has_done(start["name"], d["name"], sdate):
-                    self.logger.info("ignore %s ==> %s %s" % (start["name"], d["name"], sdate))
+                    #self.logger.info("ignore %s ==> %s %s" % (start["name"], d["name"], sdate))
                     continue
                 params = dict(
                     param="/api/home",
@@ -106,7 +106,7 @@ class CTripSpider(SpiderBase):
             print response.body
             raise e
         if int(res["code"]) != 1:
-            self.logger.error("parse_line: Unexpected return, %s" % str(res))
+            #self.logger.error("parse_line: Unexpected return, %s" % str(res))
             return
         start = response.meta["start"]
         end = response.meta["end"]

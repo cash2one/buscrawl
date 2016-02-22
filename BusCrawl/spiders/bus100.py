@@ -15,13 +15,12 @@ class bus100Spider(SpiderBase):
     name = "bus100"
     custom_settings = {
         "ITEM_PIPELINES": {
-#             'BusCrawl.pipelines.bus100.MongoBus100Pipeline': 300,
             'BusCrawl.pipeline.MongoPipeline': 300,
         },
 
         "DOWNLOADER_MIDDLEWARES": {
             'scrapy.contrib.downloadermiddleware.useragent.UserAgentMiddleware':None,
-            'BusCrawl.middlewares.common.BrowserRandomUserAgentMiddleware': 400,
+            'BusCrawl.middleware.BrowserRandomUserAgentMiddleware': 400,
 #             'BusCrawl.middlewares.common.ProxyMiddleware': 410,
 #             'BusCrawl.middlewares.scqcp.HeaderMiddleware': 410,
         }
@@ -67,7 +66,7 @@ class bus100Spider(SpiderBase):
             crawl_city = {"city_id": cityId, 'city_name': city_name}
             for j in province['countyList']:
                 target_url = 'http://www.84100.com/getEndPortList/ajax?cityId=%s'%int(str(j['countyId']))
-                yield scrapy.Request(target_url, callback=self.parse_target_city, 
+                yield scrapy.Request(target_url, callback=self.parse_target_city,
                                      meta={"crawl_province": crawl_province,'crawl_city':crawl_city,"start": j})
 
     def parse_target_city(self, response):
@@ -99,7 +98,7 @@ class bus100Spider(SpiderBase):
                         'stationIds': '',
                         'ttsId': ''
                         }
-                    yield scrapy.FormRequest(queryline_url, formdata=payload, callback=self.parse_line, 
+                    yield scrapy.FormRequest(queryline_url, formdata=payload, callback=self.parse_line,
                                              meta={"payload": payload, 'crawl_province':crawl_province,'crawl_city':crawl_city,'start':start, "end":port})
 
     def parse_line(self, response):
@@ -166,7 +165,7 @@ class bus100Spider(SpiderBase):
                 item['drv_datetime'] = datetime.datetime.strptime(sdate+' '+time[0], "%Y-%m-%d %H:%M")
                 item['s_sta_name'] = station[0]
                 item['d_sta_name'] = station[1]
-                item['bus_num'] = str(banci)
+                item['bus_num'] = banci.decode("utf-8").strip().rstrip(u"次")
                 item["full_price"] = float(str(price[0]).split('￥')[-1])
                 item["half_price"] = float(str(price[0]).split('￥')[-1])/2
                 item['distance'] = distance
@@ -180,9 +179,9 @@ class bus100Spider(SpiderBase):
                 yield item
 
             if nextPage > pageNo:
-                url = response.url.split('?')[0]+'?pageNo=%s' % nextPage
-                yield scrapy.FormRequest(url, formdata=payload, callback=self.parse_line, 
+                url = 'http://84100.com/getBusShift/ajax'+'?pageNo=%s' % nextPage
+                yield scrapy.FormRequest(url, formdata=payload, callback=self.parse_line,
                                          meta={"payload": payload, 'crawl_province':crawl_province,'crawl_city':crawl_city,'start':start, "end":end})
             elif nextPage and nextPage == pageNo:
                 self.mark_done(start["countyName"], end['portName'], sdate)
-                
+

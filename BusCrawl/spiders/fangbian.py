@@ -132,6 +132,8 @@ class FangBianSpider(SpiderBase):
             return
         self.mark_done(start["city_name"], end["city_name"], sdate)
         for d in res["data"]:
+            if d["stationCode"] == "7FC222B8-A1EA-42E3-B242-D1CFA3AF28C1":  # 过滤郑州非汽车站内票
+                continue
             drv_datetime = dte.strptime("%s %s" % (d["dptDate"], d["dptTime"]), "%Y-%m-%d %H:%M:%S")
             attrs = dict(
                 s_province = start["province"],

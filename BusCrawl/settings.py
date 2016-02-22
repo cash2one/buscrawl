@@ -108,7 +108,7 @@ MEMUSAGE_WARNING_MB = 1024
 
 # mongodb settings
 MONGODB_CONFIG = {
-    "url": "mongodb://localhost:27017/",
+    "url": "mongodb://10.51.9.34:27017/",
     "db": "web12308",
 }
 

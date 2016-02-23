@@ -86,14 +86,14 @@ class CBDSpider(SpiderBase):
         except Exception, e:
             print response.body
             raise e
-        res = res["response"]
-        if int(res["header"]["rspCode"]) != 0:
-            #self.logger.error("parse_target_city: Unexpected return, %s" % res["header"])
-            return
         start = response.meta["start"]
         end= response.meta["end"]
         sdate = response.meta["sdate"]
         self.mark_done(start["name"], end["name"], sdate)
+        res = res["response"]
+        if int(res["header"]["rspCode"]) != 0:
+            #self.logger.error("parse_target_city: Unexpected return, %s" % res["header"])
+            return
 
         for d in res["body"]["scheduleList"]:
             if int(d["canBooking"]) != 1:

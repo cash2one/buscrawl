@@ -23,7 +23,7 @@ class CTripSpider(SpiderBase):
             'BusCrawl.middleware.ProxyMiddleware': 410,
             'BusCrawl.middleware.CtripHeaderMiddleware': 410,
         },
-        #"DOWNLOAD_DELAY": 0.2,
+        "DOWNLOAD_DELAY": 0.2,
         "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
     base_url = "http://m.ctrip.com/restapi/busphp/app/index.php"
@@ -49,7 +49,7 @@ class CTripSpider(SpiderBase):
         )
         for pro in res['hotFromCity']['province']:
             province = pro["province_name"]
-            if not self.is_need_crawl(province=province):
+            if not province or not self.is_need_crawl(province=province):
                 continue
             self.logger.info("start province: %s" % province)
 
@@ -105,13 +105,13 @@ class CTripSpider(SpiderBase):
         except Exception, e:
             print response.body
             raise e
-        if int(res["code"]) != 1:
-            #self.logger.error("parse_line: Unexpected return, %s" % str(res))
-            return
         start = response.meta["start"]
         end = response.meta["end"]
         drv_date = response.meta["drv_date"]
         self.mark_done(start["name"], end["name"], drv_date)
+        if int(res["code"]) != 1:
+            #self.logger.error("parse_line: Unexpected return, %s" % str(res))
+            return
         for d in res["return"]:
             if not d["bookable"]:
                 continue

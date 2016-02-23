@@ -102,13 +102,13 @@ class ScqcpSpider(SpiderBase):
     def parse_line(self, response):
         "解析班车"
         res = json.loads(response.body)
-        if int(res["status"]) != 1:
-            #self.logger.error("parse_line: Unexpected return, %s" % str(res))
-            return
         start = response.meta["start"]
         end = response.meta["end"]
         sdate = response.meta["sdate"]
         self.mark_done(start["city_name"], end["city_name"], sdate)
+        if int(res["status"]) != 1:
+            #self.logger.error("parse_line: Unexpected return, %s" % str(res))
+            return
         for d in res["ticket_lines_query"]:
             drv_datetime = dte.strptime(d["drv_date_time"], "%Y-%m-%d %H:%M")
             drv_date, drv_time = d["drv_date_time"].split(" ")

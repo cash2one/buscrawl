@@ -124,6 +124,7 @@ class BabaSpider(SpiderBase):
         start = response.meta["start"]
         end = response.meta["end"]
         sdate = response.meta["date"]
+        self.mark_done(start["city_name"], end["city_name"], sdate)
         try:
             res = json.loads(response.body)
         except Exception, e:
@@ -131,7 +132,6 @@ class BabaSpider(SpiderBase):
         if res["returnNo"] != "0000":
             #self.logger.error("parse_line: Unexpected return, %s, %s->%s, %s", sdate, start["city_name"], end["city_name"], res["header"])
             return
-        self.mark_done(start["city_name"], end["city_name"], sdate)
         for d in res["content"]["busList"]:
             attrs = dict(
                 s_province = start["province"],

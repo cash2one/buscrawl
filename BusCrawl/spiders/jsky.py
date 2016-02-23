@@ -127,10 +127,10 @@ class JskySpider(SpiderBase):
             res = json.loads(response.body)
         except Exception, e:
             raise e
+        self.mark_done(start["name"], end["name"], sdate)
         if int(res["header"]["rspCode"]) != 0:
             #self.logger.error("parse_line: Unexpected return, %s, %s->%s, %s", sdate, start["name"], end["name"], res["header"])
             return
-        self.mark_done(start["name"], end["name"], sdate)
         for d in res["body"]["scheduleList"]:
             if int(d["canBooking"]) != 1:
                 continue

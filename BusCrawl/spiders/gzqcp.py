@@ -53,11 +53,11 @@ class GzqcpSpider(SpiderBase):
                 end_list.append(j)
         line_url = 'http://www.gzsqcp.com/com/yxd/pris/openapi/queryAllTicket.action'
 
-        start_list = [{u'code': u'520100', u'name': u'贵阳市'},{u'code': u'522200', u'name': u'铜仁市'},
-                      {u'code': u'522701', u'name': u'都匀市'},{u'code': u'522601', u'name': u'凯里市'},
-                      {u'code': u'522228', u'name': u'沿河县'},{u'code': u'522229', u'name': u'松桃县'},
-                      {u'code': u'522400', u'name': u'毕节市'}]
-#         start_list = [{u'code': u'520100', u'name': u'贵阳市'}]   
+#         start_list = [{u'code': u'520100', u'name': u'贵阳市'},{u'code': u'522200', u'name': u'铜仁市'},
+#                       {u'code': u'522701', u'name': u'都匀市'},{u'code': u'522601', u'name': u'凯里市'},
+#                       {u'code': u'522228', u'name': u'沿河县'},{u'code': u'522229', u'name': u'松桃县'},
+#                       {u'code': u'522400', u'name': u'毕节市'}]
+        start_list = [{u'code': u'520100', u'name': u'贵阳市'}]   
 #         start_list = [{u'code': u'522200', u'name': u'铜仁市'}]
 #         start_list = [{u'code': u'522701', u'name': u'都匀市'}] 
 #         start_list = [{u'code': u'522601', u'name': u'凯里市'}] 
@@ -102,9 +102,9 @@ class GzqcpSpider(SpiderBase):
             #self.logger.error("parse_line: Unexpected return, %s, %s->%s, %s", sdate, start["city_name"], end["city_name"], res["header"])
             return
         for d in res["values"]["resultList"]:
-#             if d['stopFlag'] == '0':
-#                 if not self.is_internet(start['code'], d["busCompanyCode"]):
-#                     continue
+            if d['stopFlag'] == '0':
+                if not self.is_internet(start['code'], d["busCompanyCode"]):
+                    continue
                 attrs = dict(
                     s_province = '贵州',
                     s_city_name = start["name"],
@@ -133,7 +133,6 @@ class GzqcpSpider(SpiderBase):
                     crawl_source = "gzqcp",
                     shift_id="",
                 )
-                print attrs
                 yield LineItem(**attrs)
 
     def is_internet(self, s_code, busCompanyCode):

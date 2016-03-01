@@ -8,7 +8,8 @@ class ProxyMiddleware(object):
 
     def process_request(self, request, spider):
         pass
-        # request.meta['proxy'] = "http://%s" % ip
+#         ip = "192.168.1.165:8888"
+#         request.meta['proxy'] = "http://%s" % ip
 
 
 class CbdHeaderMiddleware(object):
@@ -30,10 +31,12 @@ class TongChengHeaderMiddleware(object):
     def process_request(self, request, spider):
         request.headers.setdefault("Content-Type", "application/x-www-form-urlencoded")
 
+
 class FangBianHeaderMiddleware(object):
 
     def process_request(self, request, spider):
         request.headers.setdefault("Content-Type", "application/x-www-form-urlencoded")
+
 
 class JskyHeaderMiddleware(object):
 
@@ -55,6 +58,12 @@ class ScqcpHeaderMiddleware(object):
     def process_request(self, request, spider):
         request.headers.setdefault("Content-Type", "application/json; charset=UTF-8")
         request.headers.setdefault("Authorization", "04b8cef68ef4f2d785150eb671999834")
+
+
+class GzqcpHeaderMiddleware(object):
+
+    def process_request(self, request, spider):
+        request.headers.setdefault("Content-Type", "application/x-www-form-urlencoded")
 
 
 class MobileRandomUserAgentMiddleware(UserAgentMiddleware):

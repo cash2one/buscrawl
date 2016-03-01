@@ -53,11 +53,11 @@ class GzqcpSpider(SpiderBase):
                 end_list.append(j)
         line_url = 'http://www.gzsqcp.com/com/yxd/pris/openapi/queryAllTicket.action'
 
-#         start_list = [{u'code': u'520100', u'name': u'贵阳市'},{u'code': u'522200', u'name': u'铜仁市'},
-#                       {u'code': u'522701', u'name': u'都匀市'},{u'code': u'522601', u'name': u'凯里市'},
-#                       {u'code': u'522228', u'name': u'沿河县'},{u'code': u'522229', u'name': u'松桃县'},
-#                       {u'code': u'522400', u'name': u'毕节市'}]
-        start_list = [{u'code': u'520100', u'name': u'贵阳市'}]   
+        start_list = [{u'code': u'520100', u'name': u'贵阳市'},{u'code': u'522200', u'name': u'铜仁市'},
+                      {u'code': u'522701', u'name': u'都匀市'},{u'code': u'522601', u'name': u'凯里市'},
+                      {u'code': u'522228', u'name': u'沿河县'},{u'code': u'522229', u'name': u'松桃县'},
+                      {u'code': u'522400', u'name': u'毕节市'}]
+#         start_list = [{u'code': u'520100', u'name': u'贵阳市'}]   
 #         start_list = [{u'code': u'522200', u'name': u'铜仁市'}]
 #         start_list = [{u'code': u'522701', u'name': u'都匀市'}] 
 #         start_list = [{u'code': u'522601', u'name': u'凯里市'}] 

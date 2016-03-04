@@ -81,15 +81,15 @@ class CBDSpider(SpiderBase):
 
     def parse_line(self, response):
         "解析班车"
+        start = response.meta["start"]
+        end= response.meta["end"]
+        sdate = response.meta["sdate"]
+        self.mark_done(start["name"], end["name"], sdate)
         try:
             res = json.loads(response.body)
         except Exception, e:
             print response.body
             raise e
-        start = response.meta["start"]
-        end= response.meta["end"]
-        sdate = response.meta["sdate"]
-        self.mark_done(start["name"], end["name"], sdate)
         res = res["response"]
         if int(res["header"]["rspCode"]) != 0:
             #self.logger.error("parse_target_city: Unexpected return, %s" % res["header"])

@@ -7,7 +7,6 @@ import  urllib
 
 from datetime import datetime as dte
 from BusCrawl.item import LineItem
-from BusCrawl.utils.tool import get_pinyin_first_litter
 from base import SpiderBase
 
 START_LIST = [
@@ -127,7 +126,7 @@ class ChangtuSpider(SpiderBase):
                 half_price = float(d["halfPrice"]),
                 fee = 0,
                 crawl_datetime = dte.now(),
-                extra_info = {},
+                extra_info = {"id": d["id"], "getModel": d["getModel"], "ticketTypeStr": d["ticketTypeStr"], "stationMapId": d["stationMapId"]},
                 left_tickets = int(d["seatAmount"]),
                 crawl_source = "changtu",
                 shift_id="",

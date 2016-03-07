@@ -8,8 +8,8 @@ class ProxyMiddleware(object):
 
     def process_request(self, request, spider):
         pass
-#         ip = "192.168.1.165:8888"
-#         request.meta['proxy'] = "http://%s" % ip
+        ip = "192.168.1.127:8888"
+        request.meta['proxy'] = "http://%s" % ip
 
 
 class CbdHeaderMiddleware(object):
@@ -61,6 +61,12 @@ class ScqcpHeaderMiddleware(object):
 
 
 class GzqcpHeaderMiddleware(object):
+
+    def process_request(self, request, spider):
+        request.headers.setdefault("Content-Type", "application/x-www-form-urlencoded")
+
+
+class KuaibaHeaderMiddleware(object):
 
     def process_request(self, request, spider):
         request.headers.setdefault("Content-Type", "application/x-www-form-urlencoded")

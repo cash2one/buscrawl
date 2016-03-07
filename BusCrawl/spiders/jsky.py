@@ -123,11 +123,11 @@ class JskySpider(SpiderBase):
         start = response.meta["start"]
         end = response.meta["end"]
         sdate =  response.meta["date"]
+        self.mark_done(start["name"], end["name"], sdate)
         try:
             res = json.loads(response.body)
         except Exception, e:
             raise e
-        self.mark_done(start["name"], end["name"], sdate)
         if int(res["header"]["rspCode"]) != 0:
             #self.logger.error("parse_line: Unexpected return, %s, %s->%s, %s", sdate, start["name"], end["name"], res["header"])
             return

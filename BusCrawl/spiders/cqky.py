@@ -10,6 +10,7 @@ import requests
 from datetime import datetime as dte
 from BusCrawl.item import LineItem
 from base import SpiderBase
+from BusCrawl.utils.tool import get_redis, get_pinyin_first_litter
 
 
 class CqkySpider(SpiderBase):
@@ -23,6 +24,7 @@ class CqkySpider(SpiderBase):
             'scrapy.contrib.downloadermiddleware.useragent.UserAgentMiddleware': None,
             'BusCrawl.middleware.BrowserRandomUserAgentMiddleware': 400,
             'BusCrawl.middleware.ProxyMiddleware': 410,
+            'BusCrawl.middleware.CqkyHeaderMiddleware': 410,
         },
         #"DOWNLOAD_DELAY": 0.2,
         "RANDOMIZE_DOWNLOAD_DELAY": True,
@@ -34,111 +36,150 @@ class CqkySpider(SpiderBase):
                              callback=self.parse_start_city,)
 
     def get_dest_list(self, start_info):
-        dest_url = "http://www.96096kp.com/UserData/MQCenterSale.aspx"
-        dest_list = set([])
-        ua = "Mozilla/5.0 (Linux; U; Android 2.2; fr-lu; HTC Legend Build/FRF91) AppleWebKit/533.1 (KHTML, like Gecko)  Version/4.0 Mobile Safari/533.1"
-        headers = {
-            "User-Agent": ua,
-            "Content-Type": "application/x-www-form-urlencoded",
-        }
-        r = requests.get("http://www.96096kp.com/", headers={"User-Agent": headers["User-Agent"]})
-        print 111111, r.cookies
-        for c in [chr(i) for i in range(97, 123)]:
-            params= {
-                "cmd": "QueryNode",
-                "StartStation": start_info["s_city_name"],
-                "q": c,
+        rds = get_redis()
+        rds_key = "crawl:dest:cqky:%s" % start_info["s_city_id"]
+        dest_str = rds.get(rds_key)
+        if not dest_str:
+            dest_url = "http://www.96096kp.com/UserData/MQCenterSale.aspx"
+            dest_list = set([])
+            headers = {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "Origin": "http://www.96096kp.com/Default.aspx",
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.116 Safari/537.36",
+                "Referer": "http://www.96096kp.com/Default.aspx"
             }
-            r = requests.post(dest_url,
-                              data=urllib.urlencode(params),
-                              headers=headers,
-                              cookies=r.cookies)
-            print r.content
-            res = r.json()
-            for d in res:
-                dest_list.add((d["NDCode"], d["NDName"]))
-        return dest_list
+            for c in [chr(i) for i in range(97, 123)]:
+                params= {
+                    "cmd": "QueryNode",
+                    "StartStation": start_info["s_city_name"],
+                    "q": c,
+                }
+                r = requests.post(dest_url,
+                                  data=urllib.urlencode(params),
+                                  headers=headers,)
+                res = r.json()
+                for d in res:
+                    dest_list.add((d["NDCode"], d["NDName"]))
+            dest_str = json.dumps(list(dest_list))
+            rds.set(rds_key, dest_str)
+            rds.expire(rds_key, 5*24*60*60)
+        return json.loads(dest_str)
 
     def parse_start_city(self, response):
         res = json.loads(re.findall(r"var _stationList=(\S+)</script>", response.body)[0].replace("Pros", '"Pros"').replace("Areas", '"Areas"').replace("Stations", '"Stations"'))
+        line_url = "http://www.96096kp.com/UserData/MQCenterSale.aspx"
         for d in res["Areas"][0]["AreaData"]:
             start = {
                 "province": "重庆",
                 "s_city_id": d["ID"],
                 "s_city_name": d["CityDist"],
+                "s_city_code": get_pinyin_first_litter(d["CityDist"]),
             }
-            print self.get_dest_list(start)
-            break
-
-    def parse_target_city(self, response):
-        c = response.body
-        c = c[c.index("["): c.rindex("]") + 1]
-        for s in ["endId", "endName", "endPinyin", "endPinyinUrl", "stationMapIds", "endFirstLetterAll", "endCityNameDesc", "repeatFlag", "upEndName", "showName", "endTypeId", "provinceId", "provinceName"]:
-            c=c.replace("%s:" % s, "\"%s\":" % s)
-        c = c.replace("'", "\"")
-        res = json.loads(c)
-
-        line_url = "http://www.changtu.com/chepiao/querySchList.htm"
-        start = response.meta["start"]
-        for city in res:
-            end = {
-                "id": city["endId"],
-                "name": city["showName"],
-                "pinyin": city["endPinyinUrl"],
-                "short_pinyin": city["endFirstLetterAll"],
-                "end_type": city["endTypeId"],
-            }
-            self.logger.info("start %s ==> %s" % (start["name"], end["name"]))
-
-            today = datetime.date.today()
-            for i in range(1, 10):
-                sdate = str(today+datetime.timedelta(days=i))
-                if self.has_done(start["name"], end["name"], sdate):
-                    #self.logger.info("ignore %s ==> %s %s" % (start["name"], d["name"], sdate))
-                    continue
-                params = dict(
-                    endTypeId=end["end_type"],
-                    endId=end["id"],
-                    planDate=sdate,
-                    startCityUrl=start["pinyin"],
-                    endCityUrl=end["pinyin"],
-                    querySch=0,
-                    startCityId=start["id"],
-                    endCityId=end["id"],
-                )
-                yield scrapy.Request("%s?%s" % (line_url, urllib.urlencode(params)),
-                                     callback=self.parse_line,
-                                     meta={"start": start, "end": end, "sdate": sdate})
+            for code, name in self.get_dest_list(start):
+                end = {"d_city_name": name, "d_city_code": code}
+                today = datetime.date.today()
+                self.logger.info("start %s ==> %s" % (start["s_city_name"], end["d_city_name"]))
+                for i in range(1, 7):
+                    sdate = str(today + datetime.timedelta(days=i))
+                    #if self.has_done(start["s_city_name"], end["d_city_name"], sdate):
+                    #    self.logger.info("ignore %s ==> %s %s" % (start["s_city_name"], end["d_city_name"], sdate))
+                    #    continue
+                    params = {
+                        "StartStation": start["s_city_name"],
+                        "WaitStationCode": "",
+                        "OpStation": -1,
+                        "OpAddress": -1,
+                        "SchDate": sdate,
+                        "DstNode": name,
+                        "SeatType": "",
+                        "SchTime": "",
+                        "OperMode": "",
+                        "SchCode": "",
+                        "txtImgCode": "",
+                        "cmd": "MQCenterGetClass",
+                        "isCheck": "false",
+                    }
+                    yield scrapy.Request(line_url,
+                                         method="POST",
+                                         body=urllib.urlencode(params),
+                                         callback=self.parse_line,
+                                         meta={"start": start, "end": end, "sdate": sdate})
 
     def parse_line(self, response):
         "解析班车"
         start = response.meta["start"]
         end= response.meta["end"]
         sdate = response.meta["sdate"]
-        self.mark_done(start["name"], end["name"], sdate)
+        self.mark_done(start["s_city_name"], end["d_city_name"], sdate)
+        content = response.body
+        for k in set(re.findall("(\w+):", content)):
+            print k
+            content = content.replace(k, '"%s"' % k)
+
         try:
-            res = json.loads(response.body)
+            res = json.loads(content)
         except Exception, e:
             print response.body
             raise e
-        if res["bookFlag"] != "Y":
+        print 111111111111111111111, res
+        return
+        if res["success"] != "true":
             self.logger.error("parse_target_city: Unexpected return, %s" % res)
             return
 
-        for d in res["schList"]:
-            if int(d["bookFlag"]) != 2:
-                continue
+        """
+            SchDate: "2016-03-10",
+            SchGlobalCode: "",
+            SchLocalCode: "1003",
+            SchLineName: "成都",
+            SchStationCode: "4001",
+            SchStationName: "陈家坪汽车站",
+            SchCompCode: "",
+            SchCompName: "",
+            SchBusBrand: "",
+            SchBusBrandColor: "",
+            SchTime: "15:00",
+            SchWaitingRoom: "1",
+            SchCheckGate: "1检票口号",
+            SchBerth: "",
+            SchType: "配载",
+            SchMode: "普通",
+            SchDstCity: "",
+            SchDstNode: "cdb",
+            SchDstNodeName: "成都",
+            SchOperType: "",
+            SchFirstTime: "",
+            SchLastTime: "",
+            SchInterval: "0",
+            SchNodeNameList: "成都",
+            SchDist: "313.00",
+            SchSeatCount: "55",
+            SchPrice: "108.00",
+            SchDiscPrice: "54.00",
+            SchStdPrice: "108.00",
+            SchFuel: "4.00",
+            SchBusType: "双层",
+            SchBusLevel: "",
+            SchTicketCount: "53",
+            SchChild: "5",
+            SchStat: "1",
+            SchPrintSeat: "1",
+            Notes: "",
+            SchNodeName: "成都",
+            SchNodeCode: "cdb"
+        """
 
+        for d in res["data"]:
             attrs = dict(
                 s_province = start["province"],
-                s_city_id = "%s|%s" % (start["id"], start["pinyin"]),
-                s_city_name = start["name"],
-                s_sta_name = d["localCarrayStaName"],
-                s_city_code=start["short_pinyin"],
-                s_sta_id=d["localCarrayStaId"],
-                d_city_name = end["name"],
-                d_city_id="%s|%s|%s" % (end["end_type"], end["pinyin"], end["id"]),
-                d_city_code=end["short_pinyin"],
+                s_city_id = start["s_city_id"],
+                s_city_name = start["s_city_name"],
+                s_sta_name = d["SchStationName"],
+                s_city_code=start["s_city_code"],
+                s_sta_id=d["SchStationCode"],
+                d_city_name = end["d_city_name"],
+                d_city_id= "",
+                d_city_code=end["d_city_code"],
                 d_sta_id=d["stopId"],
                 d_sta_name=d["stopName"],
                 drv_date=d["drvDate"],

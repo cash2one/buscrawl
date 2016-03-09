@@ -112,62 +112,16 @@ class CqkySpider(SpiderBase):
         sdate = response.meta["sdate"]
         self.mark_done(start["s_city_name"], end["d_city_name"], sdate)
         content = response.body
-        for k in set(re.findall("(\w+):", content)):
-            print k
-            content = content.replace(k, '"%s"' % k)
+        for k in set(re.findall("([A-Za-z]+):", content)):
+            content = re.sub(r"\b%s\b" % k, '"%s"' % k, content)
 
         try:
             res = json.loads(content)
         except Exception, e:
-            print response.body
             raise e
-        print 111111111111111111111, res
-        return
         if res["success"] != "true":
             self.logger.error("parse_target_city: Unexpected return, %s" % res)
             return
-
-        """
-            SchDate: "2016-03-10",
-            SchGlobalCode: "",
-            SchLocalCode: "1003",
-            SchLineName: "成都",
-            SchStationCode: "4001",
-            SchStationName: "陈家坪汽车站",
-            SchCompCode: "",
-            SchCompName: "",
-            SchBusBrand: "",
-            SchBusBrandColor: "",
-            SchTime: "15:00",
-            SchWaitingRoom: "1",
-            SchCheckGate: "1检票口号",
-            SchBerth: "",
-            SchType: "配载",
-            SchMode: "普通",
-            SchDstCity: "",
-            SchDstNode: "cdb",
-            SchDstNodeName: "成都",
-            SchOperType: "",
-            SchFirstTime: "",
-            SchLastTime: "",
-            SchInterval: "0",
-            SchNodeNameList: "成都",
-            SchDist: "313.00",
-            SchSeatCount: "55",
-            SchPrice: "108.00",
-            SchDiscPrice: "54.00",
-            SchStdPrice: "108.00",
-            SchFuel: "4.00",
-            SchBusType: "双层",
-            SchBusLevel: "",
-            SchTicketCount: "53",
-            SchChild: "5",
-            SchStat: "1",
-            SchPrintSeat: "1",
-            Notes: "",
-            SchNodeName: "成都",
-            SchNodeCode: "cdb"
-        """
 
         for d in res["data"]:
             attrs = dict(
@@ -180,22 +134,22 @@ class CqkySpider(SpiderBase):
                 d_city_name = end["d_city_name"],
                 d_city_id= "",
                 d_city_code=end["d_city_code"],
-                d_sta_id=d["stopId"],
-                d_sta_name=d["stopName"],
-                drv_date=d["drvDate"],
-                drv_time=d["drvTime"],
-                drv_datetime = dte.strptime("%s %s" % (d["drvDate"], d["drvTime"]), "%Y-%m-%d %H:%M"),
-                distance = unicode(d["mile"]),
-                vehicle_type = d["busTypeName"],
+                d_sta_id="",
+                d_sta_name=d["SchDstNodeName"],
+                drv_date=d["SchDate"],
+                drv_time=d["SchTime"],
+                drv_datetime = dte.strptime("%s %s" % (d["SchDate"], d["SchTime"]), "%Y-%m-%d %H:%M"),
+                distance = unicode(d["SchDist"]),
+                vehicle_type = d["SchBusType"],
                 seat_type = "",
-                bus_num = d["scheduleId"],
-                full_price = float(d["fullPrice"]),
-                half_price = float(d["halfPrice"]),
+                bus_num = d["SchLocalCode"],
+                full_price = float(d["SchPrice"]),
+                half_price = float(d["SchDiscPrice"]),
                 fee = 0,
                 crawl_datetime = dte.now(),
-                extra_info = {"id": d["id"], "getModel": d["getModel"], "ticketTypeStr": d["ticketTypeStr"], "stationMapId": d["stationMapId"]},
-                left_tickets = int(d["seatAmount"]),
-                crawl_source = "changtu",
+                extra_info = {"raw_info": d},
+                left_tickets = int(d["SchTicketCount"]),
+                crawl_source = "cqky",
                 shift_id="",
             )
             yield LineItem(**attrs)

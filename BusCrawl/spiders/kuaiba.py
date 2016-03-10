@@ -33,6 +33,13 @@ class KuaibaSpider(SpiderBase):
 #         "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
     base_url = 'http://m.daba.cn'
+    
+    def __init__(self, province=None, *args, **kwargs):
+        if province:
+            self.province = province
+        else:
+            self.province = None
+        super(KuaibaSpider, self).__init__(*args, **kwargs)
 
     def start_requests(self):
         start_url = "http://m.daba.cn/jsp/line/newlines.jsp"
@@ -63,7 +70,7 @@ class KuaibaSpider(SpiderBase):
         end_list = []
         cities = res['data']['cities']
         for city in cities:
-            if city['county'] == u'北京' and city['county']== city['name'] and  (city['cityType'] == 1 or city['cityType'] == 3):
+            if self.province in city['provinceName'] and city['county']== city['name'] and  (city['cityType'] == 1 or city['cityType'] == 3):
                 start_list.append(city)
         for city in cities:
             if (city['cityType'] == 2 or city['cityType'] == 3):
@@ -148,7 +155,6 @@ class KuaibaSpider(SpiderBase):
         except Exception, e:
             raise e
         if end['name'] != params['arriveStation']:
-            print params["startCity"], params["arriveStation"], sdate
             self.mark_done(params["startCity"], params["arriveStation"], sdate)
         busTripInfoSet = res['data']['busTripInfoSet']
         cityOpenSale = res['data']['cityOpenSale']
@@ -157,7 +163,7 @@ class KuaibaSpider(SpiderBase):
                 if d['tickets'] == 0 or d['tempClose'] == 1:
                     continue
                 attrs = dict(
-                    s_province = start['provinceName'],
+                    s_province = self.province,
                     s_city_name = params['startCity'],
                     s_city_id = '',
                     s_city_code= get_pinyin_first_litter(params['startCity']),
@@ -174,7 +180,7 @@ class KuaibaSpider(SpiderBase):
                     distance = "0",
                     vehicle_type = "",
                     seat_type = "",
-                    bus_num = d["id"],
+                    bus_num = '',
                     full_price = float(d["price"]),
                     half_price = float(d["price"])/2,
                     fee = 0,
@@ -182,9 +188,8 @@ class KuaibaSpider(SpiderBase):
                     extra_info = {"startTime":params['startTime'],"endTime":params['endTime']},
                     left_tickets = int(d["tickets"]),
                     crawl_source = "kuaiba",
-                    shift_id="",
+                    shift_id=d["id"],
                 )
-                print attrs
                 yield LineItem(**attrs)
 
 

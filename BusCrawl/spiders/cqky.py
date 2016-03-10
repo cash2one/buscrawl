@@ -35,35 +35,40 @@ class CqkySpider(SpiderBase):
         yield scrapy.Request(start_url,
                              callback=self.parse_start_city,)
 
-    def get_dest_list(self, start_info):
+    # def get_dest_list(self, start_info):
+    #     rds = get_redis()
+    #     rds_key = "crawl:dest:cqky:%s" % start_info["s_city_id"]
+    #     dest_str = rds.get(rds_key)
+    #     if not dest_str:
+    #         dest_url = "http://www.96096kp.com/UserData/MQCenterSale.aspx"
+    #         dest_list = set([])
+    #         headers = {
+    #             "Content-Type": "application/x-www-form-urlencoded",
+    #             "Origin": "http://www.96096kp.com/Default.aspx",
+    #             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.116 Safari/537.36",
+    #             "Referer": "http://www.96096kp.com/Default.aspx"
+    #         }
+    #         for c in [chr(i) for i in range(97, 123)]:
+    #             params= {
+    #                 "cmd": "QueryNode",
+    #                 "StartStation": start_info["s_city_name"],
+    #                 "q": c,
+    #             }
+    #             r = requests.post(dest_url,
+    #                               data=urllib.urlencode(params),
+    #                               headers=headers,)
+    #             res = r.json()
+    #             for d in res:
+    #                 dest_list.add((d["NDCode"], d["NDName"]))
+    #         dest_str = json.dumps(list(dest_list))
+    #         rds.set(rds_key, dest_str)
+    #         rds.expire(rds_key, 5*24*60*60)
+    #     lst = json.loads(dest_str)
+    #     return lst
+
+    def get_dest_list(self, start):
         rds = get_redis()
-        rds_key = "crawl:dest:cqky:%s" % start_info["s_city_id"]
-        dest_str = rds.get(rds_key)
-        if not dest_str:
-            dest_url = "http://www.96096kp.com/UserData/MQCenterSale.aspx"
-            dest_list = set([])
-            headers = {
-                "Content-Type": "application/x-www-form-urlencoded",
-                "Origin": "http://www.96096kp.com/Default.aspx",
-                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.116 Safari/537.36",
-                "Referer": "http://www.96096kp.com/Default.aspx"
-            }
-            for c in [chr(i) for i in range(97, 123)]:
-                params= {
-                    "cmd": "QueryNode",
-                    "StartStation": start_info["s_city_name"],
-                    "q": c,
-                }
-                r = requests.post(dest_url,
-                                  data=urllib.urlencode(params),
-                                  headers=headers,)
-                res = r.json()
-                for d in res:
-                    dest_list.add((d["NDCode"], d["NDName"]))
-            dest_str = json.dumps(list(dest_list))
-            rds.set(rds_key, dest_str)
-            rds.expire(rds_key, 5*24*60*60)
-        return json.loads(dest_str)
+        return list(rds.smembers("cqky_all_dest"))
 
     def parse_start_city(self, response):
         res = json.loads(re.findall(r"var _stationList=(\S+)</script>", response.body)[0].replace("Pros", '"Pros"').replace("Areas", '"Areas"').replace("Stations", '"Stations"'))
@@ -75,15 +80,17 @@ class CqkySpider(SpiderBase):
                 "s_city_name": d["CityDist"],
                 "s_city_code": get_pinyin_first_litter(d["CityDist"]),
             }
-            for code, name in self.get_dest_list(start):
-                end = {"d_city_name": name, "d_city_code": code}
+            if not self.is_need_crawl(city=start["s_city_name"]):
+                continue
+            for name in self.get_dest_list(start):
+                end = {"d_city_name": name, "d_city_code": get_pinyin_first_litter(unicode(name))}
                 today = datetime.date.today()
                 self.logger.info("start %s ==> %s" % (start["s_city_name"], end["d_city_name"]))
-                for i in range(1, 7):
+                for i in range(1, 5):
                     sdate = str(today + datetime.timedelta(days=i))
-                    #if self.has_done(start["s_city_name"], end["d_city_name"], sdate):
-                    #    self.logger.info("ignore %s ==> %s %s" % (start["s_city_name"], end["d_city_name"], sdate))
-                    #    continue
+                    if self.has_done(start["s_city_name"], end["d_city_name"], sdate):
+                        # self.logger.info("ignore %s ==> %s %s" % (start["s_city_name"], end["d_city_name"], sdate))
+                        continue
                     params = {
                         "StartStation": start["s_city_name"],
                         "WaitStationCode": "",

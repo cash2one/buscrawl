@@ -79,7 +79,7 @@ class KuaibaSpider(SpiderBase):
 #         print len(end_list)
 
 #         start_list = [{u'letter': u'bj', u'name': u'北京',u'provinceName':'北京'}]
-#         end_list =  [{u'letter': u'dx', u'name': u'定兴',u'provinceName':'河北'}]
+#         end_list =  [{u'letter': u'dy', u'name': u'定兴',u'provinceName':'河北'}]
 
         for start in start_list:
             for end in end_list:
@@ -175,7 +175,7 @@ class KuaibaSpider(SpiderBase):
                     d_sta_name = params['arriveStation'],
                     d_sta_id = '',
                     drv_date = sdate,
-                    drv_time = d["time"],
+                    drv_time = d["time"][0:-3],
                     drv_datetime = dte.strptime("%s %s" % (sdate, d["time"][0:-3]), "%Y-%m-%d %H:%M"),
                     distance = "0",
                     vehicle_type = "",

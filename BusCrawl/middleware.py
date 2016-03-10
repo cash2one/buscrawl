@@ -8,8 +8,8 @@ class ProxyMiddleware(object):
 
     def process_request(self, request, spider):
         pass
-        ip = "192.168.1.177:8888"
-        request.meta['proxy'] = "http://%s" % ip
+#         ip = "192.168.1.133:8888"
+#         request.meta['proxy'] = "http://%s" % ip
 
 
 class CbdHeaderMiddleware(object):

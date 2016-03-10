@@ -32,6 +32,14 @@ class TongChengHeaderMiddleware(object):
         request.headers.setdefault("Content-Type", "application/x-www-form-urlencoded")
 
 
+class CqkyHeaderMiddleware(object):
+
+    def process_request(self, request, spider):
+        request.headers.setdefault("Content-Type", "application/x-www-form-urlencoded")
+        request.headers.setdefault("Origin", "http://www.96096kp.com/Default.aspx")
+        request.headers.setdefault("Referer", "http://www.96096kp.com/Default.aspx")
+
+
 class FangBianHeaderMiddleware(object):
 
     def process_request(self, request, spider):

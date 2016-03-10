@@ -180,7 +180,7 @@ class KuaibaSpider(SpiderBase):
                     distance = "0",
                     vehicle_type = "",
                     seat_type = "",
-                    bus_num = d["id"],
+                    bus_num = '',
                     full_price = float(d["price"]),
                     half_price = float(d["price"])/2,
                     fee = 0,
@@ -188,7 +188,7 @@ class KuaibaSpider(SpiderBase):
                     extra_info = {"startTime":params['startTime'],"endTime":params['endTime']},
                     left_tickets = int(d["tickets"]),
                     crawl_source = "kuaiba",
-                    shift_id="",
+                    shift_id=d["id"],
                 )
                 yield LineItem(**attrs)
 

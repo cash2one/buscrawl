@@ -70,7 +70,7 @@ class KuaibaSpider(SpiderBase):
         end_list = []
         cities = res['data']['cities']
         for city in cities:
-            if self.province in city['provinceName'] and city['county']== city['name'] and  (city['cityType'] == 1 or city['cityType'] == 3):
+            if self.province in city['provinceName'] and city['county'] == city['name'] and (city['cityType'] == 1 or city['cityType'] == 3):
                 start_list.append(city)
         for city in cities:
             if (city['cityType'] == 2 or city['cityType'] == 3):
@@ -180,7 +180,7 @@ class KuaibaSpider(SpiderBase):
                     distance = "0",
                     vehicle_type = "",
                     seat_type = "",
-                    bus_num = '',
+                    bus_num = d["id"],
                     full_price = float(d["price"]),
                     half_price = float(d["price"])/2,
                     fee = 0,
@@ -188,7 +188,7 @@ class KuaibaSpider(SpiderBase):
                     extra_info = {"startTime":params['startTime'],"endTime":params['endTime']},
                     left_tickets = int(d["tickets"]),
                     crawl_source = "kuaiba",
-                    shift_id=d["id"],
+                    shift_id='',
                 )
                 yield LineItem(**attrs)
 

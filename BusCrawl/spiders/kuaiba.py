@@ -70,7 +70,7 @@ class KuaibaSpider(SpiderBase):
         end_list = []
         cities = res['data']['cities']
         for city in cities:
-            if self.province in city['provinceName'] and city['county']== city['name'] and  (city['cityType'] == 1 or city['cityType'] == 3):
+            if self.province in city['provinceName'] and city['county'] == city['name'] and (city['cityType'] == 1 or city['cityType'] == 3):
                 start_list.append(city)
         for city in cities:
             if (city['cityType'] == 2 or city['cityType'] == 3):
@@ -79,7 +79,7 @@ class KuaibaSpider(SpiderBase):
 #         print len(end_list)
 
 #         start_list = [{u'letter': u'bj', u'name': u'北京',u'provinceName':'北京'}]
-#         end_list =  [{u'letter': u'dx', u'name': u'定兴',u'provinceName':'河北'}]
+#         end_list =  [{u'letter': u'dy', u'name': u'定兴',u'provinceName':'河北'}]
 
         for start in start_list:
             for end in end_list:
@@ -175,12 +175,12 @@ class KuaibaSpider(SpiderBase):
                     d_sta_name = params['arriveStation'],
                     d_sta_id = '',
                     drv_date = sdate,
-                    drv_time = d["time"],
+                    drv_time = d["time"][0:-3],
                     drv_datetime = dte.strptime("%s %s" % (sdate, d["time"][0:-3]), "%Y-%m-%d %H:%M"),
                     distance = "0",
                     vehicle_type = "",
                     seat_type = "",
-                    bus_num = '',
+                    bus_num = d["id"],
                     full_price = float(d["price"]),
                     half_price = float(d["price"])/2,
                     fee = 0,
@@ -188,7 +188,7 @@ class KuaibaSpider(SpiderBase):
                     extra_info = {"startTime":params['startTime'],"endTime":params['endTime']},
                     left_tickets = int(d["tickets"]),
                     crawl_source = "kuaiba",
-                    shift_id=d["id"],
+                    shift_id='',
                 )
                 yield LineItem(**attrs)
 

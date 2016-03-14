@@ -5,12 +5,14 @@ import json
 import datetime
 import urllib
 import re
+import time
 import requests
 
 from datetime import datetime as dte
 from BusCrawl.item import LineItem
 from base import SpiderBase
 from BusCrawl.utils.tool import get_redis, get_pinyin_first_litter
+from BusCrawl.utils.tool import md5
 
 
 class CqkySpider(SpiderBase):
@@ -35,40 +37,35 @@ class CqkySpider(SpiderBase):
         yield scrapy.Request(start_url,
                              callback=self.parse_start_city,)
 
-    # def get_dest_list(self, start_info):
-    #     rds = get_redis()
-    #     rds_key = "crawl:dest:cqky:%s" % start_info["s_city_id"]
-    #     dest_str = rds.get(rds_key)
-    #     if not dest_str:
-    #         dest_url = "http://www.96096kp.com/UserData/MQCenterSale.aspx"
-    #         dest_list = set([])
-    #         headers = {
-    #             "Content-Type": "application/x-www-form-urlencoded",
-    #             "Origin": "http://www.96096kp.com/Default.aspx",
-    #             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.116 Safari/537.36",
-    #             "Referer": "http://www.96096kp.com/Default.aspx"
-    #         }
-    #         for c in [chr(i) for i in range(97, 123)]:
-    #             params= {
-    #                 "cmd": "QueryNode",
-    #                 "StartStation": start_info["s_city_name"],
-    #                 "q": c,
-    #             }
-    #             r = requests.post(dest_url,
-    #                               data=urllib.urlencode(params),
-    #                               headers=headers,)
-    #             res = r.json()
-    #             for d in res:
-    #                 dest_list.add((d["NDCode"], d["NDName"]))
-    #         dest_str = json.dumps(list(dest_list))
-    #         rds.set(rds_key, dest_str)
-    #         rds.expire(rds_key, 5*24*60*60)
-    #     lst = json.loads(dest_str)
-    #     return lst
-
-    def get_dest_list(self, start):
+    def get_dest_list(self, start_info):
         rds = get_redis()
-        return list(rds.smembers("cqky_all_dest"))
+        rds_key = "crawl:dest:cqky:%s" % start_info["s_city_name"]
+        dest_str = rds.get(rds_key)
+        if not dest_str:
+            ts = int(time.time())
+            code = "car12308com"
+            key = "car12308com201510"
+            service_id = "U0102"
+            sdata = start_info["s_city_name"]
+            if sdata == "重庆主城":
+                sdata="重庆"
+            tmpl = {
+                "merchantCode": code,
+                "version": "1.4.0",
+                "timestamp": ts,
+                "serviceID": service_id,
+                "data": sdata,
+                "sign": md5("%s%s%s%s%s" % (code, service_id, ts, sdata, md5(key))),
+            }
+            base_url = "http://qcapi.fangbian.com/fbapi.asmx/Query"
+            r = requests.post(base_url,
+                              data=urllib.urlencode(tmpl),
+                              headers={"User-Agent": "Chrome", "Content-Type": "application/x-www-form-urlencoded"})
+            lst = r.json()["data"]
+            dest_str = json.dumps(lst)
+            rds.set(rds_key, dest_str)
+        lst = json.loads(dest_str)
+        return lst
 
     def parse_start_city(self, response):
         res = json.loads(re.findall(r"var _stationList=(\S+)</script>", response.body)[0].replace("Pros", '"Pros"').replace("Areas", '"Areas"').replace("Stations", '"Stations"'))
@@ -82,11 +79,12 @@ class CqkySpider(SpiderBase):
             }
             if not self.is_need_crawl(city=start["s_city_name"]):
                 continue
-            for name in self.get_dest_list(start):
-                end = {"d_city_name": name, "d_city_code": get_pinyin_first_litter(unicode(name))}
+            for s in self.get_dest_list(start):
+                name, code = s.split("|")
+                end = {"d_city_name": name, "d_city_code": code}
                 today = datetime.date.today()
                 self.logger.info("start %s ==> %s" % (start["s_city_name"], end["d_city_name"]))
-                for i in range(1, 5):
+                for i in range(1, 6):
                     sdate = str(today + datetime.timedelta(days=i))
                     if self.has_done(start["s_city_name"], end["d_city_name"], sdate):
                         # self.logger.info("ignore %s ==> %s %s" % (start["s_city_name"], end["d_city_name"], sdate))
@@ -125,9 +123,10 @@ class CqkySpider(SpiderBase):
         try:
             res = json.loads(content)
         except Exception, e:
+            self.logger.error("parse_line: %s" % content)
             raise e
         if res["success"] != "true":
-            self.logger.error("parse_target_city: Unexpected return, %s" % res)
+            self.logger.error("parse_line: Unexpected return, %s" % res)
             return
 
         for d in res["data"]:

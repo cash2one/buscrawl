@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 import random
 from scrapy.contrib.downloadermiddleware.useragent import UserAgentMiddleware
+from BusCrawl.utils.tool import get_redis
 
 
 class ProxyMiddleware(object):
@@ -10,6 +11,16 @@ class ProxyMiddleware(object):
         pass
 #         ip = "192.168.1.127:8888"
 #         request.meta['proxy'] = "http://%s" % ip
+
+
+class CqkyProxyMiddleware(object):
+    "代理ip切换"
+
+    def process_request(self, request, spider):
+        rds = get_redis()
+        ipstr = rds.srandmember("proxy:cqky")
+        if ipstr:
+            request.meta['proxy'] = "http://%s" % ipstr
 
 
 class CbdHeaderMiddleware(object):

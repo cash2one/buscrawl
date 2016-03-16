@@ -25,7 +25,7 @@ class CqkySpider(SpiderBase):
         "DOWNLOADER_MIDDLEWARES": {
             'scrapy.contrib.downloadermiddleware.useragent.UserAgentMiddleware': None,
             'BusCrawl.middleware.BrowserRandomUserAgentMiddleware': 400,
-            'BusCrawl.middleware.ProxyMiddleware': 410,
+            'BusCrawl.middleware.CqkyProxyMiddleware': 410,
             'BusCrawl.middleware.CqkyHeaderMiddleware': 410,
         },
         #"DOWNLOAD_DELAY": 0.2,

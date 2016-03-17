@@ -97,6 +97,12 @@ class BjkyHeaderMiddleware(object):
         request.headers.setdefault("Content-Type", "application/x-www-form-urlencoded")
 
 
+class LnkyHeaderMiddleware(object):
+
+    def process_request(self, request, spider):
+        request.headers.setdefault("Content-Type", "application/x-www-form-urlencoded")
+
+
 class MobileRandomUserAgentMiddleware(UserAgentMiddleware):
     "移动端UserAgent"
 

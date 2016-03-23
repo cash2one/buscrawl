@@ -6,9 +6,9 @@ from scrapy import cmdline
 
 path = os.path.dirname(__file__)
 sys.path.append(os.path.join(path, ".."))
-# cmdline.execute("scrapy crawl kuaiba -a province=北京".split())
+cmdline.execute("scrapy crawl kuaiba -a province=北京".split())
 
-cmdline.execute("scrapy crawl lnky -a city=沈阳市".split())
+# cmdline.execute("scrapy crawl lnky -a city=沈阳市".split())
 # cmdline.execute("scrapy crawl bjky".split())
 
 # cmdline.execute("scrapy crawl bus100 -a province_id=450000".split())

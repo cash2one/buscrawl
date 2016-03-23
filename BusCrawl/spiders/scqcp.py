@@ -112,6 +112,8 @@ class ScqcpSpider(SpiderBase):
         for d in res["ticket_lines_query"]:
             drv_datetime = dte.strptime(d["drv_date_time"], "%Y-%m-%d %H:%M")
             drv_date, drv_time = d["drv_date_time"].split(" ")
+            if int(d["amount"]) == 0:
+                continue
             attrs = dict(
                 s_province = start["province"],
                 s_city_name = d["city"],

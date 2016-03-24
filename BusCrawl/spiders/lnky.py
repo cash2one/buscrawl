@@ -85,6 +85,8 @@ class LnkySpider(SpiderBase):
                     continue
                 if int(d['seatLast']) == 0:
                     continue
+                if float(d["price"]) < 5:
+                    continue
                 attrs = dict(
                     s_province = '辽宁',
                     s_city_name = start['countyName'],

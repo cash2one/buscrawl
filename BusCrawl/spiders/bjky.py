@@ -90,7 +90,7 @@ class BjkySpider(SpiderBase):
     def start_requests(self):
         cookies = self.query_cookies()
         cookies = {"Hm_lvt_0b26ef32b58e6ad386a355fa169e6f06": "1457499524,1457580391",
-                   "ASP.NET_SessionId": "qehiaws4zt1rk3atw4teitvi",
+                   "ASP.NET_SessionId": "tt4yy0wnatkdepwbxwkblpaj",
                    "Hm_lpvt_0b26ef32b58e6ad386a355fa169e6f06": "1457666912"}
         if cookies:
             start_url = "http://www.e2go.com.cn/TicketOrder/SearchSchedule"
@@ -206,7 +206,7 @@ class BjkySpider(SpiderBase):
                 distance = "0",
                 vehicle_type = "",
                 seat_type = "",
-                bus_num = '',
+                bus_num = scheduleIdSpan,
                 full_price = float(price),
                 half_price = float(price)/2,
                 fee = 0,

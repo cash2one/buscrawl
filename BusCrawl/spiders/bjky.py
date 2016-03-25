@@ -32,7 +32,7 @@ class BjkySpider(SpiderBase):
 #             'BusCrawl.middleware.BjkyHeaderMiddleware': 410,
         },
 #        "DOWNLOAD_DELAY": 0.1,
-#         "RANDOMIZE_DOWNLOAD_DELAY": True,
+        "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
 
     def query_cookies(self):
@@ -57,7 +57,7 @@ class BjkySpider(SpiderBase):
         s_sta_name = start['name']
         if s_sta_name == u'首都机场站':
             s_sta_name = start['name'].strip().rstrip("站")
-        result = db.line.distinct('d_sta_name', {'crawl_source': 'kuaiba', 's_sta_name':s_sta_name})
+        result = db.line.distinct('d_city_name', {'crawl_source': 'kuaiba', 's_sta_name':s_sta_name})
         if end['StopName'] not in result:
             return 0
         else:
@@ -166,7 +166,6 @@ class BjkySpider(SpiderBase):
             content = content.decode('utf-8')
         sel = etree.HTML(content)
         scheduleList = sel.xpath('//div[@id="scheduleList"]/table/tbody/tr')
-        print '333333333',len(scheduleList)
         for i in range(0, len(scheduleList),2):
             s = scheduleList[i]
             time = s.xpath('td[@class="departureTimeCell"]/span/text()')[0]

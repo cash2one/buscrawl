@@ -9,8 +9,6 @@ class ProxyMiddleware(object):
 
     def process_request(self, request, spider):
         pass
-#         ip = "192.168.1.133:8888"
-#         request.meta['proxy'] = "http://%s" % ip
 
 
 class CqkyProxyMiddleware(object):
@@ -27,6 +25,12 @@ class CbdHeaderMiddleware(object):
 
     def process_request(self, request, spider):
         request.headers.setdefault("Content-Type", "application/json; charset=UTF-8")
+
+
+class ZjgsmHeaderMiddleware(object):
+
+    def process_request(self, request, spider):
+        request.headers.setdefault("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
 
 
 class BabaHeaderMiddleware(object):
@@ -151,7 +155,6 @@ class MobileRandomUserAgentMiddleware(UserAgentMiddleware):
     def process_request(self, request, spider):
         ua = random.choice(self.user_agent_list)
         if ua:
-            spider.logger.debug('Current UserAgent: '+ua)
             request.headers.setdefault('User-Agent', ua)
 
 
@@ -186,5 +189,4 @@ class BrowserRandomUserAgentMiddleware(UserAgentMiddleware):
     def process_request(self, request, spider):
         ua = random.choice(self.user_agent_list)
         if ua:
-            spider.logger.debug('Current UserAgent: '+ua)
             request.headers.setdefault('User-Agent', ua)

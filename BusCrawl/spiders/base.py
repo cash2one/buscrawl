@@ -4,6 +4,7 @@ import scrapy
 import time
 
 from BusCrawl.utils.tool import get_redis
+from datetime import datetime as dte
 
 
 class SpiderBase(scrapy.Spider):
@@ -45,3 +46,9 @@ class SpiderBase(scrapy.Spider):
         if self.city_list and city and city not in self.city_list:
             return False
         return True
+
+    def start_day(self):
+        time = dte.now().strftime("%H:%M")
+        if time > "15:00":
+            return 1        # 从第二天开始爬
+        return 0            # 爬当天的

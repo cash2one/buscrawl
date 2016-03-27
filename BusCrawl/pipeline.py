@@ -21,10 +21,12 @@ class MongoPipeline(object):
         if err:
             spider.logger.error(err)
             return
+        if item["full_price"] < 5:
+            continue
 
         data = dict(item)
         now = dte.now()
-        if data["crawl_source"] in ["cqky"]:
+        if data["province"] in ["江苏", "重庆"]:        # 后续会统一用这种方式
             data["line_id"]= md5("%(s_city_name)s-%(d_city_name)s-%(drv_datetime)s-%(s_sta_name)s-%(d_sta_name)s-%(crawl_source)s" % data)
         else:
             data["line_id"]= md5("%(s_city_name)s-%(d_city_name)s-%(drv_datetime)s-%(bus_num)s-%(crawl_source)s" % data)

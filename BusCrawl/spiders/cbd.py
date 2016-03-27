@@ -61,7 +61,7 @@ class CBDSpider(SpiderBase):
                 self.logger.info("start %s ==> %s" % (start["name"], city["name"]))
 
                 today = datetime.date.today()
-                for i in range(1, 10):
+                for i in range(self.start_day(), 7):
                     sdate = str(today+datetime.timedelta(days=i))
                     if self.has_done(start["name"], d["name"], sdate):
                         self.logger.info("ignore %s ==> %s %s" % (start["name"], d["name"], sdate))

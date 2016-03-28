@@ -13,8 +13,8 @@ from BusCrawl.utils.tool import get_redis, get_pinyin_first_litter, md5
 from base import SpiderBase
 
 
-class ZjgsmSpider(SpiderBase):
-    name = "zjgsm"
+class WxszSpider(SpiderBase):
+    name = "wxsz"
     custom_settings = {
         "ITEM_PIPELINES": {
             'BusCrawl.pipeline.MongoPipeline': 300,
@@ -23,7 +23,7 @@ class ZjgsmSpider(SpiderBase):
         "DOWNLOADER_MIDDLEWARES": {
             'scrapy.contrib.downloadermiddleware.useragent.UserAgentMiddleware': None,
             'BusCrawl.middleware.BrowserRandomUserAgentMiddleware': 400,
-            'BusCrawl.middleware.ZjgsmHeaderMiddleware': 410,
+            # 'BusCrawl.middleware.ZjgsmHeaderMiddleware': 410,
             'BusCrawl.middleware.ProxyMiddleware': 410,
         },
         "DOWNLOAD_DELAY": 0.5,
@@ -60,14 +60,13 @@ class ZjgsmSpider(SpiderBase):
         return lst
 
     def start_requests(self):
-        # 这是个pc网页页面
-        start_url = self.base_url+"/busticket/busticket/service/Busticket.getAreaList.json"
+        start_url = "http://coach.wisesz.mobi/coach_v38/main/getstations"
         yield scrapy.FormRequest(start_url,
-                                callback=self.parse_start_city)
+                                 callback=self.parse_start_city)
 
     def parse_start_city(self, response):
         res = json.loads(response.body)
-        if res["rtnCode"] != "000000":
+        if res["errorCode"] != 0:
             self.logger.error("parse_start_city: Unexpected return, %s" % res["rtnMsg"])
             return
         name_trans = {
@@ -78,48 +77,39 @@ class ZjgsmSpider(SpiderBase):
             u"太仓地区": "太仓",
             u"吴江地区": "吴江",
         }
-        station_url =self.base_url+"/busticket/busticket/service/Busticket.getStationList.json"
-        for d in res["responseData"]:
-            city = {
-                "city_id": d["areacode"],
-                "city_name": name_trans[d["areaname"]],
+        line_url = "http://coach.wisesz.mobi/coach_v38/main/get_tickets"
+        for d in res["data"]["dataList"]:
+            start = {
+                "city_id": d["FIELDS1"],
+                "city_name": name_trans[d["FIELDS2"]],
             }
-            if not self.is_need_crawl(city=city["city_name"]):
+            if not self.is_need_crawl(city=start["city_name"]):
                 continue
-            yield scrapy.FormRequest(station_url,
-                                     formdata={"AREACODE": city["city_id"]},
-                                     callback=self.parse_start_station,
-                                     meta={"start": city})
-
-    def parse_start_station(self, response):
-        res = json.loads(response.body)
-        start = response.meta["start"]
-        if res["rtnCode"] != "000000":
-            self.logger.error("parse_start_station: Unexpected return, %s" % res["rtnMsg"])
-            return
-        line_url = self.base_url + "/busticket/busticket/service/Busticket.getBusTicketList.json"
-        for d in res["responseData"]:
-            start["sta_name"] = d["stationname"]
-            for s in self.get_dest_list(start["city_name"]):
-                name, code = s.split("|")
-                end = {"city_name": name, "city_code": code}
-                self.logger.info("start %s ==> %s" % (start["sta_name"], end["city_name"]))
-                today = datetime.date.today()
-                for i in range(self.start_day(), 6):
-                    sdate = str(today + datetime.timedelta(days=i))
-                    if self.has_done(start["sta_name"], end["city_name"], sdate):
-                        continue
-                    params = {
-                        "AREACODE": start["city_id"],
-                        "ONSTAION": start["sta_name"],
-                        "OFFSTATION": end["city_name"],
-                        "STARTDATE": sdate,
-                    }
-                    yield scrapy.Request(line_url,
-                                         method="POST",
-                                         body=urllib.urlencode(params),
-                                         callback=self.parse_line,
-                                         meta={"start": start, "end": end, "sdate": sdate})
+            for sta in d["stations"]:
+                start.update({
+                    "sta_name": sta["FIELDS3"],
+                    "sta_id": sta["FIELDS2"],
+                })
+                for s in self.get_dest_list(start["city_name"]):
+                    name, code = s.split("|")
+                    end = {"city_name": name, "city_code": code}
+                    self.logger.info("start %s ==> %s" % (start["sta_name"], end["city_name"]))
+                    today = datetime.date.today()
+                    for i in range(self.start_day(), 6):
+                        sdate = (today + datetime.timedelta(days=i)).strftime("%Y%m%d")
+                        if self.has_done(start["sta_name"], end["city_name"], sdate):
+                            continue
+                        params = {
+                            "departdate": sdate,
+                            "destination": end["city_name"],
+                            "fromcode": start["sta_id"],
+                            "from": start["sta_name"],
+                        }
+                        yield scrapy.Request("%s?%s" % (line_url, urllib.urlencode(params)),
+                                             method="POST",
+                                             callback=self.parse_line,
+                                             headers={"Content-Type": "application/json;charset=UTF-8"},
+                                             meta={"start": start, "end": end, "sdate": sdate})
 
     def parse_line(self, response):
         "解析班车"
@@ -132,39 +122,40 @@ class ZjgsmSpider(SpiderBase):
         except Exception, e:
             self.logger.error(response.body)
             raise e
-        if res["rtnCode"] != "000000":
-            self.logger.error("parse_line: Unexpected return, %s" % res["rtnMsg"])
+        res = json.loads(response.body)
+        if res["errorCode"] != 0:
+            self.logger.error("parse_line: Unexpected return, %s", res)
             return
-        shift_list = res["responseData"]["shiftList"] or []
+        shift_list = res["data"]["dataList"] or []
 
         for d in shift_list:
-            drv_datetime = dte.strptime("%s %s" % (d["startdate"], d["starttime"]), "%Y%m%d %H%M")
+            drv_datetime = dte.strptime("%s %s" % (d["FIELDS1"], d["FIELDS3"]), "%Y%m%d %H%M")
             attrs = dict(
                 s_province = "江苏",
                 s_city_id = start["city_id"],
                 s_city_name = start["city_name"],
-                s_sta_name = d["onstation"],
+                s_sta_name = d["FIELDS4"],
                 s_city_code=get_pinyin_first_litter(unicode(start["city_name"])),
-                s_sta_id="",
+                s_sta_id= d["fromcode"],
                 d_city_name = end["city_name"],
                 d_city_id="",
                 d_city_code=end["city_code"],
-                d_sta_id=d["offstationcode"],
-                d_sta_name = d["offstation"],
+                d_sta_id=d["FIELDS11"],
+                d_sta_name = d["FIELDS5"],
                 drv_date = drv_datetime.strftime("%Y-%m-%d"),
                 drv_time = drv_datetime.strftime("%H:%M"),
                 drv_datetime = drv_datetime,
-                distance = unicode(d["distance"]),
-                vehicle_type = d["bustype"],
+                distance = unicode(d["FIELDS16"]),
+                vehicle_type = d["FIELDS9"],
                 seat_type = "",
-                bus_num = d["shift"],
-                full_price = float(d["price"]),
-                half_price = float(d["halfprice"]),
+                bus_num = d["FIELDS2"],
+                full_price = float(d["FIELDS14"]),
+                half_price = float(d["FIELDS15"]),
                 fee = 0,
                 crawl_datetime = dte.now(),
-                extra_info = {"startstation": d["startstation"], "terminalstation": d["terminalstation"]},
-                left_tickets = int(d["availablenum"]),
-                crawl_source = "zjgsm",
+                extra_info = {"startstation": d["FIELDS17"], "terminalstation": d["FIELDS6"]},
+                left_tickets = d["FIELDS10"],
+                crawl_source = "wxsz",
                 shift_id="",
             )
             yield LineItem(**attrs)

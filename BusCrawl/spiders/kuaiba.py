@@ -84,7 +84,7 @@ class KuaibaSpider(SpiderBase):
         for start in start_list:
             for end in end_list:
                 today = datetime.date.today()
-                for i in range(0, 5):
+                for i in range(1, 8):
                     sdate = str(today+datetime.timedelta(days=i))
                     params = {
                       "startDate": sdate,

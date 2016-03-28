@@ -105,7 +105,7 @@ class ZjgsmSpider(SpiderBase):
                 end = {"city_name": name, "city_code": code}
                 self.logger.info("start %s ==> %s" % (start["sta_name"], end["city_name"]))
                 today = datetime.date.today()
-                for i in range(self.start_day(), 6):
+                for i in range(self.start_day(), 4):
                     sdate = str(today + datetime.timedelta(days=i))
                     if self.has_done(start["sta_name"], end["city_name"], sdate):
                         continue

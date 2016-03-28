@@ -108,13 +108,13 @@ MEMUSAGE_WARNING_MB = 1024
 
 # mongodb settings
 MONGODB_CONFIG = {
-    "url": "mongodb://10.51.9.34:27017/",
+    "url": "mongodb://localhost:27017/",
     "db": "web12308",
 }
 
 # redis settings
 REDIS_CONFIG = {
-    "host": "10.51.9.34",
+    "host": "localhost",
     "port": 6379,
 }
 

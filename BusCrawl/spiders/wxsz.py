@@ -26,7 +26,7 @@ class WxszSpider(SpiderBase):
             # 'BusCrawl.middleware.ZjgsmHeaderMiddleware': 410,
             'BusCrawl.middleware.ProxyMiddleware': 410,
         },
-        # "DOWNLOAD_DELAY": 0.2,
+        "DOWNLOAD_DELAY": 0.5,
         "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
     base_url = "http://www.zjgsmwy.com"

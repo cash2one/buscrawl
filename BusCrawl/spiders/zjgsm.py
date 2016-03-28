@@ -26,7 +26,7 @@ class ZjgsmSpider(SpiderBase):
             'BusCrawl.middleware.ZjgsmHeaderMiddleware': 410,
             'BusCrawl.middleware.ProxyMiddleware': 410,
         },
-        #"DOWNLOAD_DELAY": 0.2,
+        "DOWNLOAD_DELAY": 0.5,
         "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
     base_url = "http://www.zjgsmwy.com"
@@ -163,7 +163,7 @@ class ZjgsmSpider(SpiderBase):
                 fee = 0,
                 crawl_datetime = dte.now(),
                 extra_info = {"startstation": d["startstation"], "terminalstation": d["terminalstation"]},
-                left_tickets = d["availablenum"],
+                left_tickets = int(d["availablenum"]),
                 crawl_source = "zjgsm",
                 shift_id="",
             )

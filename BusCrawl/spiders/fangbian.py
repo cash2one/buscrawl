@@ -99,7 +99,7 @@ class FangBianSpider(SpiderBase):
             }
             self.logger.info("start %s ==> %s" % (start["city_name"], end["city_name"]))
             today = datetime.date.today()
-            for i in range(1, start["presell_day"]):
+            for i in range(0, start["presell_day"]):
                 sdate = str(today+datetime.timedelta(days=i))
                 if self.has_done(start["city_name"], end["city_name"], sdate):
                     #self.logger.info("ignore %s ==> %s %s" % (start["city_name"], end["city_name"], sdate))

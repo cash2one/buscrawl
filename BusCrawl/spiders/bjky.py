@@ -90,7 +90,7 @@ class BjkySpider(SpiderBase):
     def start_requests(self):
         cookies = self.query_cookies()
         cookies = {"Hm_lvt_0b26ef32b58e6ad386a355fa169e6f06": "1457499524,1457580391",
-                   "ASP.NET_SessionId": "tt4yy0wnatkdepwbxwkblpaj",
+                   "ASP.NET_SessionId": "l4sa5elkkajtt3a2gm32kidy",
                    "Hm_lpvt_0b26ef32b58e6ad386a355fa169e6f06": "1457666912"}
         if cookies:
             start_url = "http://www.e2go.com.cn/TicketOrder/SearchSchedule"
@@ -196,7 +196,7 @@ class BjkySpider(SpiderBase):
                 s_sta_id = station_code_mapping[station[0]],
                 d_city_name = end['StopName'],
                 d_city_code= get_pinyin_first_litter(end['StopName']),
-                d_city_id = '',
+                d_city_id = end['StopId'],
                 d_sta_name = station[1].decode('utf-8'),
                 d_sta_id = '',
                 drv_date = sdate,
@@ -213,7 +213,7 @@ class BjkySpider(SpiderBase):
                 extra_info = {"ScheduleString":ScheduleString,"ArrivingStopJson":json.dumps(end)},
                 left_tickets = 50,
                 crawl_source = "bjky",
-                shift_id=scheduleIdSpan,
+                shift_id='',
             )
             yield LineItem(**attrs)
 

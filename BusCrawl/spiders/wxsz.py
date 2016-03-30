@@ -122,7 +122,6 @@ class WxszSpider(SpiderBase):
         except Exception, e:
             self.logger.error(response.body)
             raise e
-        res = json.loads(response.body)
         if res["errorCode"] != 0:
             self.logger.error("parse_line: Unexpected return, %s", res)
             return
@@ -154,7 +153,7 @@ class WxszSpider(SpiderBase):
                 fee = 0,
                 crawl_datetime = dte.now(),
                 extra_info = {"startstation": d["FIELDS17"], "terminalstation": d["FIELDS6"]},
-                left_tickets = d["FIELDS10"],
+                left_tickets = int(d["FIELDS10"]),
                 crawl_source = "wxsz",
                 shift_id="",
             )

@@ -33,7 +33,7 @@ class TongChengSpider(SpiderBase):
     def start_requests(self):
         # 这是个pc网页页面
         dest_url = "http://m.ly.com/bus/BusJson/DestinationCity"
-        for name in [u"苏州", u"南京", u"无锡", u"常州", u"南通"]:
+        for name in ["苏州", "南京", "无锡", "常州", "南通", "张家港", "昆山", "吴江", "常熟", "太仓"]:
             if not self.is_need_crawl(city=name):
                 continue
             self.logger.info("start crawl city %s", name)

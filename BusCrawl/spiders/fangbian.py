@@ -63,7 +63,14 @@ class FangBianSpider(SpiderBase):
             province = info["province"]
             if not self.is_need_crawl(province=province):
                 continue
-            for d in info["cityList"]:
+            custom_lst = [
+                {"city":{"Region": "昆山", "Region_Code": "ks", "presellDay": 7, "IsCanOrder": 1}},
+                {"city":{"Region": "张家港", "Region_Code": "zjg", "presellDay": 7, "IsCanOrder": 1}},
+                {"city":{"Region": "吴江", "Region_Code": "wj", "presellDay": 7, "IsCanOrder": 1}},
+                {"city":{"Region": "常熟", "Region_Code": "cs", "presellDay": 7, "IsCanOrder": 1}},
+                {"city":{"Region": "太仓", "Region_Code": "tc", "presellDay": 7, "IsCanOrder": 1}},
+            ]
+            for d in info["cityList"]+custom_lst:
                 city_info = d["city"]
                 if not int(city_info["IsCanOrder"]):
                     continue

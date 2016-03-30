@@ -3,7 +3,6 @@
 import scrapy
 import json
 import datetime
-import os
 import time
 import requests
 
@@ -61,7 +60,7 @@ class JskySpider(SpiderBase):
 
     def start_requests(self):
         dest_url = "http://api.jskylwsp.cn/ticket-interface/rest/query/getbusdestinations"
-        for name in ["苏州", "南京", "无锡", "常州", "南通"]:
+        for name in ["苏州", "南京", "无锡", "常州", "南通", "张家港", "昆山", "吴江", "常熟", "太仓"]:
             if not self.is_need_crawl(city=name):
                 continue
             self.logger.info("start crawl city %s", name)
@@ -122,7 +121,7 @@ class JskySpider(SpiderBase):
         "解析班车"
         start = response.meta["start"]
         end = response.meta["end"]
-        sdate =  response.meta["date"]
+        sdate = response.meta["date"]
         self.mark_done(start["name"], end["name"], sdate)
         try:
             res = json.loads(response.body)

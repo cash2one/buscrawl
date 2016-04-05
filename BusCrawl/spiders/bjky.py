@@ -55,9 +55,10 @@ class BjkySpider(SpiderBase):
         client = MongoClient(db_config["url"])
         db = client[db_config["db"]]
         s_sta_name = start['name']
-        if s_sta_name == u'首都机场站':
-            s_sta_name = start['name'].strip().rstrip("站")
-        result = db.line.distinct('d_city_name', {'crawl_source': 'kuaiba', 's_sta_name':s_sta_name})
+        if s_sta_name != u'首都机场站':
+            #s_sta_name = s_sta_name.strip().rstrip("站")
+            s_sta_name = s_sta_name+'客运站'    
+        result = db.line.distinct('d_city_name', {'crawl_source': 'ctrip', 's_sta_name':s_sta_name})
         if end['StopName'] not in result:
             return 0
         else:
@@ -90,7 +91,7 @@ class BjkySpider(SpiderBase):
     def start_requests(self):
         cookies = self.query_cookies()
         cookies = {"Hm_lvt_0b26ef32b58e6ad386a355fa169e6f06": "1457499524,1457580391",
-                   "ASP.NET_SessionId": "l4sa5elkkajtt3a2gm32kidy",
+                   "ASP.NET_SessionId": "duwqqi4zyliv3utser52svsq",
                    "Hm_lpvt_0b26ef32b58e6ad386a355fa169e6f06": "1457666912"}
         if cookies:
             start_url = "http://www.e2go.com.cn/TicketOrder/SearchSchedule"

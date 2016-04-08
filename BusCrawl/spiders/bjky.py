@@ -89,10 +89,10 @@ class BjkySpider(SpiderBase):
         return end_station_list
 
     def start_requests(self):
+#         cookies = {"Hm_lvt_0b26ef32b58e6ad386a355fa169e6f06": "1457499524,1457580391",
+#                    "ASP.NET_SessionId": "duwqqi4zyliv3utser52svsq",
+#                    "Hm_lpvt_0b26ef32b58e6ad386a355fa169e6f06": "1457666912"}
         cookies = self.query_cookies()
-        cookies = {"Hm_lvt_0b26ef32b58e6ad386a355fa169e6f06": "1457499524,1457580391",
-                   "ASP.NET_SessionId": "duwqqi4zyliv3utser52svsq",
-                   "Hm_lpvt_0b26ef32b58e6ad386a355fa169e6f06": "1457666912"}
         if cookies:
             start_url = "http://www.e2go.com.cn/TicketOrder/SearchSchedule"
     #         cookie ="Hm_lvt_0b26ef32b58e6ad386a355fa169e6f06=1456970104,1457072900,1457316719,1457403102; ASP.NET_SessionId=uuppwd3q4j3qo5vwcka2v04y; Hm_lpvt_0b26ef32b58e6ad386a355fa169e6f06=1457415243"

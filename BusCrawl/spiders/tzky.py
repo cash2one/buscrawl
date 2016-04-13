@@ -82,13 +82,16 @@ class TzkySpider(SpiderBase):
             # <td>51</td>
             # <td><span class="tk_price">56</span></td>
             # <td><span class="lv_time">17</span></td>
-            # <td>途径南京东站，终点站 : 南京南站</td><td><a href="#" onclick="if(buy_confirm('MK0041')) window.location.href='/index.php/busOrder/index/czozNTg6InsiQkNIIjoiTUswMDQxIiwiU0NaTUMiOiJcdTZjZjBcdTVkZGVcdTUzNTdcdTdhZDkiLCJTRlpETSI6IjllZDIzNDU0YjNlYWVlNDQzODEyMWJlOWM2NGNiNmUyIiwiRERaTUMiOiJcdTUzNTdcdTRlYWMiLCJERFpETSI6IjBlMmYwY2U4YmQ5MDk1NThkYWViMjFjNTUyMGI3M2NhIiwiWkRaRE0iOiIwMDAwMDAwMDAiLCJTQ1pETSI6IjllZDIzNDU0YjNlYWVlNDQzODEyMWJlOWM2NGNiNmUyIiwiWkRaTUMiOiJcdTUzNTdcdTRlYWMiLCJGQ1JRIjoiMjAxNi0wNC0wOCIsIkZDU0oiOiIwNTo0NSIsIkNYIjoiXHU1OTI3XHU1NzhiXHU5YWQ4XHU0ZTAwIiwiWVBTIjoiMTciLCJIRFpXIjoiNTEiLCJRUEoiOiI1NiIsIlRQSiI6IjI4In0iOw~~';" class="buy_btn" title="购票">购票</a></td>
+            # <td>途径南京东站，终点站 : 南京南站</td>
+            # <td><a href="#" onclick="if(buy_confirm('MK0041')) window.location.href='/index.php/busOrder/index/czozNTg6InsiQkNIIjoiTUswMDQxIiwiU0NaTUMiOiJcdTZjZjBcdTVkZGVcdTUzNTdcdTdhZDkiLCJTRlpETSI6IjllZDIzNDU0YjNlYWVlNDQzODEyMWJlOWM2NGNiNmUyIiwiRERaTUMiOiJcdTUzNTdcdTRlYWMiLCJERFpETSI6IjBlMmYwY2U4YmQ5MDk1NThkYWViMjFjNTUyMGI3M2NhIiwiWkRaRE0iOiIwMDAwMDAwMDAiLCJTQ1pETSI6IjllZDIzNDU0YjNlYWVlNDQzODEyMWJlOWM2NGNiNmUyIiwiWkRaTUMiOiJcdTUzNTdcdTRlYWMiLCJGQ1JRIjoiMjAxNi0wNC0wOCIsIkZDU0oiOiIwNTo0NSIsIkNYIjoiXHU1OTI3XHU1NzhiXHU5YWQ4XHU0ZTAwIiwiWVBTIjoiMTciLCJIRFpXIjoiNTEiLCJRUEoiOiI1NiIsIlRQSiI6IjI4In0iOw~~';" class="buy_btn" title="购票">购票</a></td>
             bus_num = lst[0].text.strip()
             drv_date = lst[2].text.strip()
             drv_time = lst[3].text.strip()
             bus_type = lst[4].text.strip()
             price = float(lst[6].text.strip())
             left_tickets = int(lst[7].text.strip())
+            lock_form_url = re.findall(r"href='(\S+)'", lst[9].select_one("a").get("onclick"))[0]
+
             attrs = dict(
                 s_province = "江苏",
                 s_city_id = "",
@@ -112,7 +115,7 @@ class TzkySpider(SpiderBase):
                 half_price = price/2,
                 fee = 0,
                 crawl_datetime = dte.now(),
-                extra_info = {},
+                extra_info = {"lock_form_url": lock_form_url},
                 left_tickets = left_tickets,
                 crawl_source = "tzky",
                 shift_id="",

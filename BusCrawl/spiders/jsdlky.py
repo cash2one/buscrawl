@@ -83,7 +83,7 @@ class JsdlkySpider(SpiderBase):
                 name, code = s.split("|")
                 end = {"city_name": name, "city_code": code}
                 self.logger.info("start %s ==> %s" % (start["sta_name"], end["city_name"]))
-                for i in range(self.start_day(), 6):
+                for i in range(self.start_day(), 7):
                     sdate = (today + datetime.timedelta(days=i)).strftime("%Y%m%d")
                     if self.has_done(start["sta_name"], end["city_name"], sdate):
                         continue

@@ -102,7 +102,7 @@ class JskySpider(SpiderBase):
                 self.logger.info("start %s ==> %s" % (start["name"], city["name"]))
 
                 today = datetime.date.today()
-                for i in range(1, min(10, days)):
+                for i in range(self.start_day(), min(10, days)):
                     sdate = str(today+datetime.timedelta(days=i))
                     if self.has_done(start["name"], end["name"], sdate):
                         self.logger.info("ignore %s ==> %s %s" % (start["name"], end["name"], sdate))

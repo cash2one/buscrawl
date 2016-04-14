@@ -89,10 +89,8 @@ class BjkySpider(SpiderBase):
         return end_station_list
 
     def start_requests(self):
-#         cookies = {"Hm_lvt_0b26ef32b58e6ad386a355fa169e6f06": "1457499524,1457580391",
-#                    "ASP.NET_SessionId": "duwqqi4zyliv3utser52svsq",
-#                    "Hm_lpvt_0b26ef32b58e6ad386a355fa169e6f06": "1457666912"}
-        cookies = self.query_cookies()
+        cookies = {"ASP.NET_SessionId": "vv3tb0fucnaxkmoudsxs5swa"}
+#         cookies = self.query_cookies()
         if cookies:
             start_url = "http://www.e2go.com.cn/TicketOrder/SearchSchedule"
     #         cookie ="Hm_lvt_0b26ef32b58e6ad386a355fa169e6f06=1456970104,1457072900,1457316719,1457403102; ASP.NET_SessionId=uuppwd3q4j3qo5vwcka2v04y; Hm_lpvt_0b26ef32b58e6ad386a355fa169e6f06=1457415243"
@@ -112,17 +110,17 @@ class BjkySpider(SpiderBase):
             self.logger.error("parse_url: cookie is expire", )
             return
         start_station_list = [
-                        {'name': u"六里桥",'code' :"1000"},
-                        {'name': u"首都机场站",'code':"1112"},
-                        {'name': u"赵公口",'code':"1103"},
-                        {'name': u"木樨园",'code': "1104"},
-                        {'name': u"丽泽桥",'code': "1106"},
-                        {'name': u"新发地",'code': "1107"},
-                        {'name': u"莲花池",'code': "1108"},
-                        {'name': u"四惠",'code': "1109"},
-                        {'name': u"永定门",'code': "1110"},
-                        {'name': u"北郊",'code': "1111"},
-                            ]
+            {'name': u"六里桥",'code': "1000"},
+            {'name': u"首都机场站",'code':"1112"},
+            {'name': u"赵公口",'code':"1103"},
+            {'name': u"木樨园",'code': "1104"},
+            {'name': u"丽泽桥",'code': "1106"},
+            {'name': u"新发地",'code': "1107"},
+            {'name': u"莲花池",'code': "1108"},
+            {'name': u"四惠",'code': "1109"},
+            {'name': u"永定门",'code': "1110"},
+            {'name': u"北郊",'code': "1111"},
+            ]
 
         queryline_url = "http://www.e2go.com.cn/TicketOrder/SearchSchedule"
         end_station_list = self.query_all_end_station()
@@ -135,7 +133,7 @@ class BjkySpider(SpiderBase):
                     end = json.loads(end)
                     if self.is_end_city(start, end):
                         today = datetime.date.today()
-                        for i in range(0, 8):
+                        for i in range(1, 10):
                             sdate = str(today+datetime.timedelta(days=i))
                             if self.has_done(start["name"], end["StopName"], sdate):
                                 self.logger.info("ignore %s ==> %s %s" % (start["name"], end["StopName"], sdate))
@@ -198,7 +196,7 @@ class BjkySpider(SpiderBase):
                 d_city_name = end['StopName'],
                 d_city_code= get_pinyin_first_litter(end['StopName']),
                 d_city_id = end['StopId'],
-                d_sta_name = station[1].decode('utf-8'),
+                d_sta_name = end['StopName'],
                 d_sta_id = '',
                 drv_date = sdate,
                 drv_time = time,

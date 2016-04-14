@@ -84,7 +84,7 @@ class CqkySpider(SpiderBase):
                 end = {"d_city_name": name, "d_city_code": code}
                 today = datetime.date.today()
                 self.logger.info("start %s ==> %s" % (start["s_city_name"], end["d_city_name"]))
-                for i in range(self.start_day(), 6):
+                for i in range(self.start_day(), 8):
                     sdate = str(today + datetime.timedelta(days=i))
                     if self.has_done(start["s_city_name"], end["d_city_name"], sdate):
                         # self.logger.info("ignore %s ==> %s %s" % (start["s_city_name"], end["d_city_name"], sdate))

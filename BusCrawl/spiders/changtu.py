@@ -13,6 +13,8 @@ START_LIST = [
     {"id": '390073', "name": '南京', "pinyin": 'nanjingshi', "short_pinyin": "nj", "province": "江苏"},
     {"id": '410283', "name": '苏州', "pinyin": 'suzhoushi', "short_pinyin": "sz", "province": "江苏"},
     {"id": '121679', "name": '南宁', "pinyin": 'nanningshi', "short_pinyin": "nn", "province": "广西"},
+    {"id": '121679', "name": '南宁', "pinyin": 'nanningshi', "short_pinyin": "nn", "province": "广西"},
+    {"id": '19', "name": '济南', "pinyin": 'jinanshi', "short_pinyin": "jn", "province": "山东"},
 ]
 
 
@@ -96,7 +98,7 @@ class ChangtuSpider(SpiderBase):
             print response.body
             raise e
         if res["bookFlag"] != "Y":
-            self.logger.error("parse_target_city: Unexpected return, %s" % res)
+            #self.logger.error("parse_target_city: Unexpected return, %s" % res)
             return
 
         for d in res["schList"]:
@@ -123,7 +125,7 @@ class ChangtuSpider(SpiderBase):
                 seat_type = "",
                 bus_num = d["scheduleId"],
                 full_price = float(d["fullPrice"]),
-                half_price = float(d["halfPrice"]),
+                half_price = float(d["fullPrice"])/2,
                 fee = 0,
                 crawl_datetime = dte.now(),
                 extra_info = {"id": d["id"], "getModel": d["getModel"], "ticketTypeStr": d["ticketTypeStr"], "stationMapId": d["stationMapId"]},

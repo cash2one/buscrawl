@@ -33,7 +33,7 @@ class TongChengSpider(SpiderBase):
     def start_requests(self):
         # 这是个pc网页页面
         dest_url = "http://m.ly.com/bus/BusJson/DestinationCity"
-        for name in ["苏州", "南京", "无锡", "常州", "南通", "张家港", "昆山", "吴江", "常熟", "太仓", "镇江", "宜兴", "江阴", "兴化"]:
+        for name in ["苏州", "南京", "无锡", "常州", "南通", "张家港", "昆山", "吴江", "常熟", "太仓", "镇江", "宜兴", "江阴", "兴化", "盐城", "扬州", "连云港", "徐州", "宿迁"]:
             if not self.is_need_crawl(city=name):
                 continue
             self.logger.info("start crawl city %s", name)
@@ -64,7 +64,7 @@ class TongChengSpider(SpiderBase):
                 self.logger.info("start %s ==> %s" % (start["name"], city["name"]))
 
                 today = datetime.date.today()
-                for i in range(self.start_day(), 7):
+                for i in range(self.start_day(), 8):
                     sdate = str(today + datetime.timedelta(days=i))
                     if self.has_done(start["name"], d["name"], sdate):
                         self.logger.info("ignore %s ==> %s %s" % (start["name"], d["name"], sdate))
@@ -94,8 +94,8 @@ class TongChengSpider(SpiderBase):
         try:
             res = json.loads(response.body)
         except Exception, e:
-            print response.body
-            raise e
+            self.logger.error("%s %s", response.body, e)
+            return
         res = res["response"]
         if int(res["header"]["rspCode"]) != 0:
             #self.logger.error("parse_target_city: Unexpected return, %s" % res["header"])
@@ -120,7 +120,7 @@ class TongChengSpider(SpiderBase):
                 s_city_name = from_city,
                 s_sta_name = from_station,
                 s_city_code=get_pinyin_first_litter(from_city),
-                s_sta_id=d["dptStationCode"],
+                s_sta_id=d.get("dptStationCode",""),
                 d_city_name = to_city,
                 d_city_id="",
                 d_city_code=end["short_pinyin"],

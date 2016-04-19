@@ -8,6 +8,7 @@ import datetime
 from datetime import datetime as dte
 from BusCrawl.item import LineItem
 from base import SpiderBase
+from BusCrawl.utils.tool import get_pinyin_first_litter
 
 
 class BabaSpider(SpiderBase):
@@ -79,7 +80,7 @@ class BabaSpider(SpiderBase):
             name = info["cityName"]
             if not self.is_need_crawl(city=name):
                 continue
-            elif name in ["绍兴", "德清", "龙泉", "丽水", "庆元", "嵊州", "宁波"]:
+            elif name in ["绍兴", "德清", "龙泉", "丽水", "庆元", "嵊州", "宁波", "温州", "台州", "海宁", "玉环"]:  # 海宁,台州，温州没数据
                 continue
             start = {
                 "province": "浙江",
@@ -89,12 +90,12 @@ class BabaSpider(SpiderBase):
             }
             days = 7
             if name == "杭州":
-                days = 20
+                days = 10
 
             for info in self.get_dest_list():
                 end = {
                     "city_name": info["stationName"],
-                    "city_code": info["firstSpell"].lower(),
+                    "city_code": get_pinyin_first_litter(info["stationName"]),
                     "city_id": info["stationId"],
                 }
                 self.logger.info("start %s ==> %s" % (start["city_name"], end["city_name"]))
@@ -125,6 +126,7 @@ class BabaSpider(SpiderBase):
         end = response.meta["end"]
         sdate = response.meta["date"]
         self.mark_done(start["city_name"], end["city_name"], sdate)
+        print start["city_name"], end["city_name"], sdate
         try:
             res = json.loads(response.body)
         except Exception, e:

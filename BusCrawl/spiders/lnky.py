@@ -28,41 +28,39 @@ class LnkySpider(SpiderBase):
     }
 
     def start_requests(self):
-        url = "http://www.84100.com/"
-        return [scrapy.Request(url, callback=self.parse_start_city)]
-
-    def parse_start_city(self, response):
-        res = response.body
-        matchObj = re.findall('var startCityJson = (.*);', res)
-        #print b[0][1:-1]
-        provinceInfo = json.loads(matchObj[0][1:-1])
-        province_id = '210000'
-        for province in provinceInfo[province_id]:
-            if not self.is_need_crawl(city=province["cityName"]):
+        url = "http://www.jt306.cn/wap/ticketSales/showCity.do"
+        start_city_list = [u"沈阳市",u"大连市",
+                           u"鞍山市",u"抚顺市",
+                           u"本溪市",u"丹东市",
+                           u"锦州市",u"营口市",
+                           u"阜新市",u"辽阳市",
+                           u"盘锦市",u"铁岭市",
+                           u"朝阳市",u"葫芦岛市"
+                           ]
+        for start_name in start_city_list:
+            if not self.is_need_crawl(city=start_name):
                 continue
-            for start in province['countyList']:
-                target_url = 'http://www.84100.com/getEndPortList/ajax?cityId=%s'%int(str(start['countyId']))
-                yield scrapy.Request(target_url, callback=self.parse_target_city,
-                                     meta={"start": start})
+            data = {"departure": start_name}
+            yield scrapy.FormRequest(url, formdata=data, callback=self.parse_target_city,
+                                     meta={"start": start_name})
 
     def parse_target_city(self, response):
         "解析目的地城市"
-        targetCity = json.loads(response.body)
+        target_city_list = json.loads(response.body)
         start = response.meta["start"]
-        ports = targetCity.get('ports', [])
 #         ports = [{'portName':'夏郢','pinyinPrefix':'rx'}]
-        if ports:
-            for end in ports:
+        if target_city_list:
+            for end in target_city_list:
                 today = datetime.date.today()
                 for i in range(0, 10):
                     sdate = str(today+datetime.timedelta(days=i))
-                    if self.has_done(self.name+start["countyName"], end['portName'], sdate):
+                    if self.has_done(start, end[0], sdate):
                         #self.logger.info("ignore %s ==> %s %s" % (start["city_name"], end["city_name"], sdate))
                         continue
                     queryline_url = 'http://www.jt306.cn/wap/ticketSales/ticketList.do'
                     payload = {
-                        "endCityName": end['portName'],
-                        "startCityName": start['countyName'],
+                        "endCityName": end[0],
+                        "startCityName": start,
                         "startDate": sdate
                             }
                     yield scrapy.FormRequest(queryline_url, formdata=payload, callback=self.parse_line,
@@ -75,7 +73,7 @@ class LnkySpider(SpiderBase):
         content = response.body
         if not isinstance(content, unicode):
             content = content.decode('utf-8')
-        self.mark_done(self.name+start["countyName"], end['portName'], sdate)
+        self.mark_done(start, end[0], sdate)
         sel = etree.HTML(content)
         scheduleInfo = sel.xpath('//input[@id="scheduleInfoJson"]/@value')
         if scheduleInfo:
@@ -89,13 +87,13 @@ class LnkySpider(SpiderBase):
                     continue
                 attrs = dict(
                     s_province = '辽宁',
-                    s_city_name = start['countyName'],
+                    s_city_name = start,
                     s_city_id = '',
-                    s_city_code= get_pinyin_first_litter(start['countyName']),
+                    s_city_code= get_pinyin_first_litter(start),
                     s_sta_name = d['fromStation'],
                     s_sta_id = '',
-                    d_city_name = end['portName'],
-                    d_city_code= get_pinyin_first_litter(end['portName']),
+                    d_city_name = end[0],
+                    d_city_code= get_pinyin_first_litter(end[0]),
                     d_city_id = '',
                     d_sta_name = d['toStation'],
                     d_sta_id = '',

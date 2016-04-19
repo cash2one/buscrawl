@@ -60,7 +60,7 @@ class JskySpider(SpiderBase):
 
     def start_requests(self):
         dest_url = "http://api.jskylwsp.cn/ticket-interface/rest/query/getbusdestinations"
-        for name in ["苏州", "南京", "无锡", "常州", "南通", "张家港", "昆山", "吴江", "常熟", "太仓", "镇江", "宜兴", "江阴", "兴化"]:
+        for name in ["苏州", "南京", "无锡", "常州", "南通", "张家港", "昆山", "吴江", "常熟", "太仓", "镇江", "宜兴", "江阴", "兴化", "盐城", "扬州", "连云港", "徐州", "宿迁", "泰州"]:
             if not self.is_need_crawl(city=name):
                 continue
             self.logger.info("start crawl city %s", name)
@@ -102,7 +102,7 @@ class JskySpider(SpiderBase):
                 self.logger.info("start %s ==> %s" % (start["name"], city["name"]))
 
                 today = datetime.date.today()
-                for i in range(1, min(10, days)):
+                for i in range(self.start_day(), min(10, days)):
                     sdate = str(today+datetime.timedelta(days=i))
                     if self.has_done(start["name"], end["name"], sdate):
                         self.logger.info("ignore %s ==> %s %s" % (start["name"], end["name"], sdate))

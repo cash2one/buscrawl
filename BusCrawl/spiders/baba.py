@@ -4,6 +4,7 @@
 import scrapy
 import json
 import datetime
+import requests
 
 from datetime import datetime as dte
 from BusCrawl.item import LineItem
@@ -34,10 +35,10 @@ class BabaSpider(SpiderBase):
                 "channelVer": "BabaBus",
                 "usId": "",
                 "appId": "com.hundsun.InternetSaleTicket",
-                "appVer": "1.0.0",
+                "appVer": "1.1.1",
                 "loginStatus": "0",
                 "imei": "864895020513527",
-                "mobileVer": "4.4.4",
+                "mobileVer": "6.0",
                 "terminalType": "1"
             },
             "key": ""
@@ -46,7 +47,7 @@ class BabaSpider(SpiderBase):
 
     def start_requests(self):
         start_url = "http://s4mdata.bababus.com:80/app/v3/ticket/cityAllListFrom.htm"
-        content = {"dataVersion": ""}
+        content = {"dataVersion": "v2.2"}
         fd = self.post_data_templ(content)
         yield scrapy.Request(start_url,
                              method="POST",
@@ -58,15 +59,15 @@ class BabaSpider(SpiderBase):
             dest_url = "http://s4mdata.bababus.com:80/app/v3/ticket/getStationList.htm"
             dest_list = []
             for c in [chr(i) for i in range(97, 123)]:
-                content = {"searchType": "1", "dataName": c}
-                fd = self.post_data_templ(content)
+                for c1 in [chr(i) for i in range(97, 123)]:
+                    content = {"searchType": "1", "dataName": c + c1}
+                    fd = self.post_data_templ(content)
 
-                ua = "Mozilla/5.0 (Linux; U; Android 2.2; fr-lu; HTC Legend Build/FRF91) AppleWebKit/533.1 (KHTML, like Gecko)  Version/4.0 Mobile Safari/533.1"
-                headers = {"User-Agent": ua}
-                import requests
-                r = requests.post(dest_url, data=json.dumps(fd), headers=headers)
-                res = r.json()
-                dest_list.extend(res["content"]["toStationList"])
+                    ua = "Mozilla/5.0 (Linux; U; Android 2.2; fr-lu; HTC Legend Build/FRF91) AppleWebKit/533.1 (KHTML, like Gecko)  Version/4.0 Mobile Safari/533.1"
+                    headers = {"User-Agent": ua}
+                    r = requests.post(dest_url, data=json.dumps(fd), headers=headers)
+                    res = r.json()
+                    dest_list.extend(res["content"]["toStationList"])
             self.dest_list = dest_list
         return self.dest_list
 

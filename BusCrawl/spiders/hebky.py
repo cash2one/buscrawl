@@ -41,15 +41,17 @@ class HebkySpider(SpiderBase):
             end_station_list = []
             letter = 'abcdefghijklmnopqrstuvwxyz'
             for i in letter:
-                end_station_url = 'http://60.2.147.28/com/yxd/pris/openapi/depotQueryByName.action'
-                data = {
-                      "type": "2",
-                      "InputStr": i,
-                      }
-                res_lists = requests.post(end_station_url, data=data)
-                res_lists = res_lists.json()
-                for res_list in res_lists['values']['resultList']:
-                    end_station_list.append(json.dumps(res_list))
+                for j in letter:
+                    query = i+j
+                    end_station_url = 'http://60.2.147.28/com/yxd/pris/openapi/depotQueryByName.action'
+                    data = {
+                          "type": "2",
+                          "InputStr": query,
+                          }
+                    res_lists = requests.post(end_station_url, data=data)
+                    res_lists = res_lists.json()
+                    for res_list in res_lists['values']['resultList']:
+                        end_station_list.append(json.dumps(res_list))
             r.set(key, json.dumps(list(set(end_station_list))))
             r.expire(key, 2*24*60*60)
             end_station_list = r.get(key)
@@ -64,7 +66,6 @@ class HebkySpider(SpiderBase):
           }
         res = requests.post(url, data=data)
         res = res.json()
-        print res
         predate = 0
         if res['akfAjaxResult'] != '0':
             predate = 0

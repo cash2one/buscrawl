@@ -12,5 +12,5 @@ sys.path.append(os.path.join(path, ".."))
 cmdline.execute("scrapy crawl hebky".split())
 
 # cmdline.execute("scrapy crawl bus100 -a province_id=450000".split())
-# cmdline.execute("scrapy crawl lnky -a province_id=210000 -a city=营口市".split())
+# cmdline.execute("scrapy crawl lnky  -a city=盘锦市".split())
 # cmdline.execute("scrapy crawl ctrip -a province=北京".split())

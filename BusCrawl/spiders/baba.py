@@ -47,7 +47,7 @@ class BabaSpider(SpiderBase):
 
     def start_requests(self):
         start_url = "http://s4mdata.bababus.com:80/app/v3/ticket/cityAllListFrom.htm"
-        content = {"dataVersion": "v2.2"}
+        content = {"dataVersion": ""}
         fd = self.post_data_templ(content)
         yield scrapy.Request(start_url,
                              method="POST",

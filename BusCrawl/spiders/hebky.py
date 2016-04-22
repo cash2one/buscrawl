@@ -124,7 +124,7 @@ class HebkySpider(SpiderBase):
                     for end in end_list:
                         end = json.loads(end)
                         today = datetime.date.today()
-                        for i in range(0, min(int(preDate), 5)):
+                        for i in range(0, min(int(preDate), 2)):
                             sdate = str(today+datetime.timedelta(days=i))
                             if self.has_done(start[1], end["depotName"], sdate):
         #                         self.logger.info("ignore %s ==> %s %s" % (start["city_name"], end["city_name"], sdate))

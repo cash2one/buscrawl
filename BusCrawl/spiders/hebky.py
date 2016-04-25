@@ -135,8 +135,8 @@ class HebkySpider(SpiderBase):
 #                 preDate = 0
                 if preDate:
                     for end in end_list:
+                        end = json.loads(end)
                         if self.is_end_city(start, end):
-                            end = json.loads(end)
                             today = datetime.date.today()
                             for i in range(0, min(int(preDate), 7)):
                                 sdate = str(today+datetime.timedelta(days=i))

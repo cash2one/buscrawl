@@ -12,6 +12,8 @@ from base import SpiderBase
 
 from BusCrawl.utils.tool import get_pinyin_first_litter
 from BusCrawl.utils.tool import get_redis
+from scrapy.conf import settings
+from pymongo import MongoClient
 
 
 class HebkySpider(SpiderBase):
@@ -58,6 +60,17 @@ class HebkySpider(SpiderBase):
             if end_station_list:
                 return end_station_list
         return end_station_list
+
+    def is_end_city(self, start, end):
+        db_config = settings.get("MONGODB_CONFIG")
+        client = MongoClient(db_config["url"])
+        db = client[db_config["db"]]
+        s_sta_name = start[1]
+        result = db.line.distinct('d_city_name', {'crawl_source': 'hebky', 's_sta_name':s_sta_name})
+        if end['depotName'] not in result:
+            return 0
+        else:
+            return 1
 
     def query_start_predate(self, code):
         url = 'http://60.2.147.28/com/yxd/pris/openapi/queryPreDate.action'
@@ -122,27 +135,28 @@ class HebkySpider(SpiderBase):
 #                 preDate = 0
                 if preDate:
                     for end in end_list:
-                        end = json.loads(end)
-                        today = datetime.date.today()
-                        for i in range(0, min(int(preDate), 2)):
-                            sdate = str(today+datetime.timedelta(days=i))
-                            if self.has_done(start[1], end["depotName"], sdate):
-        #                         self.logger.info("ignore %s ==> %s %s" % (start["city_name"], end["city_name"], sdate))
-                                continue
-        
-                            #{"depotCode":"ZD1309280006","depotName":"安陵"}
-                            data = {
-                                "arrivalDepotCode": end['depotCode'],
-                                "beginTime": sdate,
-                                "startName": unicode(start[1]),
-                                "endName": unicode(end["depotName"]),
-                                "startDepotCode": start[0]
-                            }
-                            yield scrapy.FormRequest(line_url,
-                                                     method="POST",
-                                                     formdata=data,
-                                                     callback=self.parse_line,
-                                                     meta={"start": start, "city_name": city_name, "end": end, "date": sdate})
+                        if self.is_end_city(self, start, end):
+                            end = json.loads(end)
+                            today = datetime.date.today()
+                            for i in range(0, min(int(preDate), 7)):
+                                sdate = str(today+datetime.timedelta(days=i))
+                                if self.has_done(start[1], end["depotName"], sdate):
+            #                         self.logger.info("ignore %s ==> %s %s" % (start["city_name"], end["city_name"], sdate))
+                                    continue
+            
+                                #{"depotCode":"ZD1309280006","depotName":"安陵"}
+                                data = {
+                                    "arrivalDepotCode": end['depotCode'],
+                                    "beginTime": sdate,
+                                    "startName": unicode(start[1]),
+                                    "endName": unicode(end["depotName"]),
+                                    "startDepotCode": start[0]
+                                }
+                                yield scrapy.FormRequest(line_url,
+                                                         method="POST",
+                                                         formdata=data,
+                                                         callback=self.parse_line,
+                                                         meta={"start": start, "city_name": city_name, "end": end, "date": sdate})
 
     def parse_line(self, response):
         "解析班车"

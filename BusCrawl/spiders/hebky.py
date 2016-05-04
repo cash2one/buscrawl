@@ -127,7 +127,7 @@ class HebkySpider(SpiderBase):
         line_url = 'http://60.2.147.28/com/yxd/pris/openapi/queryAllTicket.action'
         for k, v in start_dict.items():
             city_name = k
-            if not self.is_need_crawl(city=city_name):
+            if not self.is_need_crawl(city=city_name) or city_name in (u'保定', u'石家庄'):
                 continue
             for i in v:
                 start = start_list[int(i)]
@@ -136,14 +136,14 @@ class HebkySpider(SpiderBase):
                 if preDate:
                     for end in end_list:
                         end = json.loads(end)
-                        if self.is_end_city(start, end):
+                        if 1:#self.is_end_city(start, end):
                             today = datetime.date.today()
                             for i in range(0, min(int(preDate), 7)):
                                 sdate = str(today+datetime.timedelta(days=i))
                                 if self.has_done(start[1], end["depotName"], sdate):
             #                         self.logger.info("ignore %s ==> %s %s" % (start["city_name"], end["city_name"], sdate))
                                     continue
-            
+             
                                 #{"depotCode":"ZD1309280006","depotName":"安陵"}
                                 data = {
                                     "arrivalDepotCode": end['depotCode'],

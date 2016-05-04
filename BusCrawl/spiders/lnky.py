@@ -29,14 +29,23 @@ class LnkySpider(SpiderBase):
 
     def start_requests(self):
         url = "http://www.jt306.cn/wap/ticketSales/showCity.do"
-        start_city_list = [u"沈阳市",u"大连市",
-                           u"鞍山市",u"抚顺市",
-                           u"本溪市",u"丹东市",
-                           u"锦州市",u"营口市",
-                           u"阜新市",u"辽阳市",
-                           u"盘锦市",u"铁岭市",
-                           u"朝阳市",u"葫芦岛市"
-                           ]
+        start_city_list = [
+            u"沈阳市",u'康平县',u'法库县', u'辽中县', u'新民市',
+            u"大连市",u'瓦房店市',u'普兰店市',u'庄河市',
+            u"鞍山市",u'海城市',u'台安县',
+            u"抚顺市",u'清原县',u'新宾县',
+            u"本溪市",
+            u"丹东市",u'凤城市',u'东港市',
+            u"锦州市",u'凌海市',u'北镇市',u'义县',u'黑山县',
+            u"营口市",u'大石桥市',u'盖州市',u'鲅鱼圈',
+            u"阜新市",u'彰武县',
+            u"辽阳市",u'灯塔市',u'弓长岭',
+            u"盘锦市",u'大洼县',
+            u"铁岭市",u'西丰县',u'昌图县',u'开原市',u'调兵山市',
+            u"朝阳市",u'北票市',u'凌源市',u'建平县',u'喀左县',
+            u"葫芦岛市",u'建昌县',u'绥中县',u'兴城市'
+        ]
+
         for start_name in start_city_list:
             if not self.is_need_crawl(city=start_name):
                 continue

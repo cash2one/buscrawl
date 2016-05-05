@@ -29,46 +29,26 @@ class CBDSpider(SpiderBase):
 
     def start_requests(self):
         # 这是个pc网页页面
-        dest_url = "http://m.chebada.com/Home/GetBusDestinations"
+        line_url = "http://m.chebada.com/Schedule/GetBusSchedules"
         for name in ["苏州", "南京", "无锡", "常州", "南通", "张家港", "昆山", "吴江", "常熟", "太仓"]:
             if not self.is_need_crawl(city=name):
                 continue
             self.logger.info("start crawl city %s", name)
-            fd = {
-                "Departure": unicode(name),
-            }
-            yield scrapy.FormRequest(dest_url,
-                                     formdata=fd,
-                                     callback=self.parse_target_city,
-                                     meta={"start":{"name": name, "province": "江苏"}})
-
-    def parse_target_city(self, response):
-        res = json.loads(response.body)
-        res = res["response"]
-        if int(res["header"]["rspCode"]) != 0:
-            self.logger.error("parse_target_city: Unexpected return, %s" % res["header"])
-            return
-
-        line_url = "http://m.chebada.com/Schedule/GetBusSchedules"
-        start = response.meta["start"]
-        for info in res["body"]["destinationList"]:
-            for city in info["cities"]:
-                d = {
-                    "name": city["name"],
-                    "pinyin": city["enName"],
-                    "short_pinyin": city["shortEnName"],
-                }
-                self.logger.info("start %s ==> %s" % (start["name"], city["name"]))
+            start = {"name": name, "province": "江苏"}
+            for s in self.get_dest_list(start["province"], start["name"]):
+                name, code = s.split("|")
+                end = {"name": name, "short_pinyin": code}
+                self.logger.info("start %s ==> %s" % (start["name"], end["name"]))
 
                 today = datetime.date.today()
                 for i in range(self.start_day(), 8):
                     sdate = str(today+datetime.timedelta(days=i))
-                    if self.has_done(start["name"], d["name"], sdate):
-                        self.logger.info("ignore %s ==> %s %s" % (start["name"], d["name"], sdate))
+                    if self.has_done(start["name"], end["name"], sdate):
+                        self.logger.info("ignore %s ==> %s %s" % (start["name"], end["name"], sdate))
                         continue
                     params = dict(
                         departure=start["name"],
-                        destination=d["name"],
+                        destination=end["name"],
                         departureDate=sdate,
                         page="1",
                         pageSize="1025",
@@ -77,7 +57,7 @@ class CBDSpider(SpiderBase):
                         dptTimeSpan="0",
                         bookingType="0",
                     )
-                    yield scrapy.FormRequest(line_url, formdata=params, callback=self.parse_line, meta={"start": start, "end": d, "sdate": sdate})
+                    yield scrapy.FormRequest(line_url, formdata=params, callback=self.parse_line, meta={"start": start, "end": end, "sdate": sdate})
 
     def parse_line(self, response):
         "解析班车"

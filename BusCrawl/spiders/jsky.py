@@ -59,50 +59,19 @@ class JskySpider(SpiderBase):
         return tmpl
 
     def start_requests(self):
-        dest_url = "http://api.jskylwsp.cn/ticket-interface/rest/query/getbusdestinations"
+        line_url = "http://api.jskylwsp.cn/ticket-interface/rest/query/getbusschedule"
         for name in ["苏州", "南京", "无锡", "常州", "南通", "张家港", "昆山", "吴江", "常熟", "太仓", "镇江", "宜兴", "江阴", "兴化", "盐城", "扬州", "连云港", "徐州", "宿迁", "泰州"]:
             if not self.is_need_crawl(city=name):
                 continue
             self.logger.info("start crawl city %s", name)
-            body={"departure": name}
-            fd = self.post_data_templ("getbusdestinations", body)
-            yield scrapy.Request(dest_url,
-                                 method="POST",
-                                 body=json.dumps(fd),
-                                 callback=self.parse_target_city,
-                                 meta={"start":{"name": name, "province": "江苏"}})
-
-    def parse_target_city(self, response):
-        res = json.loads(response.body)
-        start = response.meta["start"]
-        if res["header"]["rspCode"] != "0000":
-            #self.logger.error("parse_target_city: Unexpected return, %s %s", start["name"], res)
-            return
-
-        line_url = "http://api.jskylwsp.cn/ticket-interface/rest/query/getbusschedule"
-
-        days_url = "http://api.jskylwsp.cn/ticket-interface/rest/query/getbussaleday"
-        body={"departure": start["name"]}
-        data = self.post_data_templ("getbussaleday", body)
-        headers = {
-            "User-Agent": "Dalvik/1.6.0 (Linux; U; Android 4.4.4; MI 4W MIUI/V7.1.3.0.KXDCNCK)",
-            "Content-Type": "application/json; charset=UTF-8",
-        }
-        r = requests.post(days_url, data=json.dumps(data), headers=headers)
-        sale_day_info = r.json()
-        days = int(sale_day_info["body"]["saleDays"])
-
-        for info in res["body"]["destinationList"]:
-            for city in info["cities"]:
-                end = {
-                    "name": city["name"],
-                    "pinyin": city["enName"],
-                    "short_pinyin": city["shortEnName"],
-                }
-                self.logger.info("start %s ==> %s" % (start["name"], city["name"]))
+            start = {"name": name, "province": "江苏"}
+            for s in self.get_dest_list(start["province"], start["name"]):
+                name, code = s.split("|")
+                end = {"name": name, "short_pinyin": code}
+                self.logger.info("start %s ==> %s" % (start["name"], end["name"]))
 
                 today = datetime.date.today()
-                for i in range(self.start_day(), min(10, days)):
+                for i in range(self.start_day(), 7):
                     sdate = str(today+datetime.timedelta(days=i))
                     if self.has_done(start["name"], end["name"], sdate):
                         self.logger.info("ignore %s ==> %s %s" % (start["name"], end["name"], sdate))

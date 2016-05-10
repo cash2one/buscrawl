@@ -127,7 +127,7 @@ class HebkySpider(SpiderBase):
         line_url = 'http://60.2.147.28/com/yxd/pris/openapi/queryAllTicket.action'
         for k, v in start_dict.items():
             city_name = k
-            if not self.is_need_crawl(city=city_name) or city_name in (u'保定', u'石家庄',u'唐山'):
+            if not self.is_need_crawl(city=city_name) or city_name in (u'保定', u'石家庄'):
                 continue
             for i in v:
                 start = start_list[int(i)]

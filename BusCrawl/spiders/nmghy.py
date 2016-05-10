@@ -52,11 +52,11 @@ class NmghySpider(SpiderBase):
                 end_name = end.split("|")[1].decode('utf8')
                 end_code = end.split("|")[2]
                 today = datetime.date.today()
-                for i in range(0, 5):
+                for i in range(0, 4):
                     sdate = str(today+datetime.timedelta(days=i))
-#                     if self.has_done(start_name, end_name, sdate):
-# #                         self.logger.info("ignore %s ==> %s %s" % (start["city_name"], end["city_name"], sdate))
-#                         continue
+                    if self.has_done(start_name, end_name, sdate):
+#                         self.logger.info("ignore %s ==> %s %s" % (start["city_name"], end["city_name"], sdate))
+                        continue
                     data = {
                         "dd_city": end_name,
                         "dd_code": end_code,

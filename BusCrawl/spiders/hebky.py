@@ -130,21 +130,19 @@ class HebkySpider(SpiderBase):
             if not self.is_need_crawl(city=city_name) or city_name in (u'保定', u'石家庄'):
                 continue
             for i in v:
-                start = start_list[int(i)]
-                preDate = self.query_start_predate(start[0])
-#                 preDate = 0
-                if preDate:
+                    start = start_list[int(i)]
+#                 preDate = self.query_start_predate(start[0])
+# #                 preDate = 0
+#                 if preDate:
                     for end in end_list:
                         end = json.loads(end)
                         if 1:#self.is_end_city(start, end):
                             today = datetime.date.today()
-                            for i in range(0, min(int(preDate), 2)):
-                                sdate = str(today+datetime.timedelta(days=i))
+                            for j in range(1, 2):
+                                sdate = str(today+datetime.timedelta(days=j))
                                 if self.has_done(start[1], end["depotName"], sdate):
-            #                         self.logger.info("ignore %s ==> %s %s" % (start["city_name"], end["city_name"], sdate))
+                                    self.logger.info("ignore %s ==> %s %s" % (start[1], end["depotName"], sdate))
                                     continue
-             
-                                #{"depotCode":"ZD1309280006","depotName":"安陵"}
                                 data = {
                                     "arrivalDepotCode": end['depotCode'],
                                     "beginTime": sdate,

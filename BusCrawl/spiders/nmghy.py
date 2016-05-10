@@ -90,9 +90,7 @@ class NmghySpider(SpiderBase):
                 drv_time = i.xpath('td[5]/span[@class="lv_time"]/text()')[0]
                 price =  i.xpath('td[8]/span[@class="tk_price"]/text()')[0]
                 left_tickets = i.xpath('td[9]/span/text()')[0]
-                print i.xpath('td[10]/a/@onclick')[0]
                 postdata = i.xpath('td[10]/a/@onclick')[0].split(',')[1][1:-3]
-                print end,type(end)
                 attrs = dict(
                     s_province = '内蒙古',
                     s_city_name = u"呼和浩特",

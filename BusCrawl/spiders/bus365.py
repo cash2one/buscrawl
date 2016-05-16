@@ -110,8 +110,8 @@ class Bus365Spider(SpiderBase):
         url = "http://%s/schedule/searchscheduler2/0" % start['netname']
 #         all_end_station = [u'望奎']
         for end in all_end_station:
-            if not self.is_end_city(start, end):
-                continue
+#             if not self.is_end_city(start, end):
+#                 continue
             today = datetime.date.today()
             for i in range(1, 2):
                 sdate = str(today+datetime.timedelta(days=i))

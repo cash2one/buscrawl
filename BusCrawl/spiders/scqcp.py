@@ -124,7 +124,7 @@ class ScqcpSpider(SpiderBase):
                 d_city_name=d["stop_name"],
                 d_city_id="",
                 d_city_code=end["city_code"],
-                d_sta_name =d["end_sta_name"],
+                d_sta_name =d["stop_name"],
                 d_sta_id="",
                 drv_date = drv_date,
                 drv_time = drv_time,

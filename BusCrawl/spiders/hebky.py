@@ -62,11 +62,8 @@ class HebkySpider(SpiderBase):
         return end_station_list
 
     def is_end_city(self, start, end):
-        db_config = settings.get("MONGODB_CONFIG")
-        client = MongoClient(db_config["url"])
-        db = client[db_config["db"]]
         s_sta_name = start[1]
-        result = db.line.distinct('d_city_name', {'crawl_source': 'hebky', 's_sta_name':s_sta_name})
+        result = self.db.line.distinct('d_city_name', {'crawl_source': 'hebky', 's_sta_name':s_sta_name})
         if end['depotName'] not in result:
             return 0
         else:
@@ -85,7 +82,7 @@ class HebkySpider(SpiderBase):
         else:
             predate = res['values']['preDate']
         return predate
-    
+
 #     def start_requests(self):
 #         start_url = "http://60.2.147.28/com/yxd/pris/openapi/cityQueryAll.action"
 #         yield scrapy.FormRequest(start_url,
@@ -103,6 +100,9 @@ class HebkySpider(SpiderBase):
             "tabLevel": "2",
             "zjm": '',
             }
+        db_config = settings.get("MONGODB_CONFIG")
+        client = MongoClient(db_config["url"])
+        self.db = client[db_config["db"]]
         yield scrapy.FormRequest(start_url,
                                  method="POST",
                                  formdata=data,
@@ -123,7 +123,6 @@ class HebkySpider(SpiderBase):
             start_dict[i[0]] = i[1].split(',')
         end_list = self.query_all_end_station()
         end_list = json.loads(end_list)
-        print "end_station_list",len(end_list)
         line_url = 'http://60.2.147.28/com/yxd/pris/openapi/queryAllTicket.action'
         for k, v in start_dict.items():
             city_name = k

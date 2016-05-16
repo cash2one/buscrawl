@@ -148,14 +148,14 @@ class TongChengSpider(SpiderBase):
         except Exception, e:
             self.logger.error("%s %s", response.body, e)
             return
-        res = res["response"]
-        if int(res["header"]["rspCode"]) != 0:
-            self.logger.error("parse_target_city: Unexpected return, %s" % res["header"])
-            return
         start = response.meta["start"]
         end= response.meta["end"]
         sdate = response.meta["sdate"]
         self.mark_done(start["name"], end["name"], sdate)
+        res = res["response"]
+        if int(res["header"]["rspCode"]) != 0:
+            self.logger.error("parse_target_city: Unexpected return, %s, %s %s" % (res["header"], start["name"], end["name"]))
+            return
 
         for d in res["body"]["schedule"]:
             if not d["canBooking"]:

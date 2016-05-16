@@ -42,19 +42,18 @@ class Bus365Spider(SpiderBase):
             }
 
     def is_end_city(self, start, end):
-        db_config = settings.get("MONGODB_CONFIG")
-        client = MongoClient(db_config["url"])
-        db = client[db_config["db"]]
-        s_sta_name = start['s_sta_name']
-        result = db.line.distinct('d_city_name', {'crawl_source': 'ctrip', 's_sta_name':s_sta_name})
-        if end['stopName'] not in result:
+#         db_config = settings.get("MONGODB_CONFIG")
+#         client = MongoClient(db_config["url"])
+#         db = client[db_config["db"]]
+        s_city_name = start['findname']
+        result = self.db.line.distinct('d_city_name', {'crawl_source': 'bus365', 's_city_name':s_city_name})
+        if end not in result:
             return 0
         else:
             return 1
 
     def query_all_end_station(self, res):
         r = get_redis()
-        print res
         city_id = res['id']
         netname = res['netname']
         key = "bus365_end_station:%s"%city_id
@@ -90,6 +89,9 @@ class Bus365Spider(SpiderBase):
         return end_station_list
 
     def start_requests(self):
+        db_config = settings.get("MONGODB_CONFIG")
+        client = MongoClient(db_config["url"])
+        self.db = client[db_config["db"]]
         url = "http://www.bus365.com/schedule/departcities/0"
         for city_name in self.city_list:
             req_data = {
@@ -107,17 +109,17 @@ class Bus365Spider(SpiderBase):
         start = res[0]
         all_end_station = self.query_all_end_station(start)
         all_end_station = json.loads(all_end_station)
-        url = "http://%s/schedule/searchscheduler2/0"%start['netname']
+        url = "http://%s/schedule/searchscheduler2/0" % start['netname']
 #         all_end_station = [u'望奎']
         for end in all_end_station:
-#             if not self.is_end_city(start, end):
-#                 continue
+            if not self.is_end_city(start, end):
+                continue
             today = datetime.date.today()
             for i in range(1, 2):
                 sdate = str(today+datetime.timedelta(days=i))
-#                 if self.has_done(start["findname"], end, sdate):
-#                     #self.logger.info("ignore %s ==> %s %s" % (start["city_name"], end["city_name"], sdate))
-#                     continue
+                if self.has_done(start["findname"], end, sdate):
+                    self.logger.info("ignore %s ==> %s %s" % (start["findname"], end, sdate))
+                    continue
                 req_data = {
                     "departdate": sdate,
                     "departcityid": start['id'],
@@ -134,7 +136,7 @@ class Bus365Spider(SpiderBase):
         end = response.meta["end"]
         sdate = response.meta["sdate"]
         res = json.loads(response.body)
-#         self.mark_done(start["city_name"], end["stopName"], sdate)
+        self.mark_done(start["findname"], end, sdate)
         for d in res['schedules']:
             if int(d['iscansell']) != 1:
                 continue

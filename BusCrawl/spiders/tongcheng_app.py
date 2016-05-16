@@ -194,5 +194,4 @@ class TongChengSpider(SpiderBase):
                 crawl_source = "tongcheng",
                 shift_id="",
             )
-            print attrs
             yield LineItem(**attrs)

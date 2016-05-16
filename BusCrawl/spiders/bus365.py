@@ -77,9 +77,7 @@ class Bus365Spider(SpiderBase):
                     station_url = "%s?%s" % (url, urllib.urlencode(req_data))
                     res = requests.get(station_url)
                     res = res.json()
-                    print res
                     for res_list in res['data']:
-                        print res_list
                         end_station_list.append(res_list['name'])
             r.set(key, json.dumps(list(set(end_station_list))))
             r.expire(key, 2*24*60*60)

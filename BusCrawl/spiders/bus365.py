@@ -113,7 +113,7 @@ class Bus365Spider(SpiderBase):
 #             if not self.is_end_city(start, end):
 #                 continue
             today = datetime.date.today()
-            for i in range(1, 2):
+            for i in range(1, 5):
                 sdate = str(today+datetime.timedelta(days=i))
                 if self.has_done(start["findname"], end, sdate):
                     self.logger.info("ignore %s ==> %s %s" % (start["findname"], end, sdate))

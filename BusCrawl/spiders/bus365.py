@@ -32,7 +32,7 @@ class Bus365Spider(SpiderBase):
             'BusCrawl.middleware.ProxyMiddleware': 410,
             'BusCrawl.middleware.Bus365HeaderMiddleware': 410,
         },
-        "DOWNLOAD_DELAY": 1,
+#         "DOWNLOAD_DELAY": 1,
         "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
     data = {

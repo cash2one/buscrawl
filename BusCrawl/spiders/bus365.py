@@ -145,7 +145,7 @@ class Bus365Spider(SpiderBase):
                 s_city_code= get_pinyin_first_litter(start['findname']),
                 s_sta_name= d["busshortname"],
                 s_sta_id = d["stationorgid"],
-                d_city_name = end,
+                d_city_name = d["stationname"],
                 d_city_code= get_pinyin_first_litter(end),
                 d_city_id = d['stationid'],
                 d_sta_name = d["stationname"],

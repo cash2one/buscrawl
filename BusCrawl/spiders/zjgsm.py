@@ -31,34 +31,6 @@ class ZjgsmSpider(SpiderBase):
     }
     base_url = "http://www.zjgsmwy.com"
 
-    def get_dest_list(self, start_city):
-        rds = get_redis()
-        rds_key = "crawl:dest:zjgsm:%s" % start_city
-        dest_str = rds.get(rds_key)
-        if not dest_str:
-            ts = int(time.time())
-            code = "car12308com"
-            key = "car12308com201510"
-            service_id = "U0102"
-            sdata = start_city
-            tmpl = {
-                "merchantCode": code,
-                "version": "1.4.0",
-                "timestamp": ts,
-                "serviceID": service_id,
-                "data": sdata,
-                "sign": md5("%s%s%s%s%s" % (code, service_id, ts, sdata, md5(key))),
-            }
-            base_url = "http://qcapi.fangbian.com/fbapi.asmx/Query"
-            r = requests.post(base_url,
-                              data=urllib.urlencode(tmpl),
-                              headers={"User-Agent": "Chrome", "Content-Type": "application/x-www-form-urlencoded"})
-            lst = r.json()["data"]
-            dest_str = json.dumps(lst)
-            rds.set(rds_key, dest_str)
-        lst = json.loads(dest_str)
-        return lst
-
     def start_requests(self):
         # 这是个pc网页页面
         start_url = self.base_url+"/busticket/busticket/service/Busticket.getAreaList.json"
@@ -100,7 +72,7 @@ class ZjgsmSpider(SpiderBase):
         line_url = self.base_url + "/busticket/busticket/service/Busticket.getBusTicketList.json"
         for d in res["responseData"]:
             start["sta_name"] = d["stationname"]
-            for s in self.get_dest_list(start["city_name"]):
+            for s in self.get_dest_list("江苏", start["city_name"]):
                 name, code = s.split("|")
                 end = {"city_name": name, "city_code": code}
                 self.logger.info("start %s ==> %s" % (start["sta_name"], end["city_name"]))

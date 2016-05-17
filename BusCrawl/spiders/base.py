@@ -5,6 +5,8 @@ import time
 
 from BusCrawl.utils.tool import get_redis
 from datetime import datetime as dte
+from scrapy.conf import settings
+from pymongo import MongoClient
 
 
 class SpiderBase(scrapy.Spider):
@@ -52,3 +54,12 @@ class SpiderBase(scrapy.Spider):
         if time > "15:00":
             return 1        # 从第二天开始爬
         return 0            # 爬当天的
+
+    def get_dest_list(self, province, city):
+        db_config = settings.get("MONGODB_CONFIG")
+        client = MongoClient(db_config["url"])
+        db = client[db_config["db"]]
+        res = db.open_city.find_one({"province": province, "city_name": city})
+        lst = res["dest_list"]
+        client.close()
+        return lst

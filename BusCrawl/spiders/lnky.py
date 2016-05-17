@@ -37,7 +37,7 @@ class LnkySpider(SpiderBase):
             u"本溪市",
             u"丹东市",u'凤城市',u'东港市',
             u"锦州市",u'凌海市',u'北镇市',u'义县',u'黑山县',
-            u"营口市",u'大石桥市',u'盖州市',u'鲅鱼圈',
+            u"营口市",u'大石桥市',u'盖州市',
             u"阜新市",u'彰武县',
             u"辽阳市",u'灯塔市',u'弓长岭',
             u"盘锦市",u'大洼县',
@@ -64,7 +64,7 @@ class LnkySpider(SpiderBase):
                 for i in range(0, 10):
                     sdate = str(today+datetime.timedelta(days=i))
                     if self.has_done(start, end[0], sdate):
-                        #self.logger.info("ignore %s ==> %s %s" % (start["city_name"], end["city_name"], sdate))
+                        self.logger.info("ignore %s ==> %s %s" % (start, end[0], sdate))
                         continue
                     queryline_url = 'http://www.jt306.cn/wap/ticketSales/ticketList.do'
                     payload = {

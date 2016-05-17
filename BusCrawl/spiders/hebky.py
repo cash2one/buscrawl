@@ -62,11 +62,8 @@ class HebkySpider(SpiderBase):
         return end_station_list
 
     def is_end_city(self, start, end):
-        db_config = settings.get("MONGODB_CONFIG")
-        client = MongoClient(db_config["url"])
-        db = client[db_config["db"]]
         s_sta_name = start[1]
-        result = db.line.distinct('d_city_name', {'crawl_source': 'hebky', 's_sta_name':s_sta_name})
+        result = self.db.line.distinct('d_city_name', {'crawl_source': 'hebky', 's_sta_name':s_sta_name})
         if end['depotName'] not in result:
             return 0
         else:
@@ -85,7 +82,7 @@ class HebkySpider(SpiderBase):
         else:
             predate = res['values']['preDate']
         return predate
-    
+
 #     def start_requests(self):
 #         start_url = "http://60.2.147.28/com/yxd/pris/openapi/cityQueryAll.action"
 #         yield scrapy.FormRequest(start_url,
@@ -103,6 +100,9 @@ class HebkySpider(SpiderBase):
             "tabLevel": "2",
             "zjm": '',
             }
+        db_config = settings.get("MONGODB_CONFIG")
+        client = MongoClient(db_config["url"])
+        self.db = client[db_config["db"]]
         yield scrapy.FormRequest(start_url,
                                  method="POST",
                                  formdata=data,
@@ -123,28 +123,25 @@ class HebkySpider(SpiderBase):
             start_dict[i[0]] = i[1].split(',')
         end_list = self.query_all_end_station()
         end_list = json.loads(end_list)
-        print "end_station_list",len(end_list)
         line_url = 'http://60.2.147.28/com/yxd/pris/openapi/queryAllTicket.action'
         for k, v in start_dict.items():
             city_name = k
-            if not self.is_need_crawl(city=city_name) or city_name in (u'保定', u'石家庄',u'唐山'):
+            if not self.is_need_crawl(city=city_name) or city_name in (u'保定', u'石家庄'):
                 continue
             for i in v:
-                start = start_list[int(i)]
-                preDate = self.query_start_predate(start[0])
-#                 preDate = 0
-                if preDate:
+                    start = start_list[int(i)]
+#                 preDate = self.query_start_predate(start[0])
+# #                 preDate = 0
+#                 if preDate:
                     for end in end_list:
                         end = json.loads(end)
-                        if 1:#self.is_end_city(start, end):
+                        if self.is_end_city(start, end):
                             today = datetime.date.today()
-                            for i in range(0, min(int(preDate), 7)):
-                                sdate = str(today+datetime.timedelta(days=i))
+                            for j in range(1, 5):
+                                sdate = str(today+datetime.timedelta(days=j))
                                 if self.has_done(start[1], end["depotName"], sdate):
-            #                         self.logger.info("ignore %s ==> %s %s" % (start["city_name"], end["city_name"], sdate))
+                                    self.logger.info("ignore %s ==> %s %s" % (start[1], end["depotName"], sdate))
                                     continue
-             
-                                #{"depotCode":"ZD1309280006","depotName":"安陵"}
                                 data = {
                                     "arrivalDepotCode": end['depotCode'],
                                     "beginTime": sdate,

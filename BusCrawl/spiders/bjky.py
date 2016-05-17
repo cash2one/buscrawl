@@ -36,10 +36,10 @@ class BjkySpider(SpiderBase):
     }
 
     def query_cookies(self):
-        db_config = settings.get("MONGODB_CONFIG")
-        client = MongoClient(db_config["url"])
-        db = client[db_config["db"]]
-        result = db.bjkyweb_rebot.find({"is_active": True}).sort([("last_login_time", -1)]).limit(5)
+#         db_config = settings.get("MONGODB_CONFIG")
+#         client = MongoClient(db_config["url"])
+#         db = client[db_config["db"]]
+        result = self.db.bjkyweb_rebot.find({"is_active": True}).sort([("last_login_time", -1)]).limit(5)
         url = "http://www.e2go.com.cn/TicketOrder/SearchSchedule"
         cookies = {}
         for i in result:
@@ -51,14 +51,14 @@ class BjkySpider(SpiderBase):
         return cookies
 
     def is_end_city(self, start, end):
-        db_config = settings.get("MONGODB_CONFIG")
-        client = MongoClient(db_config["url"])
-        db = client[db_config["db"]]
+#         db_config = settings.get("MONGODB_CONFIG")
+#         client = MongoClient(db_config["url"])
+#         db = client[db_config["db"]]
         s_sta_name = start['name']
         if s_sta_name != u'首都机场站':
             #s_sta_name = s_sta_name.strip().rstrip("站")
             s_sta_name = s_sta_name+'客运站'    
-        result = db.line.distinct('d_city_name', {'crawl_source': 'ctrip', 's_sta_name':s_sta_name})
+        result = self.db.line.distinct('d_city_name', {'crawl_source': 'ctrip', 's_sta_name':s_sta_name})
         if end['StopName'] not in result:
             return 0
         else:
@@ -90,6 +90,9 @@ class BjkySpider(SpiderBase):
 
     def start_requests(self):
 #         cookies = {"ASP.NET_SessionId": "vv3tb0fucnaxkmoudsxs5swa"}
+        db_config = settings.get("MONGODB_CONFIG")
+        client = MongoClient(db_config["url"])
+        self.db = client[db_config["db"]]
         cookies = self.query_cookies()
         if cookies:
             start_url = "http://www.e2go.com.cn/TicketOrder/SearchSchedule"

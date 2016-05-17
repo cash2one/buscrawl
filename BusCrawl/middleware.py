@@ -122,6 +122,23 @@ class HebkyHeaderMiddleware(object):
     def process_request(self, request, spider):
         request.headers.setdefault("Content-Type", "application/x-www-form-urlencoded")
 
+
+class NmghyHeaderMiddleware(object):
+
+    def process_request(self, request, spider):
+        request.headers.setdefault("Content-Type", "application/x-www-form-urlencoded")
+
+
+class Bus365HeaderMiddleware(object):
+
+    def process_request(self, request, spider):
+        request.headers.setdefault("Content-Type", "application/x-www-form-urlencoded")
+        request.headers.setdefault("accept", "application/json,")
+        request.headers.setdefault("User-Agent", "Apache-HttpClient/UNAVAILABLE (java 1.4)")
+        request.headers.setdefault("clienttype", "android")
+        request.headers.setdefault("clienttoken", "")
+
+
 class MobileRandomUserAgentMiddleware(UserAgentMiddleware):
     "移动端UserAgent"
 

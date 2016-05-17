@@ -105,23 +105,28 @@ class Bus365Spider(SpiderBase):
     def parse_start_city(self, response):
         res = json.loads(response.body)
         start = res[0]
-        all_end_station = self.query_all_end_station(start)
-        all_end_station = json.loads(all_end_station)
         url = "http://%s/schedule/searchscheduler2/0" % start['netname']
-#         all_end_station = [u'望奎']
-        for end in all_end_station:
+#         all_end_station = self.query_all_end_station(start)
+#         all_end_station = json.loads(all_end_station)
+#         for end in all_end_station:
 #             if not self.is_end_city(start, end):
 #                 continue
+        city_name = start["findname"]
+        if len(city_name) > 2 and (city_name.endswith('市') or city_name.endswith('县')):
+            city_name = city_name[0:-1]
+        for s in self.get_dest_list(start['province'], city_name):
+            name, code = s.split("|")
+            end = {"city_name": name, "city_code": code}
             today = datetime.date.today()
-            for i in range(1, 2):
+            for i in range(1, 7):
                 sdate = str(today+datetime.timedelta(days=i))
                 if self.has_done(start["findname"], end, sdate):
-                    self.logger.info("ignore %s ==> %s %s" % (start["findname"], end, sdate))
+                    self.logger.info("ignore %s ==> %s %s" % (start["findname"], end['city_name'], sdate))
                     continue
                 req_data = {
                     "departdate": sdate,
                     "departcityid": start['id'],
-                    "reachstationname": end
+                    "reachstationname": end['city_name']
                 }
                 req_data.update(self.data)
                 yield scrapy.Request("%s?%s" % (url, urllib.urlencode(req_data)),
@@ -134,7 +139,7 @@ class Bus365Spider(SpiderBase):
         end = response.meta["end"]
         sdate = response.meta["sdate"]
         res = json.loads(response.body)
-        self.mark_done(start["findname"], end, sdate)
+        self.mark_done(start["findname"], end['city_name'], sdate)
         for d in res['schedules']:
             if int(d['iscansell']) != 1:
                 continue
@@ -146,7 +151,7 @@ class Bus365Spider(SpiderBase):
                 s_sta_name= d["busshortname"],
                 s_sta_id = d["stationorgid"],
                 d_city_name = d["stationname"],
-                d_city_code= get_pinyin_first_litter(end),
+                d_city_code= get_pinyin_first_litter(d["stationname"]),
                 d_city_id = d['stationid'],
                 d_sta_name = d["stationname"],
                 d_sta_id = '',

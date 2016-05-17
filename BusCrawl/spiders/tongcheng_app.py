@@ -34,19 +34,44 @@ class TongChengSpider(SpiderBase):
 
     def start_requests(self):
         # 这是个pc网页页面
-        dest_url = "http://m.ly.com/bus/BusJson/DestinationCity"
+        line_url = "http://tcmobileapi.17usoft.com/bus/QueryHandler.ashx"
         for name in ["苏州", "南京", "无锡", "常州", "南通", "张家港", "昆山", "吴江", "常熟", "太仓", "镇江", "宜兴", "江阴", "兴化", "盐城", "扬州", "连云港", "徐州", "宿迁"]:
             if not self.is_need_crawl(city=name):
                 continue
             self.logger.info("start crawl city %s", name)
-            fd = {
-                "City": name,
-            }
-            yield scrapy.Request(dest_url,
-                                 method="POST",
-                                 body=urllib.urlencode(fd),
-                                 callback=self.parse_target_city,
-                                 meta={"start": {"name": name, "province": "江苏"}})
+            start = {"name": name, "province": "江苏"}
+            for s in self.get_dest_list(start["province"], start["name"]):
+                name, code = s.split("|")
+                end = {"name": name, "short_pinyin": code}
+                self.logger.info("start %s ==> %s" % (start["name"], end["name"]))
+
+                today = datetime.date.today()
+                for i in range(self.start_day(), 8):
+                    sdate = str(today + datetime.timedelta(days=i))
+                    if self.has_done(start["name"], end["name"], sdate):
+                        self.logger.info("ignore %s ==> %s %s" % (start["name"], end["name"], sdate))
+                        continue
+                    data = {
+                        "departure": start["name"],
+                        "destination": end["name"],
+                        "dptDate": sdate,
+                        "queryType": 1,
+                        "subCategory": 0,
+                        "page": 1,
+                        "pageSize": 1025,
+                        "hasCategory": 1,
+                        "dptStation": "",
+                        "arrStation": "",
+                        "dptTimeSpan": 0
+                    }
+                    headers, body = self.get_post_templ("getbusschedule", data)
+                    yield scrapy.Request(line_url,
+                                         method="POST",
+                                         headers=headers,
+                                         body=body,
+                                         callback=self.parse_line,
+                                         meta={"start": start, "end": end, "sdate": sdate})
+
 
     def get_post_templ(self, service_name, data):
         stime = str(int(time.time()*1000))
@@ -95,50 +120,6 @@ class TongChengSpider(SpiderBase):
             "User-Agent": "okhttp/2.5.0",
         }
         return headers, body
-
-    def parse_target_city(self, response):
-        res = json.loads(response.body)
-        res = res["response"]
-        if int(res["header"]["rspCode"]) != 0:
-            return
-
-        line_url = "http://tcmobileapi.17usoft.com/bus/QueryHandler.ashx"
-        start = response.meta["start"]
-        for c, citys in res["body"].items():
-            for city in citys:
-                d = {
-                    "name": unicode(city["name"]),
-                    "pinyin": unicode(city["enName"]),
-                    "short_pinyin": city["shortEnName"],
-                }
-                self.logger.info("start %s ==> %s" % (start["name"], city["name"]))
-
-                today = datetime.date.today()
-                for i in range(self.start_day(), 8):
-                    sdate = str(today + datetime.timedelta(days=i))
-                    if self.has_done(start["name"], d["name"], sdate):
-                        self.logger.info("ignore %s ==> %s %s" % (start["name"], d["name"], sdate))
-                        continue
-                    data = {
-                        "departure": start["name"],
-                        "destination": d["name"],
-                        "dptDate": sdate,
-                        "queryType": 1,
-                        "subCategory": 0,
-                        "page": 1,
-                        "pageSize": 1025,
-                        "hasCategory": 1,
-                        "dptStation": "",
-                        "arrStation": "",
-                        "dptTimeSpan": 0
-                    }
-                    headers, body = self.get_post_templ("getbusschedule", data)
-                    yield scrapy.Request(line_url,
-                                         method="POST",
-                                         headers=headers,
-                                         body=body,
-                                         callback=self.parse_line,
-                                         meta={"start": start, "end": d, "sdate": sdate})
 
 
     def parse_line(self, response):

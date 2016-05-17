@@ -31,22 +31,25 @@ class E8sSpider(SpiderBase):
             'BusCrawl.middleware.E8sProxyMiddleware': 410,
 #             'BusCrawl.middleware.BjkyHeaderMiddleware': 410,
         },
-        "DOWNLOAD_DELAY": 1,
+        "DOWNLOAD_DELAY": 0.1,
         "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
 
     def is_end_city(self, start, end):
-        db_config = settings.get("MONGODB_CONFIG")
-        client = MongoClient(db_config["url"])
-        db = client[db_config["db"]]
+#         db_config = settings.get("MONGODB_CONFIG")
+#         client = MongoClient(db_config["url"])
+#         db = client[db_config["db"]]
         s_sta_name = start['s_sta_name']
-        result = db.line.distinct('d_city_name', {'crawl_source': 'ctrip', 's_sta_name':s_sta_name})
+        result = self.db.line.distinct('d_city_name', {'crawl_source': 'ctrip', 's_sta_name':s_sta_name})
         if end['stopName'] not in result:
             return 0
         else:
             return 1
 
     def start_requests(self):
+        db_config = settings.get("MONGODB_CONFIG")
+        client = MongoClient(db_config["url"])
+        self.db = client[db_config["db"]]
         url = "http://m.e8s.com.cn/bwfpublicservice/endStation.action"
         return [scrapy.FormRequest(url, formdata={'jianPin': ''}, callback=self.parse_target_city)]
 
@@ -63,8 +66,8 @@ class E8sSpider(SpiderBase):
                  }
         url = "http://m.e8s.com.cn/bwfpublicservice/stationGetSchPlan.action"
         for d in res["detail"]['list']:
-            if not self.is_end_city(start, d):
-                continue
+#             if not self.is_end_city(start, d):
+#                 continue
             today = datetime.date.today()
             for i in range(1, 2):
                 sdate = str(today+datetime.timedelta(days=i))

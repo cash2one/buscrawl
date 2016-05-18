@@ -134,14 +134,14 @@ class TongChengSpider(SpiderBase):
         sdate = response.meta["sdate"]
         self.mark_done(start["name"], end["name"], sdate)
         res = res["response"]
-        if int(res["header"]["rspCode"]) != 0:
+        if int(res["header"]["rspCode"]) != 0 or not res["body"]:
             self.logger.error("parse_target_city: Unexpected return, %s, %s %s" % (res["header"], start["name"], end["name"]))
             return
 
         for d in res["body"]["schedule"]:
             if not d["canBooking"]:
                 continue
-            left_tickets = int(d["ticketLeft"])
+            left_tickets = int(d["ticketLeft"]) or "15"
             from_city = unicode(d["departure"])
             to_city = unicode(d["destination"])
             from_station = unicode(d["dptStation"])

@@ -35,11 +35,14 @@ class TongChengSpider(SpiderBase):
     def start_requests(self):
         # 这是个pc网页页面
         line_url = "http://tcmobileapi.17usoft.com/bus/QueryHandler.ashx"
-        for name in ["苏州", "南京", "无锡", "常州", "南通", "张家港", "昆山", "吴江", "常熟", "太仓", "镇江", "宜兴", "江阴", "兴化", "盐城", "扬州", "连云港", "徐州", "宿迁"]:
+        for name in ["苏州", "南京", "无锡", "常州", "南通", "张家港", "昆山", "吴江", "常熟", "太仓", "镇江", "宜兴", "江阴", "兴化", "盐城", "扬州", "连云港", "徐州", "宿迁", "天津"]:
             if not self.is_need_crawl(city=name):
                 continue
             self.logger.info("start crawl city %s", name)
-            start = {"name": name, "province": "江苏"}
+            if name == "天津":
+                start = {"name": name, "province": "天津"}
+            else:
+                start = {"name": name, "province": "江苏"}
             for s in self.get_dest_list(start["province"], start["name"]):
                 name, code = s.split("|")
                 end = {"name": name, "short_pinyin": code}
@@ -141,7 +144,7 @@ class TongChengSpider(SpiderBase):
         for d in res["body"]["schedule"]:
             if not d["canBooking"]:
                 continue
-            left_tickets = int(d["ticketLeft"]) or "15"
+            left_tickets = int(d["ticketLeft"]) or 15
             from_city = unicode(d["departure"])
             to_city = unicode(d["destination"])
             from_station = unicode(d["dptStation"])

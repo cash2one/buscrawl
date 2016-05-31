@@ -33,7 +33,7 @@ class HnSpider(SpiderBase):
         # "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
     base_url = "http://www.hn96520.com/default.aspx"
-    # base_url = 'http://www.hn96520.com/placeorder.aspx?start=%E9%83%91%E5%B7%9E%E4%B8%AD%E5%BF%83%E7%AB%99&global=410101&end=%E6%9D%AD%E5%B7%9E&date=2016-05-20'
+    #base_url = 'http://www.hn96520.com/placeorder.aspx?start=%E9%83%91%E5%B7%9E%E4%B8%AD%E5%BF%83%E7%AB%99&global=410101&end=%E6%9D%AD%E5%B7%9E&date=2016-05-30'
 
     def start_requests(self):
         yield scrapy.Request(self.base_url, callback=self.parse)
@@ -55,7 +55,7 @@ class HnSpider(SpiderBase):
                 print(e)
         urls = list(set(urls))
         # print(red(len(urls)))
-        for i in xrange(16):
+        for i in xrange(7):
             qtime = (datetime.datetime.now() +
                      datetime.timedelta(i)).strftime("%Y-%m-%d")
             qtimes.append(qtime)
@@ -85,9 +85,13 @@ class HnSpider(SpiderBase):
                 vehicle_type = x.find_all('td')[6].get_text().strip()
                 full_price = x.find_all('td')[7].get_text().strip()
                 left_tickets = int(x.find_all('td')[8].get_text().strip())
+                y = x.find_all('td')[9].a.get('href').split('?')[-1]
+                extra  = {}
+                for z in y.split('&'):
+                    extra[z.split('=')[0]] = z.split('=')[1]
 
                 attrs = dict(
-                    s_province=s_province,
+                    s_province='河南',
                     s_city_id="",
                     s_city_name=s_province,
                     s_sta_name=s_province,
@@ -110,7 +114,7 @@ class HnSpider(SpiderBase):
                     half_price=float(full_price) / 2,
                     fee=0.0,
                     crawl_datetime=dte.now(),
-                    extra_info={},
+                    extra_info=extra,
                     left_tickets=left_tickets,
                     crawl_source="hn96520",
                     shift_id="",

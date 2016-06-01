@@ -137,7 +137,7 @@ class HebkySpider(SpiderBase):
                         end = json.loads(end)
                         if self.is_end_city(start, end):
                             today = datetime.date.today()
-                            for j in range(1, 5):
+                            for j in range(1, 7):
                                 sdate = str(today+datetime.timedelta(days=j))
                                 if self.has_done(start[1], end["depotName"], sdate):
                                     self.logger.info("ignore %s ==> %s %s" % (start[1], end["depotName"], sdate))
@@ -174,6 +174,8 @@ class HebkySpider(SpiderBase):
             return
         for d in res["values"]["resultList"]:
             if d['stopFlag'] == '0':
+                if float(d["fullPrice"]) < 10:
+                    continue
                 attrs = dict(
                     s_province = '河北',
                     s_city_name = city_name,

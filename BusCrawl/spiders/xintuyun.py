@@ -38,7 +38,6 @@ class XinTuYunSpider(SpiderBase):
         #print b[0][1:-1]
         #print type(b[0])
         provinceInfo = json.loads(matchObj[0][1:-1])
-        print provinceInfo['210000']
 
         crawl_province = {"province_id": '210000', 'province_name': u"辽宁"}
         province_id = crawl_province['province_id']
@@ -62,10 +61,10 @@ class XinTuYunSpider(SpiderBase):
         if ports:
             for port in ports:
                 today = datetime.date.today()
-                for i in range(0, 10):
+                for i in range(1, 11):
                     sdate = str(today+datetime.timedelta(days=i))
                     if self.has_done(start["countyName"], port['portName'], sdate):
-                        #self.logger.info("ignore %s ==> %s %s" % (start["city_name"], end["city_name"], sdate))
+                        self.logger.info("ignore %s ==> %s %s" % (start["countyName"], port["portName"], sdate))
                         continue
                     queryline_url = 'http://www.xintuyun.cn/getTrainList/ajax'
                     payload = {

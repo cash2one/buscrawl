@@ -142,6 +142,8 @@ class TongChengSpider(SpiderBase):
             return
 
         for d in res["body"]["schedule"]:
+            if not d["coachNo"]:
+                continue
             if not d["canBooking"]:
                 continue
             left_tickets = int(d["ticketLeft"]) or 15

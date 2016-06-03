@@ -83,7 +83,7 @@ class ScqcpSpider(SpiderBase):
 
             # 预售期5天, 节假日预售期10天
             today = datetime.date.today()
-            for i in range(1, 7):
+            for i in range(1, 11):
                 sdate = str(today+datetime.timedelta(days=i))
                 if self.has_done(start["city_name"], end["city_name"], sdate):
                     #self.logger.info("ignore %s ==> %s %s" % (start["city_name"], end["city_name"], sdate))

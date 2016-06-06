@@ -8,7 +8,7 @@ import urllib
 from bs4 import BeautifulSoup as bs
 import re
 # from fabric.colors import green, red
-from cchardet import detect
+# from cchardet import detect
 
 
 from datetime import datetime as dte

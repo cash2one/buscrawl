@@ -91,7 +91,6 @@ class HnSpider(SpiderBase):
             data['dm'] = dm
             if city.find({'start': data['start'], 'mc': data['mc'], data['dm']: dm}).count() <= 0:
                 city.save(dict(data))
-        # print(soup)
 
     def parse(self, response):
         soup = bs(response.body, 'lxml')

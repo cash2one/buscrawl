@@ -41,24 +41,31 @@ class HnSpider(SpiderBase):
         # "DOWNLOAD_DELAY": 0.75,
         # "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
+
     dcitys = city.find({'start': {'$exists': True}, 'mc': {
-                       '$exists': True}, 'dm': {'$exists': True}})
+        '$exists': True}, 'dm': {'$exists': True}})
     # base_url = "http://www.hn96520.com/default.aspx"
     # base_url = 'http://www.hn96520.com/ajax/query.aspx?method=GetListByPY&q=b&limit=20&timestamp=1465204637302&global=410101'
     # base_url = 'http://www.hn96520.com/placeorder.aspx?start=%E9%83%91%E5%B7%9E%E4%B8%AD%E5%BF%83%E7%AB%99&global=410101&end=%E6%9D%AD%E5%B7%9E&date=2016-05-30'
 
     def start_requests(self):
-        qtimes = []
-        for i in xrange(7):
-            qtime = (datetime.datetime.now() +
-                     datetime.timedelta(i)).strftime("%Y-%m-%d")
-            qtimes.append(qtime)
+        days = 7
+        today = datetime.date.today()
+        if self.city_list:
+            self.dcitys = city.find({'scity': {'$in': self.city_list}})
         for x in self.dcitys:
-            for y in qtimes:
+            for y in xrange(self.start_day(), days):
+                start = x.get('start')
+                end = x.get('mc')
+                sdate = str(today + datetime.timedelta(days=y))
+                if self.has_done(start, end, sdate):
+                    continue
                 url = 'http://www.hn96520.com/placeorder.aspx?start={0}&global={1}&end={2}&date={3}'.format(
-                    x.get('start'), x.get('dm'), x.get('mc'), y)
-                yield scrapy.Request(url, callback=self.parse_line, meta={'city':
-                                                                          x.get('scity')})
+                    start, x.get('dm'), end, sdate)
+                # print url, x.get('scity')
+                yield scrapy.Request(url, callback=self.parse_line,
+                                     meta={'city': x.get('scity'), 'start': start, 'end': end,
+                                           'sdate': sdate})
 
         # 初始化抵达城市
         # gs = []
@@ -92,54 +99,12 @@ class HnSpider(SpiderBase):
             if city.find({'start': data['start'], 'mc': data['mc'], data['dm']: dm}).count() <= 0:
                 city.save(dict(data))
 
-    def parse(self, response):
-        soup = bs(response.body, 'lxml')
-        info = soup.find_all(
-            'div', attrs={'id': re.compile(r"divHotline\_\d+")})
-        # print(info)
-        urls = []
-        qtimes = []
-        for x in info:
-            try:
-                y = x.find_all('a')
-                for z in y:
-                    url = 'http://www.hn96520.com/' + z.get('href')
-                    # print(url)
-                    urls.append(url.strip())
-            except Exception as e:
-                print(e)
-        urls = list(set(urls))
-        # for url in urls:
-        #     for x in cityZD:
-        #         for y in x.get('ZD'):
-        #              name =  urllib.unquote(url.split('&')[0].split('=')[-1])
-        #              dm = url.split('&')[1].split('=')[-1]
-        #              pk = {'DM': dm, 'Name': name}
-        #              if pk == y:
-        #                 city = x.get('City')
-        # print(red(len(urls)))
-        for i in xrange(7):
-            qtime = (datetime.datetime.now() +
-                     datetime.timedelta(i)).strftime("%Y-%m-%d")
-            qtimes.append(qtime)
-        # print(qtimes)
-        for j in qtimes:
-            for k in urls:
-                url = k[:-10] + j
-                for x in cityZD:
-                    for y in x.get('ZD'):
-                        name = urllib.unquote(url.split('&')[0].split('=')[-1])
-                        dm = url.split('&')[1].split('=')[-1]
-                        pk = {'DM': dm, 'Name': name}
-                        if pk == y:
-                            city = x.get('City')
-                            # print(city)
-                            yield scrapy.Request(url, callback=self.parse_line, meta={'city': city})
-
     def parse_line(self, response):
-        # from pprint import pprint
-        # print(green('Staring {0}'.format(response.url)))
         s_city_name = response.meta['city'].decode('utf-8')
+        start = response.meta['start'].decode('utf-8')
+        end = response.meta['end'].decode('utf-8')
+        sdate = response.meta['sdate'].decode('utf-8')
+        self.mark_done(start, end, sdate)
         soup = bs(response.body, 'lxml')
         info = soup.find('table', attrs={'class': 'resulttb'}).find_all(
             'tbody', attrs={'class': 'rebody'})
@@ -152,7 +117,7 @@ class HnSpider(SpiderBase):
                 d_city_name = x.find_all('td')[1].get_text().split()[1]
                 drv_date = x.find_all('td')[2].get_text().strip()
                 drv_time = x.find_all('td')[3].get_text().strip()
-                d_sta_name = x.find_all('td')[4].get_text().strip()
+                # d_sta_name = x.find_all('td')[4].get_text().strip()
                 distance = x.find_all('td')[5].get_text().strip()
                 vehicle_type = x.find_all('td')[6].get_text().strip()
                 full_price = x.find_all('td')[7].get_text().strip()
@@ -191,8 +156,7 @@ class HnSpider(SpiderBase):
                     crawl_source="hn96520",
                     shift_id="",
                 )
-                # pprint(attrs)
                 yield LineItem(**attrs)
 
-            except Exception as e:
-                print(e)
+            except:
+                pass

@@ -143,6 +143,8 @@ class Bus365Spider(SpiderBase):
         for d in res['schedules']:
             if int(d['iscansell']) != 1:
                 continue
+            if float(d['fullprice']) < 11:
+                continue
             attrs = dict(
                 s_province = start['province'],
                 s_city_name = start['findname'],

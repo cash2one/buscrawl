@@ -48,35 +48,35 @@ class HnSpider(SpiderBase):
     # base_url = 'http://www.hn96520.com/placeorder.aspx?start=%E9%83%91%E5%B7%9E%E4%B8%AD%E5%BF%83%E7%AB%99&global=410101&end=%E6%9D%AD%E5%B7%9E&date=2016-05-30'
 
     def start_requests(self):
-        # qtimes = []
-        # for i in xrange(7):
-        #     qtime = (datetime.datetime.now() +
-        #              datetime.timedelta(i)).strftime("%Y-%m-%d")
-        #     qtimes.append(qtime)
-        # for x in self.dcitys:
-        #     for y in qtimes:
-        #         url = 'http://www.hn96520.com/placeorder.aspx?start={0}&global={1}&end={2}&date={3}'.format(
-        #             x.get('start'), x.get('dm'), x.get('mc'), y)
-        #         yield scrapy.Request(url, callback=self.parse_line, meta={'city':
-        # x.get('scity')})
+        qtimes = []
+        for i in xrange(7):
+            qtime = (datetime.datetime.now() +
+                     datetime.timedelta(i)).strftime("%Y-%m-%d")
+            qtimes.append(qtime)
+        for x in self.dcitys:
+            for y in qtimes:
+                url = 'http://www.hn96520.com/placeorder.aspx?start={0}&global={1}&end={2}&date={3}'.format(
+                    x.get('start'), x.get('dm'), x.get('mc'), y)
+                yield scrapy.Request(url, callback=self.parse_line, meta={'city':
+                                                                          x.get('scity')})
 
         # 初始化抵达城市
-        gs = []
-        for x in cityZD:
-            for y in x.get('ZD'):
-                pk = y.get('DM') + '--' + y.get('Name') + '--' + x.get('City')
-                gs.append(pk)
-        gs = list(set(gs))
-        dcitys = 'abcdefghijklmnopqrstuvwxyz'
-        for dcity in dcitys:
-            for y in gs:
-                dm = y.split('--')[0]
-                start = y.split('--')[1]
-                scity = y.split('--')[2]
-                url = 'http://www.hn96520.com/ajax/query.aspx?method=GetListByPY&q={0}&limit=1000&global={1}'.format(
-                    dcity, dm)
-                yield scrapy.Request(url, callback=self.parse_dcity, meta={'scity':
-                                                                           scity, 'start': start, 'dm': dm})
+        # gs = []
+        # for x in cityZD:
+        #     for y in x.get('ZD'):
+        #         pk = y.get('DM') + '--' + y.get('Name') + '--' + x.get('City')
+        #         gs.append(pk)
+        # gs = list(set(gs))
+        # dcitys = 'abcdefghijklmnopqrstuvwxyz'
+        # for dcity in dcitys:
+        #     for y in gs:
+        #         dm = y.split('--')[0]
+        #         start = y.split('--')[1]
+        #         scity = y.split('--')[2]
+        #         url = 'http://www.hn96520.com/ajax/query.aspx?method=GetListByPY&q={0}&limit=1000&global={1}'.format(
+        #             dcity, dm)
+        #         yield scrapy.Request(url, callback=self.parse_dcity, meta={'scity':
+        # scity, 'start': start, 'dm': dm})
 
     # 初始化到达城市
     def parse_dcity(self, response):

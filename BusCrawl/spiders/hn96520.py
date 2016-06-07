@@ -173,7 +173,7 @@ class HnSpider(SpiderBase):
                     d_city_id="",
                     d_city_code=get_pinyin_first_litter(d_city_name),
                     d_sta_id="",
-                    d_sta_name=d_sta_name,
+                    d_sta_name=d_city_name,
                     drv_date=drv_date,
                     drv_time=drv_time,
                     drv_datetime=dte.strptime("%s %s" % (

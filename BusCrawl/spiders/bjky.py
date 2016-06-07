@@ -176,6 +176,10 @@ class BjkySpider(SpiderBase):
             scheduleIdSpan = scheduleIdSpan.replace('\r\n', '').replace('\t',  '').replace(' ',  '')
             price = s.xpath('td[@class="ticketPriceCell"]/span[@class="ticketPriceSpan"]/span[@class="ticketPriceValueSpan"]/text()')[0]
             ScheduleString = s.xpath('td[@class="operationCell"]/@data-schedule')[0]
+            left_tickets = 45
+            left_less = s.xpath('td[@class="memoCell"]/span/@class')
+            if left_less:
+                left_tickets = 0
 
             station_code_mapping = {
                 u"六里桥": "1000",
@@ -213,7 +217,7 @@ class BjkySpider(SpiderBase):
                 fee = 0,
                 crawl_datetime = dte.now(),
                 extra_info = {"ScheduleString":ScheduleString,"ArrivingStopJson":json.dumps(end)},
-                left_tickets = 50,
+                left_tickets = left_tickets,
                 crawl_source = "bjky",
                 shift_id='',
             )

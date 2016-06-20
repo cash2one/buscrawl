@@ -3,16 +3,12 @@
 import scrapy
 import json
 import datetime
-import urllib
-import re
-import time
 import requests
 
 from datetime import datetime as dte
 from BusCrawl.item import LineItem
 from base import SpiderBase
-from BusCrawl.utils.tool import get_redis, get_pinyin_first_litter
-from BusCrawl.utils.tool import md5
+from BusCrawl.utils.tool import get_pinyin_first_litter
 
 
 class GdswSpider(SpiderBase):
@@ -44,14 +40,13 @@ class GdswSpider(SpiderBase):
         for x in data:
             if not self.is_need_crawl(city=x):
                 continue
-            start = {"s_city_name": x, "s_city_code": get_pinyin_first_litter(x)}
             dest_list = self.get_dest_list("广东", x)
             for y in dest_list:
                 end = {"d_city_name": y, "d_city_code": get_pinyin_first_litter(y)}
-                self.logger.info("start %s ==> %s" % (start["s_city_name"], end["d_city_name"]))
+                self.logger.info("start %s ==> %s" % (x, y))
                 for i in range(self.start_day(), 8):
                     sdate = (today+datetime.timedelta(days=i)).strftime("%Y%m%d")
-                    if self.has_done(start["s_city_name"], end["d_city_name"], sdate):
+                    if self.has_done(x, y, sdate):
                         continue
                     params = {"fromcity": x,"schdate": sdate,"schtimeend":"","schtimestart":"","tocity":y}
                     yield scrapy.Request(line_url,
@@ -59,7 +54,7 @@ class GdswSpider(SpiderBase):
                                          body=json.dumps(params),
                                          callback=self.parse_line,
                                          headers={"Content-Type": "application/json; charset=UTF-8"},
-                                         meta={"start": start, "end": end, "sdate": sdate})
+                                         meta={"start": x, "end": y,"sdate": sdate})
 
     def get_dest_list_from_web(self, province, city):
         if not hasattr(self, "_dest_list"):
@@ -79,39 +74,45 @@ class GdswSpider(SpiderBase):
         start = response.meta["start"]
         end= response.meta["end"]
         sdate = response.meta["sdate"]
-        self.mark_done(start["s_city_name"], end["d_city_name"], sdate)
+        self.mark_done(start, end, sdate)
         try:
             res = json.loads(response.body)
         except Exception, e:
             raise e
-
+        if not res.get("success", False):
+            return
         for d in res["data"]:
+            drv_datetime = dte.strptime("%s %s" % (d["schdate"], d["sendtime"]), "%Y%m%d %H%M")
+            if d["endnodename"] != d["endstationname"]:
+                print "未知之谜：%s %s" % (res["startcity"], d["endcity"])
+            if not d["sell"]:
+                continue
             attrs = dict(
                 s_province = "广东",
-                s_city_id = start["s_city_id"],
-                s_city_name = start["s_city_name"],
-                s_sta_name = d["SchStationName"],
-                s_city_code=start["s_city_code"],
-                s_sta_id=d["SchStationCode"],
-                d_city_name = end["d_city_name"],
+                s_city_id = "",
+                s_city_name = res["startcity"],
+                s_sta_name = d["startstationname"],
+                s_city_code=get_pinyin_first_litter(res["startcity"]),
+                s_sta_id=d["startstation"],
+                d_city_name = d["endcity"],
                 d_city_id= "",
-                d_city_code=end["d_city_code"],
-                d_sta_id="",
-                d_sta_name=d["SchDstNodeName"],
-                drv_date=d["SchDate"],
-                drv_time=d["SchTime"],
-                drv_datetime = dte.strptime("%s %s" % (d["SchDate"], d["SchTime"]), "%Y-%m-%d %H:%M"),
-                distance = unicode(d["SchDist"]),
-                vehicle_type = d["SchBusType"],
+                d_city_code=get_pinyin_first_litter(d["endcity"]),
+                d_sta_id=d["endstation"],
+                d_sta_name=d["endstationname"],
+                drv_date=drv_datetime.strftime("%Y-%m-%d"),
+                drv_time=drv_datetime.strftime("%H:%M"),
+                drv_datetime = drv_datetime,
+                distance = "",
+                vehicle_type = d["bustype"],
                 seat_type = "",
-                bus_num = d["SchLocalCode"],
-                full_price = float(d["SchPrice"]),
-                half_price = float(d["SchDiscPrice"]),
+                bus_num = d["schcode"],
+                full_price = float(d["price"]),
+                half_price = float(d["price"]),
                 fee = 0,
                 crawl_datetime = dte.now(),
-                extra_info = {"raw_info": d},
-                left_tickets = int(d["SchTicketCount"]),
-                crawl_source = "cqky",
+                extra_info = {},
+                left_tickets = int(d["lefttickets"]),
+                crawl_source = "gdsw",
                 shift_id="",
             )
             yield LineItem(**attrs)

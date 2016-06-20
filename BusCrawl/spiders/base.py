@@ -56,10 +56,30 @@ class SpiderBase(scrapy.Spider):
         return 0            # 爬当天的
 
     def get_dest_list(self, province, city):
+        """
+        获取目的地, 先从数据库获取,为空则去网络找
+        """
+        lst = self.get_dest_list_from_db(province, city)
+        if not lst:
+            lst = self.get_dest_list_from_web(province, city)
+        return lst
+
+    def get_dest_list_from_db(self, province, city):
+        """
+        从数据库获取目的地
+        """
         db_config = settings.get("MONGODB_CONFIG")
         client = MongoClient(db_config["url"])
         db = client[db_config["db"]]
         res = db.open_city.find_one({"province": province, "city_name": city})
-        lst = res["dest_list"]
+        lst = []
+        if res:
+            lst = res["dest_list"]
         client.close()
         return lst
+
+    def get_dest_list_from_web(self, province, city):
+        """
+        由子类实现
+        """
+        pass

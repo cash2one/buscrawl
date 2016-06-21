@@ -26,7 +26,7 @@ class MongoPipeline(object):
 
         data = dict(item)
         now = dte.now()
-        if data["crawl_source"] in ["cqky", "zjgsm", "wxsz", "tongcheng", "cbd", "jsky", "fangbian", "jsdlky", "baba", "tzky", "ctrip", "changtu", "scqcp","bus365"]:
+        if data["crawl_source"] in ["cqky", "zjgsm", "wxsz", "tongcheng", "cbd", "jsky", "fangbian", "jsdlky", "baba", "tzky", "ctrip", "changtu", "scqcp", "bus365", "xyjt", "gdsw"]:
             data["line_id"]= md5("%(s_city_name)s-%(d_city_name)s-%(drv_datetime)s-%(s_sta_name)s-%(d_sta_name)s-%(crawl_source)s" % data)
         else:
             data["line_id"]= md5("%(s_city_name)s-%(d_city_name)s-%(drv_datetime)s-%(bus_num)s-%(crawl_source)s" % data)

@@ -42,7 +42,7 @@ class GdswSpider(SpiderBase):
                 continue
             dest_list = self.get_dest_list("广东", x)
             for y in dest_list:
-                end = {"d_city_name": y, "d_city_code": get_pinyin_first_litter(y)}
+                y = y.split("|")[0]
                 self.logger.info("start %s ==> %s" % (x, y))
                 for i in range(self.start_day(), 8):
                     sdate = (today+datetime.timedelta(days=i)).strftime("%Y%m%d")

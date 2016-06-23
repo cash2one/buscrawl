@@ -93,8 +93,8 @@ class Xyjt(SpiderBase):
                 end = x.get('end')
                 start_code = x.get('start_code')
                 sdate = str(today + datetime.timedelta(days=y))
-                # if self.has_done(start, end, sdate):
-                #     continue
+                if self.has_done(start, end, sdate):
+                    continue
                 url = 'http://order.xuyunjt.com/wsdgbccx.aspx'
                 ste = sdate.replace('-', '')
                 data['radio'] = end

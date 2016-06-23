@@ -64,7 +64,7 @@ class SpiderBase(scrapy.Spider):
         client.close()
         return lst
 
-    def update_sale_line(self, city, q):
+    def update_sale_line(self, city, q=''):
         '''
         更新open_city sale_line字段
         '''

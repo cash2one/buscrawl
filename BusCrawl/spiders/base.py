@@ -3,7 +3,7 @@
 import scrapy
 import time
 
-from BusCrawl.utils.tool import get_redis
+from BusCrawl.utils.tool import get_redis, get_pinyin_first_litter
 from datetime import datetime as dte
 from scrapy.conf import settings
 from pymongo import MongoClient
@@ -56,30 +56,34 @@ class SpiderBase(scrapy.Spider):
         return 0            # 爬当天的
 
     def get_dest_list(self, province, city):
-        """
-        获取目的地, 先从数据库获取,为空则去网络找
-        """
-        lst = self.get_dest_list_from_db(province, city)
-        if not lst:
-            lst = self.get_dest_list_from_web(province, city)
-        return lst
-
-    def get_dest_list_from_db(self, province, city):
-        """
-        从数据库获取目的地
-        """
         db_config = settings.get("MONGODB_CONFIG")
         client = MongoClient(db_config["url"])
         db = client[db_config["db"]]
         res = db.open_city.find_one({"province": province, "city_name": city})
-        lst = []
-        if res:
-            lst = res["dest_list"]
+        lst = res["dest_list"]
         client.close()
         return lst
 
-    def get_dest_list_from_web(self, province, city):
-        """
-        由子类实现
-        """
-        pass
+    def update_sale_line(self, city, q):
+        '''
+        更新open_city sale_line字段
+        '''
+        db_config = settings.get("MONGODB_CONFIG")
+        client = MongoClient(db_config["url"])
+        db = client[db_config["db"]]
+        res = db.line.find({'s_city_name': city})
+        sale = {}
+        for x in res:
+            s, e, c = x['s_sta_name'], x['d_sta_name'], x.get(q, '')
+            start = '{0}|{1}|{2}'.format(s, get_pinyin_first_litter(s), c)
+            end = '{0}|{1}'.format(e, get_pinyin_first_litter(e))
+            v = sale.get(start, [])
+            if v:
+                if end not in v:
+                    v.append(end)
+                sale[start] = v
+            else:
+                sale[start] = [end, ]
+        db.open_city.update({'city_name': city}, {'$set': {'sale_line': sale}})
+        client.close()
+        return sale

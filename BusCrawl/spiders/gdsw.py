@@ -83,8 +83,6 @@ class GdswSpider(SpiderBase):
             return
         for d in res["data"]:
             drv_datetime = dte.strptime("%s %s" % (d["schdate"], d["sendtime"]), "%Y%m%d %H%M")
-            if d["endnodename"] != d["endstationname"]:
-                print "未知之谜：%s %s" % (res["startcity"], d["endcity"])
             if not d["sell"]:
                 continue
             attrs = dict(
@@ -110,7 +108,7 @@ class GdswSpider(SpiderBase):
                 half_price = float(d["price"]),
                 fee = 0,
                 crawl_datetime = dte.now(),
-                extra_info = {},
+                extra_info = {"endnodename": d["endnodename"], "endnodecode": d["endnodecode"]},
                 left_tickets = int(d["lefttickets"]),
                 crawl_source = "gdsw",
                 shift_id="",

@@ -132,22 +132,13 @@ class Xyjt(SpiderBase):
     # 初始化到达城市
     def parse_dcity(self, response):
         s_city_name = response.meta['s_city_name'].decode('utf-8')
-        soup = bs(response.body, 'lxml')
-        data = {}
-        # inspect_response(response, self)
-        data['s_city_name'] = s_city_name
-        snames = []
-        info = soup.find('select', attrs={
-                         'name': 'ctl00$ContentPlaceHolder1$ddlincounty'}).find_all('option')
-        snames = [(x.get_text(), x.get('value')) for x in info]
-        info = soup.find(
-            'td', attrs={'colspan': '3', 'align': 'center'}).find_all('label')
-        dnames = self.get_dest_list('江苏', '徐州')
-        for x in snames:
-            for y in dnames:
-                data['start'] = x[0]
-                data['start_code'] = x[1]
-                data['end'] = y.split('|')[0]
+        line = self.get_sale_line('徐州')
+        data = {'s_city_name': s_city_name}
+        for x in line:
+            for y in line[x].keys():
+                data['start'] = x.split('|')[0]
+                data['start_code'] = x.split('|')[2]
+                data['end'] = y
                 if city.find({'start': data['start'], 'end': data['end'], 'start_code': data['start_code']}).count() <= 0:
                     city.save(dict(data))
 

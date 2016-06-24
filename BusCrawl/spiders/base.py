@@ -75,8 +75,8 @@ class SpiderBase(scrapy.Spider):
         sale = {}
         for x in res:
             s, e, c, eta  = x['s_sta_name'], x['d_sta_name'], x.get(q, ''), x.get(extra, {})
-            start = ('{0}|{1}'.format(s, get_pinyin_first_litter(s)), c)
-            end = ('{0}|{1}'.format(e, get_pinyin_first_litter(e)), eta)
+            start = '{0}|{1}|{2}'.format(s, get_pinyin_first_litter(s), c)
+            end = {'{0}|{1}'.format(e, get_pinyin_first_litter(e)): e}
             v = sale.get(start, [])
             if v:
                 if end not in v:
@@ -87,7 +87,7 @@ class SpiderBase(scrapy.Spider):
         db.open_city.update({'city_name': city}, {'$set': {'sale_line': sale}})
         client.close()
 
-    def get_sale_line(self, city='')
+    def get_sale_line(self, city=''):
         db_config = settings.get("MONGODB_CONFIG")
         client = MongoClient(db_config["url"])
         db = client[db_config["db"]]

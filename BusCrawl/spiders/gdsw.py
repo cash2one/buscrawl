@@ -23,7 +23,7 @@ class GdswSpider(SpiderBase):
             'BusCrawl.middleware.MobileRandomUserAgentMiddleware': 400,
             # 'BusCrawl.middleware.CqkyHeaderMiddleware': 410,
         },
-        # "DOWNLOAD_DELAY": 0.2,
+        "DOWNLOAD_DELAY": 0.02,
         "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
 
@@ -38,11 +38,14 @@ class GdswSpider(SpiderBase):
         today = dte.today()
         line_url = "http://183.6.161.195:9000/api/TicketOrder/QuerySchedule"
         for x in data:
+            if x in ["广州"]:
+                continue
             if not self.is_need_crawl(city=x):
                 continue
             dest_list = self.get_dest_list("广东", x)
             start = {"city_name": x, "city_code": get_pinyin_first_litter(x)}
             for y in dest_list:
+                y = y.split("|")[0]
                 end = {"city_name": y, "city_code": get_pinyin_first_litter(y)}
                 self.logger.info("start %s ==> %s" % (x, y))
                 for i in range(self.start_day(), 8):

@@ -64,29 +64,6 @@ class SpiderBase(scrapy.Spider):
         client.close()
         return lst
 
-    def update_sale_line(self, city, q='', extra='', crawl=''):
-        '''
-        更新open_city sale_line字段
-        '''
-        db_config = settings.get("MONGODB_CONFIG")
-        client = MongoClient(db_config["url"])
-        db = client[db_config["db"]]
-        res = db.line.find({'s_city_name': city, 'crawl_source': crawl})
-        sale = {}
-        for x in res:
-            s, e, c, eta  = x['s_sta_name'], x['d_sta_name'], x.get(q, ''), x.get(extra, {})
-            start = '{0}|{1}|{2}'.format(s, get_pinyin_first_litter(s), c)
-            end = {'{0}|{1}'.format(e, get_pinyin_first_litter(e)): e}
-            v = sale.get(start, [])
-            if v:
-                if end not in v:
-                    v.append(end)
-                sale[start] = v
-            else:
-                sale[start] = [end, ]
-        db.open_city.update({'city_name': city}, {'$set': {'sale_line': sale}})
-        client.close()
-
     def get_sale_line(self, city=''):
         db_config = settings.get("MONGODB_CONFIG")
         client = MongoClient(db_config["url"])

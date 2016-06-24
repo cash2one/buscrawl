@@ -117,7 +117,7 @@ class Xyjt(SpiderBase):
                     body=pa,
                     headers=headers,
                     meta={
-                        's_city_name': '徐州市',
+                        's_city_name': '徐州',
                         'start': start,
                         'end': end,
                         'sdate': sdate,
@@ -127,7 +127,7 @@ class Xyjt(SpiderBase):
                 )
 
         # 初始化抵达城市
-        # yield scrapy.Request(self.base_url, callback=self.parse_dcity, meta={'s_city_name': '徐州市'})
+        # yield scrapy.Request(self.base_url, callback=self.parse_dcity, meta={'s_city_name': '徐州'})
 
     # 初始化到达城市
     def parse_dcity(self, response):
@@ -150,16 +150,6 @@ class Xyjt(SpiderBase):
                 data['end'] = y.split('|')[0]
                 if city.find({'start': data['start'], 'end': data['end'], 'start_code': data['start_code']}).count() <= 0:
                     city.save(dict(data))
-
-    def get_dest_list(self, province, city):
-        db_config = settings.get("MONGODB_CONFIG")
-        client = MongoClient(db_config["url"])
-        db = client[db_config["db"]]
-        res = db.open_city.find_one({"province": province, "city_name": city})
-        lst = res["dest_list"]
-        client.close()
-        return lst
-
 
     def parse_line(self, response):
         s_city_name = response.meta['s_city_name'].decode('utf-8')
@@ -193,7 +183,7 @@ class Xyjt(SpiderBase):
                 for z in extra.split('&'):
                     extra_info[z.split('=')[0]] = z.split('=')[1]
                 attrs = dict(
-                    s_province='江苏省',
+                    s_province='江苏',
                     s_city_id="",
                     s_city_name=s_city_name,
                     s_sta_name=s_sta_name,

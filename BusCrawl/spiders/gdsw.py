@@ -41,8 +41,9 @@ class GdswSpider(SpiderBase):
             if not self.is_need_crawl(city=x):
                 continue
             dest_list = self.get_dest_list("广东", x)
+            start = {"city_name": x, "city_code": get_pinyin_first_litter(x)}
             for y in dest_list:
-                end = {"d_city_name": y, "d_city_code": get_pinyin_first_litter(y)}
+                end = {"city_name": y, "city_code": get_pinyin_first_litter(y)}
                 self.logger.info("start %s ==> %s" % (x, y))
                 for i in range(self.start_day(), 8):
                     sdate = (today+datetime.timedelta(days=i)).strftime("%Y%m%d")
@@ -54,7 +55,7 @@ class GdswSpider(SpiderBase):
                                          body=json.dumps(params),
                                          callback=self.parse_line,
                                          headers={"Content-Type": "application/json; charset=UTF-8"},
-                                         meta={"start": x, "end": y,"sdate": sdate})
+                                         meta={"start": start, "end": end,"sdate": sdate})
 
     def get_dest_list_from_web(self, province, city):
         if not hasattr(self, "_dest_list"):
@@ -74,7 +75,7 @@ class GdswSpider(SpiderBase):
         start = response.meta["start"]
         end= response.meta["end"]
         sdate = response.meta["sdate"]
-        self.mark_done(start, end, sdate)
+        self.mark_done(start["city_name"], end["city_name"], sdate)
         try:
             res = json.loads(response.body)
         except Exception, e:
@@ -92,9 +93,9 @@ class GdswSpider(SpiderBase):
                 s_sta_name = d["startstationname"],
                 s_city_code=get_pinyin_first_litter(res["startcity"]),
                 s_sta_id=d["startstation"],
-                d_city_name = d["endcity"],
+                d_city_name = end["city_name"],
                 d_city_id= "",
-                d_city_code=get_pinyin_first_litter(d["endcity"]),
+                d_city_code=end["city_code"],
                 d_sta_id=d["endstation"],
                 d_sta_name=d["endstationname"],
                 drv_date=drv_datetime.strftime("%Y-%m-%d"),
@@ -108,7 +109,7 @@ class GdswSpider(SpiderBase):
                 half_price = float(d["price"]),
                 fee = 0,
                 crawl_datetime = dte.now(),
-                extra_info = {"endnodename": d["endnodename"], "endnodecode": d["endnodecode"]},
+                extra_info = {"endnodename": d["endnodename"], "endnodecode": d["endnodecode"], "endcity": d["endcity"]},
                 left_tickets = int(d["lefttickets"]),
                 crawl_source = "gdsw",
                 shift_id="",

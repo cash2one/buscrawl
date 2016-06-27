@@ -6,6 +6,7 @@ import json
 import datetime
 import urllib
 import time
+import requests
 
 from datetime import datetime as dte
 from collections import OrderedDict
@@ -32,10 +33,19 @@ class TongChengSpider(SpiderBase):
     }
     base_url = "http://m.ctrip.com/restapi/busphp/app/index.php"
 
+    def get_dest_list_from_web(self, province, city):
+        url = "http://www.chebada.com/Home/GetBusDestinations"
+        r = requests.post(url, headers={"User-Agent": "Chrome", "Content-Type": "application/x-www-form-urlencoded"}, data=urllib.urlencode({"departure": city}))
+        lst = []
+        for d in r.json()["response"]["body"]["destinationList"]:
+            for c in d["cities"]:
+                lst.append("%s|%s" % (c["name"], c["shortEnName"]))
+        return set(lst)
+
     def start_requests(self):
         # 这是个pc网页页面
         line_url = "http://tcmobileapi.17usoft.com/bus/QueryHandler.ashx"
-        for name in ["苏州", "南京", "无锡", "常州", "南通", "张家港", "昆山", "吴江", "常熟", "太仓", "镇江", "宜兴", "江阴", "兴化", "盐城", "扬州", "连云港", "徐州", "宿迁", "天津"]:
+        for name in ["苏州", "南京", "无锡", "常州", "南通", "张家港", "昆山", "吴江", "常熟", "太仓", "镇江", "宜兴", "江阴", "兴化", "盐城", "扬州", "连云港", "徐州", "宿迁", "天津", "淮安"]:
             if not self.is_need_crawl(city=name):
                 continue
             self.logger.info("start crawl city %s", name)
@@ -175,7 +185,14 @@ class TongChengSpider(SpiderBase):
                 half_price = float(d["ticketPrice"])/2,
                 fee = float(d["ticketFee"]),
                 crawl_datetime = dte.now(),
-                extra_info = {},
+                extra_info = {
+                    "AgentType":d["AgentType"],
+                    "timePeriodType":d[u'timePeriodType'],
+                    "serviceChargeID": d["serviceChargeID"],
+                    "serviceChargePrice": d["serviceChargePrice"],
+                    "serviceChargeType": d.get("serviceChargeType", 0),
+                    "runTime": d["runTime"]
+                },
                 left_tickets = left_tickets,
                 crawl_source = "tongcheng",
                 shift_id="",

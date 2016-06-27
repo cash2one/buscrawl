@@ -83,3 +83,11 @@ class SpiderBase(scrapy.Spider):
         由子类实现
         """
         pass
+
+    def get_sale_line(self, city=''):
+        db_config = settings.get("MONGODB_CONFIG")
+        client = MongoClient(db_config["url"])
+        db = client[db_config["db"]]
+        res = db.open_city.find_one({'city_name': city})
+        client.close()
+        return res['sale_line']

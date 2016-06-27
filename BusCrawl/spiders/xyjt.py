@@ -198,7 +198,7 @@ class Xyjt(SpiderBase):
                     s_city_name=s_city_name,
                     s_sta_name=s_sta_name,
                     s_city_code=get_pinyin_first_litter(s_city_name),
-                    s_sta_id='',
+                    s_sta_id=extra_info['incountry'],
                     d_city_name=d_city_name,
                     d_city_id="",
                     d_city_code=get_pinyin_first_litter(d_city_name),

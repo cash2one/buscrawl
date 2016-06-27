@@ -117,7 +117,7 @@ class SzkySpider(SpiderBase):
             for k, (name, w_code) in station_dict.items():
                 for end in end_list:
                     today = datetime.date.today()
-                    for j in range(1, 3):
+                    for j in range(1, 7):
                         sdate = str(today+datetime.timedelta(days=j))
                         if self.has_done(name, end, sdate):
                             self.logger.info("ignore %s ==> %s %s" % (name, end,sdate))

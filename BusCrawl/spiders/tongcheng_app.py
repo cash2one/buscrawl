@@ -175,7 +175,14 @@ class TongChengSpider(SpiderBase):
                 half_price = float(d["ticketPrice"])/2,
                 fee = float(d["ticketFee"]),
                 crawl_datetime = dte.now(),
-                extra_info = {},
+                extra_info = {
+                    "AgentType":d["AgentType"],
+                    "timePeriodType":d[u'timePeriodType'],
+                    "serviceChargeID": d["serviceChargeID"],
+                    "serviceChargePrice": d["serviceChargePrice"],
+                    "serviceChargeType": d.get("serviceChargeType", 0),
+                    "runTime": d["runTime"]
+                },
                 left_tickets = left_tickets,
                 crawl_source = "tongcheng",
                 shift_id="",

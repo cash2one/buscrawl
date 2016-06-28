@@ -51,14 +51,16 @@ class BjkySpider(SpiderBase):
         return cookies
 
     def is_end_city(self, start, end):
-#         db_config = settings.get("MONGODB_CONFIG")
-#         client = MongoClient(db_config["url"])
-#         db = client[db_config["db"]]
+        if not hasattr("_sta_dest_list"):
+            self._sta_dest_list = {}
         s_sta_name = start['name']
         if s_sta_name != u'首都机场站':
-            #s_sta_name = s_sta_name.strip().rstrip("站")
-            s_sta_name = s_sta_name+'客运站'    
-        result = self.db.line.distinct('d_city_name', {'crawl_source': 'ctrip', 's_sta_name':s_sta_name})
+            s_sta_name = s_sta_name+'客运站'
+
+        if s_sta_name not in self._sta_dest_list:
+            self._sta_dest_list[s_sta_name] = self.db.line.distinct('d_city_name', {'crawl_source': 'ctrip', 's_sta_name':s_sta_name})
+
+        result = self._sta_dest_list[s_sta_name]
         if end['StopName'] not in result:
             return 0
         else:
@@ -97,7 +99,7 @@ class BjkySpider(SpiderBase):
         if cookies:
             start_url = "http://www.e2go.com.cn/TicketOrder/SearchSchedule"
     #         cookie ="Hm_lvt_0b26ef32b58e6ad386a355fa169e6f06=1456970104,1457072900,1457316719,1457403102; ASP.NET_SessionId=uuppwd3q4j3qo5vwcka2v04y; Hm_lpvt_0b26ef32b58e6ad386a355fa169e6f06=1457415243"
-    #         headers={"cookie":cookie} 
+    #         headers={"cookie":cookie}
             yield scrapy.Request(start_url,
                                  method="GET",
                                  cookies=cookies,

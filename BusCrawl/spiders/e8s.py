@@ -36,11 +36,14 @@ class E8sSpider(SpiderBase):
     }
 
     def is_end_city(self, start, end):
-#         db_config = settings.get("MONGODB_CONFIG")
-#         client = MongoClient(db_config["url"])
-#         db = client[db_config["db"]]
+        if not hasattr("_sta_dest_list"):
+            self._sta_dest_list = {}
         s_sta_name = start['s_sta_name']
-        result = self.db.line.distinct('d_city_name', {'crawl_source': 'ctrip', 's_sta_name':s_sta_name})
+
+        if s_sta_name not in self._sta_dest_list:
+            result = self.db.line.distinct('d_city_name', {'crawl_source': 'ctrip', 's_sta_name':s_sta_name})
+            self._sta_dest_list[s_sta_name] = result
+        result = self._sta_dest_list[s_sta_name]
         if end['stopName'] not in result:
             return 0
         else:

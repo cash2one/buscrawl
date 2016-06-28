@@ -42,11 +42,13 @@ class Bus365Spider(SpiderBase):
             }
 
     def is_end_city(self, start, end):
-#         db_config = settings.get("MONGODB_CONFIG")
-#         client = MongoClient(db_config["url"])
-#         db = client[db_config["db"]]
+        if not hasattr("_sta_dest_list"):
+            self._sta_dest_list = {}
         s_city_name = start['findname']
-        result = self.db.line.distinct('d_city_name', {'crawl_source': 'bus365', 's_city_name':s_city_name})
+
+        if s_city_name not in self._sta_dest_list:
+            self._sta_dest_list[s_city_name] = self.db.line.distinct('d_city_name', {'crawl_source': 'bus365', 's_city_name':s_city_name})
+        result = self._sta_dest_list[s_city_name]
         if end not in result:
             return 0
         else:

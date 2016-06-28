@@ -62,8 +62,13 @@ class HebkySpider(SpiderBase):
         return end_station_list
 
     def is_end_city(self, start, end):
+        if not hasattr("_sta_dest_list"):
+            self._sta_dest_list = {}
         s_sta_name = start[1]
-        result = self.db.line.distinct('d_city_name', {'crawl_source': 'hebky', 's_sta_name':s_sta_name})
+
+        if s_sta_name not in self._sta_dest_list:
+            self._sta_dest_list[s_sta_name] = self.db.line.distinct('d_city_name', {'crawl_source': 'hebky', 's_sta_name': s_sta_name})
+        result = self._sta_dest_list[s_sta_name]
         if end['depotName'] not in result:
             return 0
         else:

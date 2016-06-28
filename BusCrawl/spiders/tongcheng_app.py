@@ -45,7 +45,7 @@ class TongChengSpider(SpiderBase):
     def start_requests(self):
         # 这是个pc网页页面
         line_url = "http://tcmobileapi.17usoft.com/bus/QueryHandler.ashx"
-        for name in ["苏州", "南京", "无锡", "常州", "南通", "张家港", "昆山", "吴江", "常熟", "太仓", "镇江", "宜兴", "江阴", "兴化", "盐城", "扬州", "连云港", "徐州", "宿迁", "天津", "淮安"]:
+        for name in ["苏州", "南京", "无锡", "常州", "南通", "张家港", "昆山", "吴江", "常熟", "太仓", "镇江", "宜兴", "江阴", "兴化", "盐城", "扬州", "连云港", "徐州", "宿迁", "天津", "淮安", "句容", "靖江", "句容", "靖江", "大丰", "扬中", "溧阳", "射阳", "滨海", "盱眙", "涟水"]:
             if not self.is_need_crawl(city=name):
                 continue
             self.logger.info("start crawl city %s", name)

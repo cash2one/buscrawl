@@ -121,7 +121,7 @@ class SzkySpider(SpiderBase):
                         y = y.split("|")[0]
                         end = {"city_name": y, "city_code": get_pinyin_first_litter(y)}
                         today = datetime.date.today()
-                        for j in range(1, 2):
+                        for j in range(1, 7):
                             sdate = str(today+datetime.timedelta(days=j))
                             if self.has_done(name, end['city_name'], sdate):
                                 self.logger.info("ignore %s ==> %s %s" % (name,end['city_name'],sdate))

@@ -186,10 +186,10 @@ class DgkySpider(SpiderBase):
                     continue
                 bus_num = i.xpath('td[1]/div/text()')[0].replace('\r\n', '').replace('\t',  '').replace(' ',  '')
                 drv_date = i.xpath('td[2]/div/text()')[0].replace('\r\n', '').replace('\t',  '').replace(' ',  '')
+                drv_date = dte.strftime(drv_date.strptime(drv_date, '%Y-%m-%d'),'%Y-%m-%d')
                 drv_time = i.xpath('td[3]/div/text()')[0].replace('\r\n', '').replace('\t',  '').replace(' ',  '')
                 start_station = i.xpath('td[4]/div/text()')[0].replace('\r\n', '').replace('\t',  '').replace(' ',  '')
                 end_station = i.xpath('td[5]/div/text()')[0].replace('\r\n', '').replace('\t',  '').replace(' ',  '')
-                chexing = i.xpath('td[6]/div/text()')[0].replace('\r\n', '').replace('\t',  '').replace(' ',  '')
                 distance = i.xpath('td[7]/div/text()')[0].replace('\r\n', '').replace('\t',  '').replace(' ',  '')
                 href = i.xpath('td[9]/div/a/@onclick')[0].split(";")
                 query_url = "http://www.mp0769.com/" + href[0][15:-1]

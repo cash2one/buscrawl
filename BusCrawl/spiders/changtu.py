@@ -14,11 +14,19 @@ START_LIST = [
     {"id": '390073', "name": '南京', "pinyin": 'nanjingshi', "short_pinyin": "nj", "province": "江苏"},
     {"id": '410283', "name": '苏州', "pinyin": 'suzhoushi', "short_pinyin": "sz", "province": "江苏"},
     {"id": '121679', "name": '南宁', "pinyin": 'nanningshi', "short_pinyin": "nn", "province": "广西"},
+    {"id":'63', "name":'天津', "pinyin":'tianjinshi', "short_pinyin": "tj", "province": "天津"},
+
+    # 山东
     {"id": '19', "name": '济南', "pinyin": 'jinanshi', "short_pinyin": "jn", "province": "山东"},
     {"id": '488392', "name": '淄博', "pinyin": 'ziboshi', "short_pinyin": "zb", "province": "山东"},
     {"id": '69', "name": '威海', "pinyin": 'weihaishi', "short_pinyin": "wh", "province": "山东"},
     {"id": '520163', "name": '临沂', "pinyin": 'linyishi', "short_pinyin": "ly", "province": "山东"},
-    {"id":'63', "name":'天津', "pinyin":'tianjinshi', "short_pinyin": "tj", "province": "天津"}
+    {"id": '499467', "name": '潍坊', "pinyin": 'weifangshi', "short_pinyin": "wf", "province": "山东"},
+    {"id": '511968', "name": '泰安', "pinyin": 'taianshi', "short_pinyin":'ts', "province": "山东"},
+    {"id": '516989', "name": '日照', "pinyin": 'rizhaoshi', "short_pinyin":'rz', "province": "山东"},
+    {"id": '536931', "name": '滨州', "pinyin": 'binzhoushi', "short_pinyin":'bz', "province": "山东"},
+    {"id": '525881', "name": '德州', "pinyin": 'dezhoushi', "short_pinyin":'dz', "province": "山东"},
+    {"id": '563649', "name": '聊城', "pinyin": 'liaochengshi', "short_pinyin":'lc', "province": "山东"},
 ]
 
 

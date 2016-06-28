@@ -69,7 +69,19 @@ def vcode_cqky(img_content):
     return code
 
 
-def ecp(im):
+def vcode_dgky(img_content):
+    ims = cStringIO.StringIO(img_content)
+    im = Image.open(ims)
+    im = im.convert('L')
+    im = im.point(lambda x: 255 if x > 190 else 0)
+    im = ecp(im, 7)
+    code = image_to_string(im, lang='mp', config='-psm 7')
+    info = re.findall(r'[0-9]', str(code))
+    code = ''.join(info)
+    return code
+
+
+def ecp(im, dcount=6):
     frame = im.load()
     (w, h) = im.size
     for i in xrange(w):

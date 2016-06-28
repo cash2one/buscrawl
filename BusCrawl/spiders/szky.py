@@ -105,9 +105,10 @@ class SzkySpider(SpiderBase):
             end_list = []
             letter = 'abcdefghijklmnopqrstuvwxyz'
             for i in letter:
-                for j in letter:
-                    query = i+j
-                    end_list.append(query)
+                query = i
+#                 for j in letter:
+#                     query = i+j
+                end_list.append(query)
             line_url = 'http://124.172.118.225/UserData/MQCenterSale.aspx'
             headers.update({
                         "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
@@ -115,49 +116,52 @@ class SzkySpider(SpiderBase):
                         "X-Requested-With": "XMLHttpRequest",
                     })
             for k, (name, w_code) in station_dict.items():
-                for end in end_list:
-                    today = datetime.date.today()
-                    for j in range(1, 7):
-                        sdate = str(today+datetime.timedelta(days=j))
-                        if self.has_done(name, end, sdate):
-                            self.logger.info("ignore %s ==> %s %s" % (name, end,sdate))
-                            continue
-                        data = {
-                            "DstNode": end,
-                            "OpAddress": "-1",
-                            "OpStation":  "-1",
-                            "OperMode": '',
-                            "SchCode": '',
-                            "SchDate": sdate,
-                            "SchTime": '',
-                            'SeatType': '',
-                            'StartStation':  k,
-                            'WaitStationCode': w_code,
-                            'cmd': "MQCenterGetClass",
-                            'txtImgCode': valid_code,
-                        }
-#                         proxies = {
-#                             'http': 'http://192.168.1.33:8888',
-#                             'https': 'http://192.168.1.33:8888',
-#                             }
-#                         r = requests.post(line_url, data=urllib.urlencode(data), headers=headers, cookies=cookies,proxies=proxies)
-#                         content = json.loads(trans_js_str(r.content))
-#                         yield self.parse_line(content)
-                        yield scrapy.FormRequest(line_url,
-                                                 method="POST",
-                                                 cookies=cookies,
-                                                 headers=headers,
-                                                 formdata=data,
-                                                 callback=self.parse_line,
-                                                 meta={"start": name, "end": end, "date": sdate}
-                                                )
+                    dest_list = self.get_dest_list("广东", '深圳')
+                    for y in dest_list:
+                        y = y.split("|")[0]
+                        end = {"city_name": y, "city_code": get_pinyin_first_litter(y)}
+                        today = datetime.date.today()
+                        for j in range(1, 7):
+                            sdate = str(today+datetime.timedelta(days=j))
+                            if self.has_done(name, end['city_name'], sdate):
+                                self.logger.info("ignore %s ==> %s %s" % (name,end['city_name'],sdate))
+                                continue
+                            data = {
+                                "DstNode": end['city_name'],
+                                "OpAddress": "-1",
+                                "OpStation":  "-1",
+                                "OperMode": '',
+                                "SchCode": '',
+                                "SchDate": sdate,
+                                "SchTime": '',
+                                'SeatType': '',
+                                'StartStation':  k,
+                                'WaitStationCode': w_code,
+                                'cmd': "MQCenterGetClass",
+                                'txtImgCode': valid_code,
+                            }
+    #                         proxies = {
+    #                             'http': 'http://192.168.1.33:8888',
+    #                             'https': 'http://192.168.1.33:8888',
+    #                             }
+    #                         r = requests.post(line_url, data=urllib.urlencode(data), headers=headers, cookies=cookies,proxies=proxies)
+    #                         content = json.loads(trans_js_str(r.content))
+    #                         yield self.parse_line(content)
+                            yield scrapy.FormRequest(line_url,
+                                                     method="POST",
+                                                     cookies=cookies,
+                                                     headers=headers,
+                                                     formdata=data,
+                                                     callback=self.parse_line,
+                                                     meta={"start": name, "end": end, "date": sdate}
+                                                    )
 
     def parse_line(self, response):
         "解析班车"
         start = response.meta["start"]
         end = response.meta["end"]
         sdate = response.meta["date"]
-        self.mark_done(start, end, sdate)
+        self.mark_done(start, end['city_name'], sdate)
         res = json.loads(trans_js_str(response.body))
         for d in res["data"]:
             if d['SchStat'] == '1':
@@ -168,8 +172,8 @@ class SzkySpider(SpiderBase):
                     s_city_code= get_pinyin_first_litter(u"深圳"),
                     s_sta_name = d["SchWaitStName"],
                     s_sta_id = d["SchStationCode"],
-                    d_city_name = d["SchDstCity"],
-                    d_city_code=get_pinyin_first_litter(d["SchDstCity"]),
+                    d_city_name = end['city_name'],
+                    d_city_code=end['city_code'],
                     d_city_id = d['SchDstNode'],
                     d_sta_name = d["SchNodeName"],
                     d_sta_id = d["SchNodeCode"],

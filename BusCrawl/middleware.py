@@ -8,7 +8,7 @@ class ProxyMiddleware(object):
     "代理ip切换"
 
     def process_request(self, request, spider):
-        #request.meta['proxy'] = "http://192.168.1.33:8888" 
+        request.meta['proxy'] = "http://192.168.1.33:8888" 
         pass
 
 
@@ -146,6 +146,12 @@ class SzkyHeaderMiddleware(object):
         request.headers.setdefault("Content-Type", "application/x-www-form-urlencoded")
         request.headers.setdefault("accept", "application/json")
         request.headers.setdefault("X-Requested-With", "XMLHttpRequest")
+
+
+class DgkyHeaderMiddleware(object):
+
+    def process_request(self, request, spider):
+        request.headers.setdefault("Content-Type", "application/x-www-form-urlencoded")
 
 
 class MobileRandomUserAgentMiddleware(UserAgentMiddleware):

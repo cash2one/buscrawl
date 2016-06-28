@@ -12,6 +12,7 @@ import urllib2
 import cookielib
 import re
 import time
+import math
 
 from datetime import datetime as dte
 from BusCrawl.item import LineItem
@@ -58,8 +59,8 @@ class DgkySpider(SpiderBase):
         ua = random.choice(BrowserRandomUserAgentMiddleware.user_agent_list)
         headers = {
                "User-Agent": ua,
-               "Referer":"http://www.mp0769.com/",
-               "Host":"www.mp0769.com",
+               "Referer": "http://www.mp0769.com/",
+               "Host": "www.mp0769.com",
                }
         self.headers = headers
         cj = cookielib.LWPCookieJar()
@@ -125,8 +126,11 @@ class DgkySpider(SpiderBase):
             init_url_param = "%s%s" % (init_url, urllib.urlencode(params))
 #             station_url = station_url + '&station=%s' % json.dumps(u'深圳龙华').replace('\u','%u')[1:-1]
 
-            end_list = [u'深圳龙华']
-            for end in end_list:
+            end_list = [u'广州']
+            dest_list = self.get_dest_list("广东", '东莞')
+            for y in dest_list:
+                end = y.split("|")[0]
+#             for end in end_list:
                 station_url = init_url_param + '&station=%s' % json.dumps(end).replace('\u','%u')[1:-1]
                 form, sel = self.is_end_station(station_url)
                 if form:
@@ -165,6 +169,14 @@ class DgkySpider(SpiderBase):
         end = response.meta["end"]
         sdate = response.meta["sdate"]
         sel = etree.HTML(res) 
+        next_url = ''
+        for i, j in enumerate(sel.xpath("//a/text()")):
+            if j == '下一页':
+                next_url = sel.xpath("//a/@href")[i]
+#         countObj = re.findall("查询到(\d+)班", str(res))
+#         if countObj:
+#             count = countObj
+#             page = int(math.ceil(count/10))
         form = sel.xpath('//form[@method="Post"]/@action')
         if form:
             sch = sel.xpath('//table[@width="600"]/tr')
@@ -206,8 +218,7 @@ class DgkySpider(SpiderBase):
                         if k:
                             k, v = k[0], v[0] if k else ""
                             params[k] = v.encode('gb2312')
-                    params = params
-                    if not params or int(params['ct_price']) == 0:
+                    if not params or int(params.get('ct_price', 0)) == 0:
                         continue
                     else:
                         print "ct_price ", params['ct_price']
@@ -243,5 +254,18 @@ class DgkySpider(SpiderBase):
                     crawl_source = "dgky",
                     shift_id="",
                 )
-                yield  LineItem(**attrs)
-
+                yield LineItem(**attrs)
+        if next_url:
+            url = "http://www.mp0769.com/bccx.asp?"
+            param = {}
+            for s in next_url.split("?")[1].split("&"):
+                k, v = s.split("=")
+                param[k] = v.encode('gb2312')
+            url = url + urllib.urlencode(param)
+            yield scrapy.Request(url,
+                                 method="GET",
+                                 callback=self.parse_line,
+                                 meta={'start': v, 'end': end, 'sdate':sdate})
+        else:
+            pass
+            #self.mark_done(start, end, sdate)

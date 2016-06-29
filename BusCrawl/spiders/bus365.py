@@ -42,7 +42,7 @@ class Bus365Spider(SpiderBase):
             }
 
     def is_end_city(self, start, end):
-        if not hasattr("_sta_dest_list"):
+        if not hasattr(self, "_sta_dest_list"):
             self._sta_dest_list = {}
         s_city_name = start['findname']
 

@@ -88,70 +88,73 @@ class DgkySpider(SpiderBase):
         
         station_dict = {
             "1901": ("东莞总站","东莞总站"),
-#             "1902": ("市客运北站","汽车北站　"),
-#             "1903": ("市客运东站","东莞汽车东站"),
-#             "1904": ("东城汽车客运站","东城汽车站"),
-#             "1907": ("松山湖汽车客运站","松山湖汽车站"),
-#             "1908": ("长安客运站","长安汽车站"),
-#             "1909": ("虎门客运站","虎门汽车站"),
-#             "1911": ("厚街专线车站","厚街专线车站"),
-#             "1912": ("沙田汽车客运站","沙田汽车站"),
-#             "1916": ("石龙客运站","石龙车站"),
-#             "1917": ("石龙千里客运站","石龙千里车站"),
-#             "1919": ("桥头车站","桥头汽车站"),
-#             "1920": ("东坑车站","东坑汽车站"),
-#             "1925": ("石排客运站","石排客运站"),
-#             "1926": ("樟木头振通车站","振通客运站"),
-#             "1927": ("大朗汽车客运站","大朗汽车客运"),
-#             "1929": ("清溪客运站","清溪车站"),
-#             "1933": ("塘厦车站","塘厦客运站"),
-#             "1935": ("上沙汽车客运站","上沙汽车站"),
-#             "1930": ("凤岗客运站","凤岗车站"),
+            "1902": ("市客运北站","汽车北站"),
+            "1903": ("市客运东站","东莞汽车东站"),
+            "1904": ("东城汽车客运站","东城汽车站"),
+            "1907": ("松山湖汽车客运站","松山湖汽车站"),
+            "1908": ("长安客运站","长安汽车站"),
+            "1909": ("虎门客运站","虎门汽车站"),
+            "1911": ("厚街专线车站","厚街专线车站"),
+            "1912": ("沙田汽车客运站","沙田汽车站"),
+            "1916": ("石龙客运站","石龙车站"),
+            "1917": ("石龙千里客运站","石龙千里车站"),
+            "1919": ("桥头车站","桥头汽车站"),
+            "1920": ("东坑车站","东坑汽车站"),
+            "1925": ("石排客运站","石排客运站"),
+            "1926": ("樟木头振通车站","振通客运站"),
+            "1927": ("大朗汽车客运站","大朗汽车客运"),
+            "1929": ("清溪客运站","清溪车站"),
+            "1933": ("塘厦车站","塘厦客运站"),
+            "1935": ("上沙汽车客运站","上沙汽车站"),
+            "1930": ("凤岗客运站","凤岗车站"),
 
             }
         today = datetime.date.today()
-        sdate = str(today+datetime.timedelta(days=2))
+        sdate = str(today+datetime.timedelta(days=1))
         init_url = "http://www.mp0769.com/bccx.asp?"
         for k, (dg_name, sw_name) in station_dict.items():
-            params = {
-                 "action": "queryclick",
-                 "Depot": k,
-                 "date": sdate,
-                 "Times": '',
-                 "num":"1",
-                 "Verifycode": code,
-                 "tanchu": 1
-                 }
-            init_url_param = "%s%s" % (init_url, urllib.urlencode(params))
-#             station_url = station_url + '&station=%s' % json.dumps(u'深圳龙华').replace('\u','%u')[1:-1]
-
-#             dest_list = [u'深圳龙华']
+#             dest_list = [u'石龙']
 #             dest_list = self.get_dest_list("广东", '东莞')
             dest_list = self.query_end_city(sw_name)
             for y in dest_list:
                 end = y.split("|")[0]
-#             for end in end_list:
-                station_url = init_url_param + '&station=%s' % json.dumps(end).replace('\u','%u')[1:-1]
-                form, sel = self.is_end_station(station_url)
-                if form:
-                    yield scrapy.Request(station_url,
-                                         method="GET",
-                                         callback=self.parse_line,
-                                         meta={'start_name': dg_name, 'start_code':k, 'end': end,'sdate':sdate})
-                else:
-                    station = sel.xpath('//a')
-                    for i in station:
-                        td = i.xpath('font/text()')
-                        station_name = td[0].replace('\r\n','').replace('\t','').replace(' ',  '')
-                        if station_name == end:
-                            continue
-                        station_url = init_url_param + '&station=%s' % json.dumps(station_name).replace('\u','%u')[1:-1]
-                        form, sel = self.is_end_station(station_url)
-                        if form:
-                            yield scrapy.Request(station_url,
-                                                 method="GET",
-                                                 callback=self.parse_line,
-                                                 meta={'start_name': dg_name, 'start_code':k, 'end': end,'sdate':sdate})
+                today = datetime.date.today()
+                for j in range(1, 7):
+                    sdate = str(today+datetime.timedelta(days=j))
+                    params = {
+                     "action": "queryclick",
+                     "Depot": k,
+                     "date": sdate,
+                     "Times": '',
+                     "num":"1",
+                     "Verifycode": code,
+                     "tanchu": 1
+                     }
+                    init_url_param = "%s%s" % (init_url, urllib.urlencode(params))
+                    station_url = init_url_param + '&station=%s' % json.dumps(end).replace('\u','%u')[1:-1]
+                    form, sel = self.is_end_station(station_url)
+                    if form:
+                        yield scrapy.Request(station_url,
+                                             method="GET",
+                                             callback=self.parse_line,
+                                             meta={'start_name': dg_name, 'sw_name': sw_name, 
+                                                   'start_code': k, 'end': end, 'sdate':sdate})
+                    else:
+                        station = sel.xpath('//a')
+                        for i in station:
+                            td = i.xpath('font/text()')
+                            href = i.xpath('@href')[0]
+                            station_name = td[0].replace('\r\n','').replace('\t','').replace(' ',  '')
+    #                         if station_name == end:
+    #                             continue
+                            station_url = "http://www.mp0769.com/cbprjdisp8.asp?"+href
+                            form, sel = self.is_end_station(station_url)
+                            if form:
+                                yield scrapy.Request(station_url,
+                                                     method="GET",
+                                                     callback=self.parse_line,
+                                                     meta={'start_name': dg_name, 'sw_name': sw_name, 
+                                                           'start_code': k, 'end': end,'sdate':sdate})
 
     def is_end_station(self, station_url):
         req = self.urllib2.Request(station_url, headers=self.headers)
@@ -161,11 +164,21 @@ class DgkySpider(SpiderBase):
         sel = etree.HTML(content) 
         form = sel.xpath('//form[@method="Post"]/@action')
         return form, sel
+    
+    def query_line_info_by_gdsw(self, start_station, end_station, bus_num, drv_datetime):
+        result = self.db.line.find_one({'crawl_source': 'gdsw',
+                                        's_sta_name': start_station,
+                                        'd_sta_name': end_station,
+                                        'drv_datetime': drv_datetime,
+                                        'bus_num': bus_num
+                                        })
+        return result
 
     def parse_line(self, response):
         "解析班车"
         res = response.body.decode('gbk')
         start_name = response.meta["start_name"]
+        sw_name = response.meta["sw_name"]
         start_code = response.meta["start_code"]
         end = response.meta["end"]
         sdate = response.meta["sdate"]
@@ -193,24 +206,34 @@ class DgkySpider(SpiderBase):
                 drv_date = dte.strftime(dte.strptime(drv_date, '%Y-%m-%d'),'%Y-%m-%d')
                 drv_time = i.xpath('td[3]/div/text()')[0].replace('\r\n', '').replace('\t',  '').replace(' ',  '')
                 start_station = i.xpath('td[4]/div/text()')[0].replace('\r\n', '').replace('\t',  '').replace(' ',  '')
-                end_station = i.xpath('td[5]/div/text()')[0].replace('\r\n', '').replace('\t',  '').replace(' ',  '')
+                #end_station = i.xpath('td[5]/div/text()')[0].replace('\r\n', '').replace('\t',  '').replace(' ',  '')
                 distance = i.xpath('td[7]/div/text()')[0].replace('\r\n', '').replace('\t',  '').replace(' ',  '')
                 href = i.xpath('td[9]/div/a/@onclick')[0]
                 if 'javascript:alert' in href:
                     continue
-                query_url = "http://www.mp0769.com/" + href.split(";")[0][15:-1]
                 if not flag:
-                    for i in range(15):
+                    for i in range(10):
+                        param = {}
+                        for s in href.split(";")[0][15:-1].split("?")[1].split("&"):
+                            k, v = s.split("=")
+                            param[k] = v.encode('gb2312')
+                        query_url = "%s%s" % ('http://www.mp0769.com/orderlist.asp?', urllib.urlencode(param))
                         req = self.urllib2.Request(query_url, headers=self.headers)
                         result = self.urllib2.urlopen(req)
                         content = result.read()
-                        res = content
+                        res = content.decode('gbk')
+                        if '非法操作' in res:
+                            query_url = "http://www.mp0769.com/" + href.split(";")[0][15:-1]
+                            req = self.urllib2.Request(query_url, headers=self.headers)
+                            result = self.urllib2.urlopen(req)
+                            content = result.read()
+                            res = content.decode('gbk')
                         check_url = re.findall("window.location.href=(.*);", res)[0][1:-1]
                         check_url = "http://www.mp0769.com/" + check_url
                         param = {}
                         for s in check_url.split("?")[1].split("&"):
                             k, v = s.split("=")
-                            param[k] = v
+                            param[k] = v.encode('gb2312')
                         order_url = "http://www.mp0769.com/orderlist.asp?"
                         order_url = "%s%s" % (order_url, urllib.urlencode(param))
                         req = self.urllib2.Request(order_url, headers=self.headers)
@@ -224,7 +247,7 @@ class DgkySpider(SpiderBase):
                                 k, v = k[0], v[0] if k else ""
                                 params[k] = v.encode('gb2312')
                         if not params or int(params.get('ct_price', 0)) == 0:
-                            continue
+                            end_station = params['ct_stname'].decode('gbk')
                         else:
                             print "ct_price ", params['ct_price']
                             full_price = params['ct_price']
@@ -232,6 +255,16 @@ class DgkySpider(SpiderBase):
                             end_station = params['ct_stname'].decode('gbk')
                             flag = True
                             break
+                drv_datetime = dte.strptime("%s %s" % (drv_date, drv_time), "%Y-%m-%d %H:%M")
+                if not flag:
+                    result = self.query_line_info_by_gdsw(sw_name,end_station,bus_num,drv_datetime)
+                    if result:
+                        full_price = result['full_price']
+                        left_tickets = result['left_tickets']
+                        flag = True
+                    else:
+                        print 111111,sw_name,end_station,bus_num,drv_datetime
+                        print 3333333,end
                 attrs = dict(
                     s_province = u'广东',
                     s_city_name = u"东莞",
@@ -246,7 +279,7 @@ class DgkySpider(SpiderBase):
                     d_sta_id = '',
                     drv_date = drv_date,
                     drv_time = drv_time,
-                    drv_datetime = dte.strptime("%s %s" % (drv_date, drv_time), "%Y-%m-%d %H:%M"),
+                    drv_datetime = drv_datetime,
                     distance = distance,
                     vehicle_type = "",
                     seat_type = "",
@@ -255,7 +288,7 @@ class DgkySpider(SpiderBase):
                     half_price = float(full_price)/2,
                     fee = 0,
                     crawl_datetime = dte.now(),
-                    extra_info = {"query_url":query_url},
+                    extra_info = {"query_url":href},
                     left_tickets = left_tickets,
                     crawl_source = "dgky",
                     shift_id="",
@@ -274,7 +307,8 @@ class DgkySpider(SpiderBase):
             yield scrapy.Request(url,
                                  method="GET",
                                  callback=self.parse_line,
-                                 meta={'start_name': start_name,'start_code':start_code, 'end': end, 'sdate':sdate})
+                                 meta={'start_name': start_name, "sw_name": sw_name,
+                                       'start_code': start_code, 'end': end, 'sdate':sdate})
         else:
             pass
             #self.mark_done(start, end, sdate)

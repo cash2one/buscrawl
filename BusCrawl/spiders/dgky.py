@@ -122,10 +122,10 @@ class DgkySpider(SpiderBase):
                 end = y.split("|")[0]
                 today = datetime.date.today()
                 for j in range(1, 7):
+                    sdate = str(today+datetime.timedelta(days=j))
                     if self.has_done(dg_name, end, sdate):
                         self.logger.info("ignore %s ==> %s %s" % (dg_name, end, sdate))
                         continue
-                    sdate = str(today+datetime.timedelta(days=j))
                     params = {
                      "action": "queryclick",
                      "Depot": k,

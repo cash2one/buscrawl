@@ -113,6 +113,8 @@ class DgkySpider(SpiderBase):
         sdate = str(today+datetime.timedelta(days=1))
         init_url = "http://www.mp0769.com/bccx.asp?"
         for k, (dg_name, sw_name) in station_dict.items():
+            if not self.is_need_crawl(city=dg_name):
+                continue
 #             dest_list = [u'石龙']
 #             dest_list = self.get_dest_list("广东", '东莞')
             dest_list = self.query_end_city(sw_name)

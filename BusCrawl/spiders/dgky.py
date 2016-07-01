@@ -110,7 +110,6 @@ class DgkySpider(SpiderBase):
 
             }
         today = datetime.date.today()
-        sdate = str(today+datetime.timedelta(days=1))
         init_url = "http://www.mp0769.com/bccx.asp?"
         for k, (dg_name, sw_name) in station_dict.items():
             if not self.is_need_crawl(city=dg_name):

@@ -115,13 +115,16 @@ class DgkySpider(SpiderBase):
         for k, (dg_name, sw_name) in station_dict.items():
             if not self.is_need_crawl(city=dg_name):
                 continue
-#             dest_list = [u'石龙']
+#             dest_list = [u'天河暨南大',u'中山城东站']
 #             dest_list = self.get_dest_list("广东", '东莞')
             dest_list = self.query_end_city(sw_name)
             for y in dest_list:
                 end = y.split("|")[0]
                 today = datetime.date.today()
                 for j in range(1, 7):
+                    if self.has_done(dg_name, end, sdate):
+                        self.logger.info("ignore %s ==> %s %s" % (dg_name, end, sdate))
+                        continue
                     sdate = str(today+datetime.timedelta(days=j))
                     params = {
                      "action": "queryclick",
@@ -214,7 +217,7 @@ class DgkySpider(SpiderBase):
                 if 'javascript:alert' in href:
                     continue
                 if not flag:
-                    for i in range(10):
+                    for i in range(5):
                         param = {}
                         for s in href.split(";")[0][15:-1].split("?")[1].split("&"):
                             k, v = s.split("=")
@@ -312,5 +315,4 @@ class DgkySpider(SpiderBase):
                                  meta={'start_name': start_name, "sw_name": sw_name,
                                        'start_code': start_code, 'end': end, 'sdate':sdate})
         else:
-            pass
-            #self.mark_done(start, end, sdate)
+            self.mark_done(start_name, end, sdate)

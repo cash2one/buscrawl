@@ -70,6 +70,7 @@ class Zhw(SpiderBase):
             'SchDstNodeName': '',
         }
         url = 'http://www.zhwsbs.gov.cn:9013/shfw/zaotsTicket/pageLists.xhtml'
+        code, cookies = self.update_cookies()
         for x in self.dcitys:
             for y in xrange(self.start_day(), days):
                 start = x.get('city_name')
@@ -78,7 +79,6 @@ class Zhw(SpiderBase):
                 print sdate, end
                 if self.has_done(start, end, sdate):
                     continue
-                code, cookies = self.update_cookies()
                 data['SchDstNodeName'] = end
                 data['SchDate'] = sdate
                 data['checkCode'] = code

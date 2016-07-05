@@ -95,32 +95,35 @@ class Zhw(SpiderBase):
             'StartStation': '"-"',
             'SchDstNodeName': '',
         }
+        l = ['香洲长途站', '上冲站', '南溪站', '拱北通大站', '斗门站', '井岸站', '红旗站', '三灶站', '平沙站', '南水站', '唐家站', '金鼎站', '拱北票务中心', '西埔站']
         code, cookies = self.update_cookies()
         for x in self.dcitys:
             for y in xrange(self.start_day(), days):
-                start = x.get('city_name')
-                end = x.get('szCode')
-                sdate = str(today + datetime.timedelta(days=y))
-                print sdate, end
-                if self.has_done(start, end, sdate):
-                    continue
-                data['SchDstNodeName'] = end
-                data['SchDate'] = sdate
-                data['checkCode'] = code
-                yield scrapy.Request(
-                    url=self.url,
-                    callback=self.parse_line,
-                    method='POST',
-                    body=urllib.urlencode(data),
-                    headers=headers,
-                    cookies=dict(cookies),
-                    meta={
-                        's_city_name': '珠海',
-                        'start': start,
-                        'end': end,
-                        'sdate': sdate,
-                    },
-                )
+                for z in l:
+                    start = x.get('city_name')
+                    end = x.get('szCode')
+                    sdate = str(today + datetime.timedelta(days=y))
+                    print sdate, end
+                    if self.has_done(start, end, sdate):
+                        continue
+                    data['SchDstNodeName'] = end
+                    data['SchDate'] = sdate
+                    data['checkCode'] = code
+                    data['StartStation'] = z
+                    yield scrapy.Request(
+                        url=self.url,
+                        callback=self.parse_line,
+                        method='POST',
+                        body=urllib.urlencode(data),
+                        headers=headers,
+                        cookies=dict(cookies),
+                        meta={
+                            's_city_name': '珠海',
+                            'start': start,
+                            'end': end,
+                            'sdate': sdate,
+                        },
+                    )
 
         # 初始化抵达城市
         # letter = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'

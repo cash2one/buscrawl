@@ -17,6 +17,7 @@ from BusCrawl.utils.tool import get_pinyin_first_litter, vcode_zhw
 from base import SpiderBase
 from scrapy.conf import settings
 from pymongo import MongoClient
+import requests
 # import cStringIO
 # from PIL import Image
 # import ipdb
@@ -43,14 +44,39 @@ class Zhw(SpiderBase):
     }
 
     dcitys = city.find({'szCode': {'$exists': True}})
+    url = 'http://www.zhwsbs.gov.cn:9013/shfw/zaotsTicket/pageLists.xhtml'
     # base_url = 'http://www.hn96520.com/ajax/query.aspx?method=GetListByPY&q=b&limit=20&timestamp=1465204637302&global=410101'
     # base_url = 'http://www.hn96520.com/placeorder.aspx?start=%E9%83%91%E5%B7%9E%E4%B8%AD%E5%BF%83%E7%AB%99&global=410101&end=%E6%9D%AD%E5%B7%9E&date=2016-05-30'
 
     def update_cookies(self):
-        for x in xrange(3):
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:47.0) Gecko/20100101 Firefox/47.0",
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Referer': 'http://www.zhwsbs.gov.cn:9013/shfw/zaotsTicket/pageLists.xhtml',
+        }
+        data = {
+            'SchDate': '',
+            'SchTime': '',
+            'checkCode': '',
+            'StartStation': '"-"',
+            'SchDstNodeName': '',
+        }
+        today = datetime.date.today()
+        sdate = str(today + datetime.timedelta(days=22))
+        t = self.dcitys[0]
+        for x in xrange(5):
             code, cookies = vcode_zhw()
-            if code:
+            end = t.get('szCode')
+            data['SchDstNodeName'] = end
+            data['SchDate'] = sdate
+            data['checkCode'] = code
+            r = requests.get(self.url, headers=headers, cookies=cookies, data=data)
+            soup = bs(r.content, 'lxml')
+            info = soup.find('table', attrs={'id': 'changecolor'})
+            if '验证码' not in info.get_text():
                 return (code, cookies)
+            else:
+                print info.get_text()
 
     def start_requests(self):
         days = 7
@@ -69,7 +95,6 @@ class Zhw(SpiderBase):
             'StartStation': '"-"',
             'SchDstNodeName': '',
         }
-        url = 'http://www.zhwsbs.gov.cn:9013/shfw/zaotsTicket/pageLists.xhtml'
         code, cookies = self.update_cookies()
         for x in self.dcitys:
             for y in xrange(self.start_day(), days):
@@ -83,7 +108,7 @@ class Zhw(SpiderBase):
                 data['SchDate'] = sdate
                 data['checkCode'] = code
                 yield scrapy.Request(
-                    url=url,
+                    url=self.url,
                     callback=self.parse_line,
                     method='POST',
                     body=urllib.urlencode(data),
@@ -101,7 +126,7 @@ class Zhw(SpiderBase):
         # letter = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
         # for x in letter:
         #     url = 'http://www.zhwsbs.gov.cn:9013/shfw/zaotsTicket/findCity.xhtml?term={0}%2520%2520&featureClass=P&style=full&maxRows=8&name_startsWith={1}++'.format(x, x)
-            yield scrapy.Request(url, callback=self.parse_dcity,meta={'s_city_name': '珠海'})
+        #     yield scrapy.Request(self.url, callback=self.parse_dcity,meta={'s_city_name': '珠海'})
 
     # 初始化到达城市
     def parse_dcity(self, response):
@@ -117,13 +142,10 @@ class Zhw(SpiderBase):
         start = response.meta['start'].decode('utf-8')
         end = response.meta['end'].decode('utf-8')
         sdate = response.meta['sdate'].decode('utf-8')
+        self.mark_done(start, end, sdate)
         soup = bs(response.body, 'lxml')
         # print soup
         info = soup.find('table', attrs={'id': 'changecolor'})
-        if '验证码' in info.get_text():
-            return
-        else:
-            self.mark_done(start, end, sdate)
         items = info.find_all('tr', attrs={'id': True})
         for i, x in enumerate(items):
             i = i + 1

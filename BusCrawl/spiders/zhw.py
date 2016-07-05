@@ -81,8 +81,6 @@ class Zhw(SpiderBase):
     def start_requests(self):
         days = 7
         today = datetime.date.today()
-        if self.city_list:
-            self.dcitys = city.find({'city_name': {'$in': self.city_list}})
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:47.0) Gecko/20100101 Firefox/47.0",
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -97,7 +95,7 @@ class Zhw(SpiderBase):
         }
         l = ['香洲长途站', '上冲站', '南溪站', '拱北通大站', '斗门站', '井岸站', '红旗站', '三灶站', '平沙站', '南水站', '唐家站', '金鼎站', '拱北票务中心', '西埔站']
         code, cookies = self.update_cookies()
-        for x in self.dcitys:
+        for x in city.find({'szCode': {'$exists': True}}).batch_size(30):
             for y in xrange(self.start_day(), days):
                 for z in l:
                     start = x.get('city_name')

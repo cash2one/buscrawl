@@ -142,6 +142,10 @@ class BabaSpider(SpiderBase):
             #self.logger.error("parse_line: Unexpected return, %s, %s->%s, %s", sdate, start["city_name"], end["city_name"], res["header"])
             return
         for d in res["content"]["busList"]:
+            try:
+                drv_datetime = dte.strptime("%s %s" % (d["leaveDate"], d["leaveTime"]), "%Y-%m-%d %H:%M")
+            except:
+                continue
             attrs = dict(
                 s_province = start["province"],
                 s_city_name = start["city_name"],
@@ -156,7 +160,7 @@ class BabaSpider(SpiderBase):
                 d_sta_id = d["endStationId"],
                 drv_date = d["leaveDate"],
                 drv_time = d["leaveTime"],
-                drv_datetime = dte.strptime("%s %s" % (d["leaveDate"], d["leaveTime"]), "%Y-%m-%d %H:%M"),
+                drv_datetime = drv_datetime,
                 distance = "0",
                 vehicle_type = d["busType"],
                 seat_type = "",

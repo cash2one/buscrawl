@@ -103,9 +103,8 @@ class Zhw(SpiderBase):
                     start = x.get('city_name')
                     end = x.get('szCode')
                     sdate = str(today + datetime.timedelta(days=y))
-                    print sdate, end
-                    #if self.has_done(start, end, sdate):
-                    #    continue
+                    if self.has_done(start, end, sdate):
+                        continue
                     data['SchDstNodeName'] = end
                     data['SchDate'] = sdate
                     data['checkCode'] = code

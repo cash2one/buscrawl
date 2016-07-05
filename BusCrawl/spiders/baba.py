@@ -89,11 +89,11 @@ class BabaSpider(SpiderBase):
         line_url = "http://s4mdata.bababus.com:80/app/v4/ticket/busList.htm"
         for info in res["content"]["cityList"]:
             name = info["cityName"]
-            if not self.is_need_crawl(city=name):
-                continue
             if name not in CITY_TO_PROVINCE:
                 continue
             province = CITY_TO_PROVINCE[name]
+            if not self.is_need_crawl(city=name, province=province):
+                continue
             start = {
                 "province": province,
                 "city_name": info["cityName"],

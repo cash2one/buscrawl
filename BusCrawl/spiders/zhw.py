@@ -43,7 +43,7 @@ class Zhw(SpiderBase):
         # "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
 
-    dcitys = city.find({'szCode': {'$exists': True}})
+    dcitys = city.find({'szCode': {'$exists': True}}).batch_size(30)
     url = 'http://www.zhwsbs.gov.cn:9013/shfw/zaotsTicket/pageLists.xhtml'
     # base_url = 'http://www.hn96520.com/ajax/query.aspx?method=GetListByPY&q=b&limit=20&timestamp=1465204637302&global=410101'
     # base_url = 'http://www.hn96520.com/placeorder.aspx?start=%E9%83%91%E5%B7%9E%E4%B8%AD%E5%BF%83%E7%AB%99&global=410101&end=%E6%9D%AD%E5%B7%9E&date=2016-05-30'
@@ -104,8 +104,8 @@ class Zhw(SpiderBase):
                     end = x.get('szCode')
                     sdate = str(today + datetime.timedelta(days=y))
                     print sdate, end
-                    if self.has_done(start, end, sdate):
-                        continue
+                    #if self.has_done(start, end, sdate):
+                    #    continue
                     data['SchDstNodeName'] = end
                     data['SchDate'] = sdate
                     data['checkCode'] = code

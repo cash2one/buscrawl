@@ -54,13 +54,17 @@ class DgkySpider(SpiderBase):
         else:
             return self.query_code()
 
-    def query_end_city(self, s_sta_name):
+    def query_end_city(self, s_sta_name, sdate):
         if not hasattr(self, "_sta_dest_list"):
             self._sta_dest_list = {}
-
-        if s_sta_name not in self._sta_dest_list:
-            self._sta_dest_list[s_sta_name] = self.db.line.distinct('d_sta_name', {'crawl_source': 'gdsw', 's_sta_name': s_sta_name})
-        result = self._sta_dest_list[s_sta_name]
+        sta_name_key = s_sta_name+sdate
+        if sta_name_key not in self._sta_dest_list:
+            self._sta_dest_list[sta_name_key] = self.db.line.distinct('d_city_name', 
+                                                                      {'crawl_source': 'gdsw', 
+                                                                       's_sta_name':s_sta_name,
+                                                                       'drv_data': sdate
+                                                                    })
+        result = self._sta_dest_list[sta_name_key]
         return result
     
     def start_requests(self):
@@ -116,12 +120,12 @@ class DgkySpider(SpiderBase):
                 continue
 #             dest_list = [u'天河暨南大',u'中山城东站']
 #             dest_list = self.get_dest_list("广东", '东莞')
-            dest_list = self.query_end_city(sw_name)
-            for y in dest_list:
-                end = y.split("|")[0]
-                today = datetime.date.today()
-                for j in range(1, 7):
-                    sdate = str(today+datetime.timedelta(days=j))
+            today = datetime.date.today()
+            for j in range(1, 7):
+                sdate = str(today+datetime.timedelta(days=j))
+                dest_list = self.query_end_city(sw_name, sdate)
+                for y in dest_list:
+                    end = y.split("|")[0]
                     if self.has_done(dg_name, end, sdate):
                         self.logger.info("ignore %s ==> %s %s" % (dg_name, end, sdate))
                         continue

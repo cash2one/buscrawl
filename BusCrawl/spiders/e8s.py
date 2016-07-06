@@ -59,7 +59,6 @@ class E8sSpider(SpiderBase):
     def parse_target_city(self, response):
         "解析目的地城市"
         res = json.loads(response.body)
-        print res
         if int(res["flag"]) != 1:
             self.logger.error("parse_target_city: Unexpected return, %s" % str(res))
             return
@@ -69,14 +68,14 @@ class E8sSpider(SpiderBase):
                  }
         url = "http://m.e8s.com.cn/bwfpublicservice/stationGetSchPlan.action"
         for d in res["detail"]['list']:
-#             if not self.is_end_city(start, d):
-#                 continue
+            if not self.is_end_city(start, d):
+                continue
             today = datetime.date.today()
-            for i in range(1, 2):
+            for i in range(1, 7):
                 sdate = str(today+datetime.timedelta(days=i))
-#                 if self.has_done(start["city_name"], d["stopName"], sdate):
-#                     #self.logger.info("ignore %s ==> %s %s" % (start["city_name"], end["city_name"], sdate))
-#                     continue
+                if self.has_done(start["city_name"], d["stopName"], sdate):
+                    self.logger.info("ignore %s ==> %s %s" % (start["city_name"], d["stopName"], sdate))
+                    continue
                 fd = {
                     "drvDate": sdate,
                     "rowNum": "10",
@@ -93,13 +92,10 @@ class E8sSpider(SpiderBase):
         "解析班车"
         start = response.meta["start"]
         end = response.meta["end"]
-        print end
         sdate = response.meta["sdate"]
-        print response.body
         res = json.loads(response.body)
-#         self.mark_done(start["city_name"], end["stopName"], sdate)
+        self.mark_done(start["city_name"], end["stopName"], sdate)
         res = res['detail']
-        print res
         for d in res:
             if int(d['seatAmount']) == 0:
                 continue

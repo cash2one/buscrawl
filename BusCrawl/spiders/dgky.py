@@ -62,7 +62,7 @@ class DgkySpider(SpiderBase):
             self._sta_dest_list[sta_name_key] = self.db.line.distinct('d_city_name', 
                                                                       {'crawl_source': 'gdsw', 
                                                                        's_sta_name':s_sta_name,
-                                                                       'drv_data': sdate
+                                                                       'drv_date': sdate
                                                                     })
         result = self._sta_dest_list[sta_name_key]
         return result

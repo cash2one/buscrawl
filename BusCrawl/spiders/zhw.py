@@ -92,22 +92,37 @@ class Zhw(SpiderBase):
             'StartStation': '"-"',
             'SchDstNodeName': '',
         }
-        l = ['C1K001-102017', 'C1K027-102018', 'C1K013-102019', 'C1K030-102023', 'C2K003-102027', 'C2K001-102028', 'C1K006-102030', 'C1K004-102031', 'C1K007-102032', 'C1K008-102033', 'TJZ001-102020', 'JDZ001-102021', 'GBPW01-102024', 'XPZ001-102029']
+        d = {
+            u'香洲长途站': 'C1K001-102017',
+            u'上冲站': 'C1K027-102018',
+            u'南溪站': 'C1K013-102019',
+            u'拱北通大站': 'C1K030-102023',
+            u'斗门站': 'C2K003-102027',
+            u'井岸站': 'C2K001-102028',
+            u'红旗站': 'C1K006-102030',
+            u'三灶站': 'C1K004-102031',
+            u'平沙站': 'C1K007-102032',
+            u'南水站': 'C1K008-102033',
+            u'唐家站': 'TJZ001-102020',
+            u'金鼎站': 'JDZ001-102021',
+            u'拱北票务中心': 'GBPW01-102024',
+            u'西埔站': 'XPZ001-102029',
+        }
         code, cookies = self.update_cookies()
-        for x in city.find({'szCode': {'$exists': True}}).batch_size(10):
+        for z in d:
             for y in xrange(self.start_day(), days):
-                for z in l:
+                for x in city.find({'szCode': {'$exists': True}}).batch_size(16):
                     # if z != 'C1K001-102017' or x.get('szCode') != '广州东站':
                     #     continue
                     start = x.get('city_name')
                     end = x.get('szCode')
                     sdate = str(today + datetime.timedelta(days=y))
-                    if self.has_done(start, end, sdate):
+                    if self.has_done(z, end, sdate):
                         continue
                     data['SchDstNodeName'] = end
                     data['SchDate'] = sdate
                     data['checkCode'] = code
-                    data['StartStation'] = z
+                    data['StartStation'] = d[z]
                     yield scrapy.Request(
                         url=self.url,
                         callback=self.parse_line,
@@ -120,6 +135,7 @@ class Zhw(SpiderBase):
                             'start': start,
                             'end': end,
                             'sdate': sdate,
+                            'z': z,
                         },
                     )
 
@@ -143,7 +159,8 @@ class Zhw(SpiderBase):
         start = response.meta['start'].decode('utf-8')
         end = response.meta['end'].decode('utf-8')
         sdate = response.meta['sdate'].decode('utf-8')
-        self.mark_done(start, end, sdate)
+        z = response.meta['z'].decode('utf-8')
+        self.mark_done(z, end, sdate)
         soup = bs(response.body, 'lxml')
         info = soup.find('table', attrs={'id': 'changecolor'})
         items = info.find_all('tr', attrs={'id': True})

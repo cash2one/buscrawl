@@ -89,6 +89,8 @@ class GdswSpider(SpiderBase):
             drv_datetime = dte.strptime("%s %s" % (d["schdate"], d["sendtime"]), "%Y%m%d %H%M")
             if not d["sell"]:
                 continue
+            if not int(d["lefttickets"]):
+                continue
             attrs = dict(
                 s_province = "广东",
                 s_city_id = "",

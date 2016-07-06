@@ -161,6 +161,8 @@ class TongChengSpider(SpiderBase):
             to_city = unicode(d["destination"])
             from_station = unicode(d["dptStation"])
             to_station = unicode(d["arrStation"])
+            if from_station == u"无锡华东城":
+                continue
 
             attrs = dict(
                 s_province = start["province"],

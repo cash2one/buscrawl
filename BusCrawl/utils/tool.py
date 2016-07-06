@@ -8,6 +8,7 @@ import redis
 import re
 
 import cStringIO
+import requests
 
 try:
     import Image
@@ -21,6 +22,7 @@ except ImportError:
     from PIL import ImageFilter
 from datetime import datetime as dte
 from pytesseract import image_to_string
+from time import sleep
 
 
 def get_pinyin_first_litter(hanzi):
@@ -81,7 +83,25 @@ def vcode_dgky(img_content):
     return code
 
 
-def ecp(im, dcount=6):
+def vcode_zhw():
+    url = 'http://www.zhwsbs.gov.cn:9013/jsps/shfw/checkCode.jsp'
+    for x in xrange(5):
+        r = requests.get(url)
+        im = cStringIO.StringIO(r.content)
+        im = Image.open(im)
+        im = im.convert('L')
+        im = im.point(lambda x: 255 if x > 130 else 0)
+        im = ecp(im, 7)
+        code = image_to_string(im, lang='zhw2', config='-psm 8')
+        code = re.findall(r'[0-9a-zA-Z]', str(code))
+        code = ''.join(code)
+        if len(code) == 4:
+            # im.save(code + '.png')
+            return (code, r.cookies)
+        sleep(0.25)
+
+
+def ecp(im, n=6):
     frame = im.load()
     (w, h) = im.size
     for i in xrange(w):
@@ -128,6 +148,6 @@ def ecp(im, dcount=6):
                         count += 1
                 except IndexError:
                     pass
-                if count >= 6:
+                if count >= n:
                     frame[i, j] = 255
     return im

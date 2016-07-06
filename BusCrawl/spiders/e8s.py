@@ -69,14 +69,14 @@ class E8sSpider(SpiderBase):
                  }
         url = "http://m.e8s.com.cn/bwfpublicservice/stationGetSchPlan.action"
         for d in res["detail"]['list']:
-#             if not self.is_end_city(start, d):
-#                 continue
+            if not self.is_end_city(start, d):
+                continue
             today = datetime.date.today()
-            for i in range(1, 2):
+            for i in range(1, 7):
                 sdate = str(today+datetime.timedelta(days=i))
-#                 if self.has_done(start["city_name"], d["stopName"], sdate):
-#                     #self.logger.info("ignore %s ==> %s %s" % (start["city_name"], end["city_name"], sdate))
-#                     continue
+                if self.has_done(start["city_name"], d["stopName"], sdate):
+                    self.logger.info("ignore %s ==> %s %s" % (start["city_name"], d["stopName"], sdate))
+                    continue
                 fd = {
                     "drvDate": sdate,
                     "rowNum": "10",
@@ -97,7 +97,7 @@ class E8sSpider(SpiderBase):
         sdate = response.meta["sdate"]
         print response.body
         res = json.loads(response.body)
-#         self.mark_done(start["city_name"], end["stopName"], sdate)
+        self.mark_done(start["city_name"], end["stopName"], sdate)
         res = res['detail']
         print res
         for d in res:

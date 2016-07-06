@@ -59,7 +59,6 @@ class E8sSpider(SpiderBase):
     def parse_target_city(self, response):
         "解析目的地城市"
         res = json.loads(response.body)
-        print res
         if int(res["flag"]) != 1:
             self.logger.error("parse_target_city: Unexpected return, %s" % str(res))
             return
@@ -93,13 +92,10 @@ class E8sSpider(SpiderBase):
         "解析班车"
         start = response.meta["start"]
         end = response.meta["end"]
-        print end
         sdate = response.meta["sdate"]
-        print response.body
         res = json.loads(response.body)
         self.mark_done(start["city_name"], end["stopName"], sdate)
         res = res['detail']
-        print res
         for d in res:
             if int(d['seatAmount']) == 0:
                 continue

@@ -104,7 +104,7 @@ class CBDSpider(SpiderBase):
                 seat_type = "",
                 bus_num = d["coachNo"],
                 full_price = float(d["ticketPrice"]),
-                half_price = float(d["childPrice"]),
+                half_price = float(d["ticketPrice"])/2,
                 fee = float(d["ticketFee"]),
                 crawl_datetime = dte.now(),
                 extra_info = {"raw_info": d},

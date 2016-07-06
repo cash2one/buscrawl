@@ -64,17 +64,15 @@ class Zhw(SpiderBase):
         }
         today = datetime.date.today()
         sdate = str(today + datetime.timedelta(days=1))
-        t = self.dcitys[0]
         for x in xrange(5):
             code, cookies = vcode_zhw()
-            end = t.get('szCode')
-            data['SchDstNodeName'] = end
+            data['SchDstNodeName'] ='广东东站'
             data['SchDate'] = sdate
             data['checkCode'] = code
-            r = requests.get(self.url, headers=headers, cookies=cookies, data=data)
+            r = requests.post(self.url, headers=headers, cookies=cookies, data=data)
             soup = bs(r.content, 'lxml')
             info = soup.find('table', attrs={'id': 'changecolor'})
-            if '验证码' not in info.get_text():
+            if '验证码错误' not in info.get_text():
                 return (code, cookies)
             else:
                 print info.get_text()
@@ -96,7 +94,7 @@ class Zhw(SpiderBase):
         }
         l = ['C1K001-102017', 'C1K027-102018', 'C1K013-102019', 'C1K030-102023', 'C2K003-102027', 'C2K001-102028', 'C1K006-102030', 'C1K004-102031', 'C1K007-102032', 'C1K008-102033', 'TJZ001-102020', 'JDZ001-102021', 'GBPW01-102024', 'XPZ001-102029']
         code, cookies = self.update_cookies()
-        for x in city.find({'szCode': {'$exists': True}}).batch_size(30):
+        for x in city.find({'szCode': {'$exists': True}}).batch_size(10):
             for y in xrange(self.start_day(), days):
                 for z in l:
                     # if z != 'C1K001-102017' or x.get('szCode') != '广州东站':
@@ -158,7 +156,6 @@ class Zhw(SpiderBase):
                 drv_time = y[1].get_text().strip()
                 s_sta_name = y[2].get_text().strip()
                 d_sta_name = y[3].get_text().strip()
-                # full_price = info.find('input', attrs={'id': tid}).get('value', '')
                 left_tickets = y[5].get_text().strip()
                 vehicle_type = y[6].get_text().strip()
                 extra = {}

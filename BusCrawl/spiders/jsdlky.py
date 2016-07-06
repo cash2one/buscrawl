@@ -43,7 +43,8 @@ class JsdlkySpider(SpiderBase):
 
 
     def start_requests(self):
-        line_url = "http://58.213.132.27:8082/nj_weixinService/2.0/queryBus"
+        # line_url = "http://58.213.132.27:8082/nj_weixinService/2.0/queryBus"
+        line_url = "http://58.213.132.28/weixin/proxy/queryBus"
         today = datetime.date.today()
         for sta_info in START_STA_LIST:
             start = {
@@ -60,17 +61,23 @@ class JsdlkySpider(SpiderBase):
                     sdate = (today + datetime.timedelta(days=i)).strftime("%Y%m%d")
                     if self.has_done(start["sta_name"], end["city_name"], sdate):
                         continue
-                    params = {
+                    # params = {
+                    #     "drive_date": sdate,
+                    #     "rst_name": start["sta_name"],
+                    #     "dst_name": end["city_name"],
+                    #     "v_source": "a",
+                    #     "v_version": "v2.2",
+                    #     "v_reg_id": ""
+                    # }
+                    # req_data = {
+                    #     "param_key": json.dumps(params),
+                    #     "secret_key": md5("&".join(map(lambda a:"%s=%s" % (a[0], a[1]), sorted(params.items(), key=lambda i: i[0])))),
+                    # }
+                    req_data = {
+                        "ewx": "FSclq1vvBHkQRfFqCaVal5+g6aovi02md1tfoQkuFUjwpwMPj4cjwu0EEWzvYfwohaqwrerSReE3zaLOAa1g85WWGXWruPxN2bD04NjmfV8=",
                         "drive_date": sdate,
                         "rst_name": start["sta_name"],
                         "dst_name": end["city_name"],
-                        "v_source": "a",
-                        "v_version": "v2.2",
-                        "v_reg_id": ""
-                    }
-                    req_data = {
-                        "param_key": json.dumps(params),
-                        "secret_key": md5("&".join(map(lambda a:"%s=%s" % (a[0], a[1]), sorted(params.items(), key=lambda i: i[0])))),
                     }
                     yield scrapy.Request("%s?%s" % (line_url, urllib.urlencode(req_data)),
                                          callback=self.parse_line,

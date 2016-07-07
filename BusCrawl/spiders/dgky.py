@@ -121,7 +121,7 @@ class DgkySpider(SpiderBase):
 #             dest_list = [u'天河暨南大',u'中山城东站']
 #             dest_list = self.get_dest_list("广东", '东莞')
             today = datetime.date.today()
-            for j in range(1, 7):
+            for j in range(1, 8):
                 sdate = str(today+datetime.timedelta(days=j))
                 dest_list = self.query_end_city(sw_name, sdate)
                 for y in dest_list:

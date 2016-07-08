@@ -79,8 +79,8 @@ class CBDSpider(SpiderBase):
                     self.logger.info("start %s ==> %s" % (start["city_name"], end["city_name"]))
                     for i in range(self.start_day(), 8):
                         sdate = str(today + datetime.timedelta(days=i))
-                        # if self.has_done(start["city_name"], end["city_name"], sdate):
-                        # continue
+                        if self.has_done(start["city_name"], end["city_name"], sdate):
+                            continue
                         params = {
                             "startprovince": start["province"],
                             "startcity": start["city_name"],

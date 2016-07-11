@@ -72,7 +72,7 @@ class CBDSpider(SpiderBase):
                 if not self.is_need_crawl(province=province) and not self.is_need_crawl(province=province.rstrip(u"省")):
                     continue
                 start = {"city_id": d["startcityid"], "city_code": d["shortspell"], "city_name": d["cityname"], "province": d["province"]}
-                if not self.is_need_crawl(city=start["city_name"]):
+                if not self.is_need_crawl(city=start["city_name"]) or start["city_name"] in ["宝应"]:
                     continue
 
                 for end in self.get_dest_list(province, start["city_name"]):
@@ -129,8 +129,8 @@ class CBDSpider(SpiderBase):
                 drv_date=d["departdate"],
                 drv_time=d["departtime"],
                 drv_datetime=dte.strptime("%s %s" % (d["departdate"], d["departtime"]), "%Y-%m-%d %H:%M"),
-                distance=unicode(d["distance"] or ""),
-                vehicle_type=d["bustype"] or "",
+                distance=unicode(d.get("distance", "") or ""),
+                vehicle_type=d.get("bustype", "") or "",
                 seat_type="",
                 bus_num=d["itemno"],
                 full_price=float(d["price"]),

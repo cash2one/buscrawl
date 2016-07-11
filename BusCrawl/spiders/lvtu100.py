@@ -137,7 +137,7 @@ class CBDSpider(SpiderBase):
                 half_price=float(d["price"]) / 2,
                 fee=3,
                 crawl_datetime=dte.now(),
-                extra_info={"goodsid": d["goodsid"], "itemid": d["itemid"]},
+                extra_info={"goodsid": d["goodsid"], "itemid": d["itemid"], "startProvince": start["province"], "stopprovince": end["province"], "productid": d["productid"]},
                 left_tickets=10,
                 crawl_source="lvtu100",
                 shift_id="",

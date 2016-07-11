@@ -77,7 +77,7 @@ class Sd365(SpiderBase):
             return code, sids
 
     def start_requests(self):
-        days = 3
+        days = 7
         today = datetime.date.today()
         data = {
             'a': 'getlinebysearch',
@@ -100,7 +100,6 @@ class Sd365(SpiderBase):
                 if self.has_done(start, end, sdate):
                     continue
                 url = 'http://www.36565.cn/?c=tkt3&a=search&fromid=&from={0}&toid=&to={1}&date={2}&time=0#'.format(start, end, sdate)
-                print url
                 res = self.get_pre(url)
                 if not res:
                     continue
@@ -137,7 +136,6 @@ class Sd365(SpiderBase):
         info = response.body.split('[]')[2].split(';')
         data = {'s_city_name': s_city_name, 'fromid': fromid}
         for x in info:
-            print x
             try:
                 y = x.split('=')[1].split(',')
                 data['d_city_name'] = y[1].split("'")[1]
@@ -152,8 +150,9 @@ class Sd365(SpiderBase):
         end = response.meta['end'].decode('utf-8')
         sdate = response.meta['sdate'].decode('utf-8')
         last_url = response.meta['last_url']
-        print start, end, sdate
         self.mark_done(start, end, sdate)
+        if response.body == '[]':
+            return
         soup = json.loads(response.body)
         for x in soup:
             try:
@@ -208,5 +207,4 @@ class Sd365(SpiderBase):
                     yield LineItem(**attrs)
 
             except:
-                print soup
                 pass

@@ -22,7 +22,7 @@ class ScqcpSpider(SpiderBase):
             'BusCrawl.middleware.ProxyMiddleware': 410,
             'BusCrawl.middleware.ScqcpHeaderMiddleware': 410,
         },
-        #"DOWNLOAD_DELAY": 0.2,
+        "DOWNLOAD_DELAY": 0.2,
         "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
     md5_key = "sdkjfgweysdgfvgvehbfhsdfgvbwjehfsdf"
@@ -138,7 +138,6 @@ class ScqcpSpider(SpiderBase):
     def parse_line(self, response):
         "解析班车"
         res = json.loads(response.body)
-        print res
         start = response.meta["start"]
         end = response.meta["end"]
         sdate = response.meta["sdate"]

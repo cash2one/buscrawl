@@ -19,10 +19,10 @@ class ScqcpSpider(SpiderBase):
         "DOWNLOADER_MIDDLEWARES": {
             'scrapy.contrib.downloadermiddleware.useragent.UserAgentMiddleware': None,
             'BusCrawl.middleware.MobileRandomUserAgentMiddleware': 400,
-            'BusCrawl.middleware.ProxyMiddleware': 410,
+            'BusCrawl.middleware.ScqcpProxyMiddleware': 410,
             'BusCrawl.middleware.ScqcpHeaderMiddleware': 410,
         },
-        "DOWNLOAD_DELAY": 0.1,
+#         "DOWNLOAD_DELAY": 0.1,
         "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
     md5_key = "sdkjfgweysdgfvgvehbfhsdfgvbwjehfsdf"

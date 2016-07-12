@@ -48,7 +48,7 @@ class Sd365(SpiderBase):
         'Content-Type': 'application/x-www-form-urlencoded',
     }
 
-    dcitys = city.find()
+    dcitys = city.find().batch_size(16)
 
     def get_fromid(self):
         url = 'http://www.36565.cn/js/data/buscityjs.js'
@@ -62,6 +62,7 @@ class Sd365(SpiderBase):
             except:
                 pass
         return res
+
     def get_pre(self, url):
         r = requests.get(url, headers=self.headers)
         try:
@@ -77,56 +78,56 @@ class Sd365(SpiderBase):
             return code, sids
 
     def start_requests(self):
-        days = 7
-        today = datetime.date.today()
-        data = {
-            'a': 'getlinebysearch',
-            'c': 'tkt3',
-            'toid': '',
-            'type': '0',
-        }
-        if self.city_list:
-            self.dcitys = city.find({'s_city_name': {'$in': self.city_list}})
-        #self.dcitys = city.find({'s_city_name': '烟台市'})
-        for x in self.dcitys:
-            for y in xrange(self.start_day(), days):  # self.start_day()
-                start = x.get('s_city_name')
-                # if start == '济宁市':
-                #     continue
-                end = x.get('d_city_name')
-                # fromid = x.get('fromid')
-                # toid = x.get('toid')
-                sdate = str(today + datetime.timedelta(days=y))
-                if self.has_done(start, end, sdate):
-                    continue
-                url = 'http://www.36565.cn/?c=tkt3&a=search&fromid=&from={0}&toid=&to={1}&date={2}&time=0#'.format(start, end, sdate)
-                res = self.get_pre(url)
-                if not res:
-                    continue
-                print url, res
-                data['code'] = res[0]
-                data['date'] = sdate
-                data['sids'] = res[1][:-1]
-                data['to'] = end
-                last_url = 'http://www.36565.cn/?' + urllib.urlencode(data)
-                yield scrapy.Request(
-                  url=last_url,
-                  callback=self.parse_line,
-                  method='GET',
-                  headers=self.headers,
-                  meta={
-                      'start': start,
-                      'end': end,
-                      'sdate': sdate,
-                      'last_url': last_url,
-                  },
-                )
+        # days = 7
+        # today = datetime.date.today()
+        # data = {
+        #     'a': 'getlinebysearch',
+        #     'c': 'tkt3',
+        #     'toid': '',
+        #     'type': '0',
+        # }
+        # if self.city_list:
+        #     self.dcitys = city.find({'s_city_name': {'$in': self.city_list}}).batch_size(16)
+        # for x in self.dcitys:
+        #     for y in xrange(self.start_day(), days):  # self.start_day()
+        #         start = x.get('s_city_name')
+        #         # if start == '济宁市':
+        #         #     continue
+        #         end = x.get('d_city_name')
+        #         # fromid = x.get('fromid')
+        #         # toid = x.get('toid')
+        #         sdate = str(today + datetime.timedelta(days=y))
+        #         # if self.has_done(start, end, sdate):
+        #         #     continue
+        #         url = 'http://www.36565.cn/?c=tkt3&a=search&fromid=&from={0}&toid=&to={1}&date={2}&time=0#'.format(start, end, sdate)
+        #         res = self.get_pre(url)
+        #         if not res:
+        #             continue
+        #         print url, res
+        #         data['code'] = res[0]
+        #         data['date'] = sdate
+        #         data['sids'] = res[1][:-1]
+        #         data['to'] = end
+        #         last_url = 'http://www.36565.cn/?' + urllib.urlencode(data)
+        #         yield scrapy.Request(
+        #           url=last_url,
+        #           callback=self.parse_line,
+        #           method='GET',
+        #           headers=self.headers,
+        #           meta={
+        #               'start': start,
+        #               'end': end,
+        #               'sdate': sdate,
+        #               'last_url': last_url,
+        #           },
+        #         )
 
         # 初始化抵达城市
-        # res = self.get_fromid()
-        # for x in res.items():
-        #     url = 'http://www.36565.cn/js/data/cityport_{0}.js'.format(x[1])
-        #     yield scrapy.Request(url, callback=self.parse_dcity, meta={'s_city_name': x[0], 'fromid': x[1]})
+        res = self.get_fromid()
+        for x in res.items():
+            url = 'http://www.36565.cn/js/data/cityport_{0}.js'.format(x[1])
+            print url, x[0]
+            # yield scrapy.Request(url, callback=self.parse_dcity, meta={'s_city_name': x[0], 'fromid': x[1]})
 
     # 初始化到达城市
     def parse_dcity(self, response):

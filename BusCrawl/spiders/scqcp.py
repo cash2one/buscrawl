@@ -22,7 +22,7 @@ class ScqcpSpider(SpiderBase):
             'BusCrawl.middleware.ProxyMiddleware': 410,
             'BusCrawl.middleware.ScqcpHeaderMiddleware': 410,
         },
-        "DOWNLOAD_DELAY": 0.2,
+        "DOWNLOAD_DELAY": 0.1,
         "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
     md5_key = "sdkjfgweysdgfvgvehbfhsdfgvbwjehfsdf"

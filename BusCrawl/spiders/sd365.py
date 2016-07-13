@@ -41,14 +41,14 @@ class Sd365(SpiderBase):
             'BusCrawl.middleware.ProxyMiddleware': 410,
             # 'BusCrawl.middleware.TongChengHeaderMiddleware': 410,
         },
-        "DOWNLOAD_DELAY": 0.25,
+        "DOWNLOAD_DELAY": 0.1,
         # "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:47.0) Gecko/20100101 Firefox/47.0",
         'Content-Type': 'application/x-www-form-urlencoded',
     }
-
+    vdate = (datetime.datetime.now() + datetime.timedelta(days=1)).strftime('%Y-%m-%d')
     dcitys = city.find().batch_size(16)
 
     def get_fromid(self):
@@ -77,8 +77,38 @@ class Sd365(SpiderBase):
             sids += x['value'] + ','
         if code and sids:
             return code, sids
+        else:
+            return ''
 
     def start_requests(self):
+        # days = 7
+        # today = datetime.date.today()
+        # if self.city_list:
+        #     self.dcitys = city.find({'s_city_name': {'$in': self.city_list, 'crawl_source': 'sd365', 'drv_date': self.vdate}}).batch_size(16)
+        # for x in self.dcitys:
+        #     for y in xrange(self.start_day(), days):  # self.start_day()
+        #         start = x['s_city_name']
+        #         end = x['d_city_name']
+        #         sdate = str(today + datetime.timedelta(days=y))
+        #         # if self.has_done(start, end, sdate):
+        #         #     continue
+        #         last_url = x['extra_info']['last_url']
+        #         last_url = re.sub(r'\d{4}\-\d{2}\-\d{2}', sdate, last_url)
+        #         print last_url
+        #         yield scrapy.Request(
+        #           url=last_url,
+        #           callback=self.parse_line,
+        #           method='GET',
+        #           headers=self.headers,
+        #           meta={
+        #               'start': start,
+        #               'end': end,
+        #               'sdate': sdate,
+        #               'last_url': last_url,
+        #           },
+        #         )
+
+
         days = 7
         today = datetime.date.today()
         data = {
@@ -90,21 +120,19 @@ class Sd365(SpiderBase):
         if self.city_list:
             self.dcitys = city.find({'s_city_name': {'$in': self.city_list}}).batch_size(16)
         for x in self.dcitys:
+            start = x.get('s_city_name')
+            # if start == '济宁市':
+            #     continue
+            end = x.get('d_city_name')
+            url = 'http://www.36565.cn/?c=tkt3&a=search&fromid=&from={0}&toid=&to={1}&date={2}&time=0#'.format(start, end, self.vdate)
+            res = self.get_pre(url)
+            if not res:
+                continue
+            print url, res
             for y in xrange(self.start_day(), days):  # self.start_day()
-                start = x.get('s_city_name')
-                # if start == '济宁市':
-                #     continue
-                end = x.get('d_city_name')
-                # fromid = x.get('fromid')
-                # toid = x.get('toid')
                 sdate = str(today + datetime.timedelta(days=y))
                 if self.has_done(start, end, sdate):
                     continue
-                url = 'http://www.36565.cn/?c=tkt3&a=search&fromid=&from={0}&toid=&to={1}&date={2}&time=0#'.format(start, end, sdate)
-                res = self.get_pre(url)
-                if not res:
-                    continue
-                print url, res
                 data['code'] = res[0]
                 data['date'] = sdate
                 data['sids'] = res[1][:-1]
@@ -153,7 +181,7 @@ class Sd365(SpiderBase):
         sdate = response.meta['sdate'].decode('utf-8')
         last_url = response.meta['last_url']
         self.mark_done(start, end, sdate)
-        if response.body == '[]':
+        if response.body == '[]' or response.body == '0':
             return
         soup = json.loads(response.body)
         for x in soup:
@@ -162,7 +190,7 @@ class Sd365(SpiderBase):
                 drv_time = x['bpnSendTime']
                 s_sta_name = x['shifazhan']
                 s_sta_id = x['siID']
-                d_sta_name = x['daozhan']
+                d_sta_name = x['prtName']
                 # d_sta_name = x['bpnSendPort']
                 left_tickets = x['bpnLeftNum']
                 vehicle_type = x['btpName']

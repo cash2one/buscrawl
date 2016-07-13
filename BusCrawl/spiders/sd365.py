@@ -185,7 +185,7 @@ class Sd365(SpiderBase):
             return
         soup = json.loads(response.body)
         s_province = '山东'
-        if '天津' in s_city_name:
+        if start in ["天津", "天津市"]:
             s_province = '天津'
         for x in soup:
             try:
@@ -207,7 +207,7 @@ class Sd365(SpiderBase):
                 bus_num = x['bliID']
                 full_price = x['prcPrice']
                 attrs = dict(
-                    s_province=s_province
+                    s_province=s_province,
                     s_city_id="",
                     s_city_name=start,
                     s_sta_name=s_sta_name,

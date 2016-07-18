@@ -86,7 +86,7 @@ class Zhw(SpiderBase):
             u'南溪站': 'C1K013-102019',
             u'拱北通大站': 'C1K030-102023',
             u'斗门站': 'C2K003-102027',
-            u'井岸站': 'C2K001-102028',
+            # u'井岸站': 'C2K001-102028',
             u'红旗站': 'C1K006-102030',
             u'三灶站': 'C1K004-102031',
             u'平沙站': 'C1K007-102032',
@@ -185,8 +185,8 @@ class Zhw(SpiderBase):
                     shift_id="",
                 )
                 # pprint(attrs)
-                if not sts:
-                    yield LineItem(**attrs)
+                # if not sts:
+                yield LineItem(**attrs)
 
             except Exception, e:
                 self.logger.error(e)

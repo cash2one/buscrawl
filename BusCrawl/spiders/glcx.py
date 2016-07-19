@@ -8,8 +8,8 @@ import urllib
 from bs4 import BeautifulSoup as bs
 import re
 # from fabric.colors import green, red
-# from cchardet import detect
-# from scrapy.shell import inspect_response
+from cchardet import detect
+from scrapy.shell import inspect_response
 
 from datetime import datetime as dte
 from BusCrawl.item import LineItem
@@ -119,8 +119,8 @@ class Glcx(SpiderBase):
 
     def parse_line(self, response):
         s_city_name = response.meta['s_city_name'].decode('utf-8')
-        start = response.meta['start'].decode('utf-8')
-        end = response.meta['end'].decode('utf-8')
+        start = response.meta['start']
+        end = response.meta['end']
         start_id = response.meta['start_id'].decode('utf-8')
         end_id = response.meta['end_id'].decode('utf-8')
         sdate = response.meta['sdate'].decode('utf-8')
@@ -128,14 +128,17 @@ class Glcx(SpiderBase):
         soup = bs(response.body, 'lxml')
         info = soup.find('table', attrs={'id': 'selbuy'})
         items = info.find_all('tr', attrs={'class': True})
+        if len(items) == 0:
+            return
+        # inspect_response(response, self)
         for x in items:
             try:
                 y = x.find_all('td')
                 bus_num = y[0].get_text().strip()
                 drv_date = sdate
                 drv_time = y[1].get_text().strip()
-                d_sta_name = y[3].get_text().strip()
-                vehicle_type = y[4].get_text().strip()
+                d_sta_name = y[3].get_text().strip().decode('utf-8')
+                vehicle_type = y[4].get_text().strip().decode('utf-8')
                 full_price = y[6].get_text().strip()
                 extra = y[7].get_text().strip()
                 left_tickets = y[10].get_text().strip()
@@ -169,7 +172,8 @@ class Glcx(SpiderBase):
                     crawl_source="glcx",
                     shift_id="",
                 )
-                yield LineItem(**attrs)
+                if end == d_sta_name and int(left_tickets):
+                    yield LineItem(**attrs)
 
             except:
                 pass

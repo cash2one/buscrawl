@@ -184,8 +184,7 @@ class Zhw(SpiderBase):
                     crawl_source="zhw",
                     shift_id="",
                 )
-                # pprint(attrs)
-                if u'立即购买' == sts:
+                if sts in [u'不在服务时间', u'立即购买']:
                     yield LineItem(**attrs)
 
             except Exception, e:

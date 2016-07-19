@@ -2,23 +2,19 @@
 # encoding: utf-8
 
 import scrapy
-import json
+# import json
 import datetime
 import urllib
 from bs4 import BeautifulSoup as bs
-import re
-# from fabric.colors import green, red
-from cchardet import detect
-from scrapy.shell import inspect_response
+# import re
 
 from datetime import datetime as dte
 from BusCrawl.item import LineItem
-from BusCrawl.utils.tool import get_pinyin_first_litter, vcode_zhw
+from BusCrawl.utils.tool import get_pinyin_first_litter
 from base import SpiderBase
 from scrapy.conf import settings
 from pymongo import MongoClient
-import requests
-from pprint import pprint
+# import requests
 # import cStringIO
 # from PIL import Image
 # import ipdb

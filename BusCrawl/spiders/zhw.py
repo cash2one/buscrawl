@@ -138,7 +138,7 @@ class Zhw(SpiderBase):
             i = i + 1
             try:
                 y = x.find_all('td')
-                sts = x.find('input', attrs={'disabled': 'disabled'})
+                sts = x.find('input', attrs={'class': 'g_table_btn', 'onclick': True}).get('value')
                 drv_date = y[0].get_text().strip()
                 drv_time = y[1].get_text().strip()
                 s_sta_name = y[2].get_text().strip()
@@ -185,8 +185,8 @@ class Zhw(SpiderBase):
                     shift_id="",
                 )
                 # pprint(attrs)
-                # if not sts:
-                yield LineItem(**attrs)
+                if u'立即购买' == sts:
+                    yield LineItem(**attrs)
 
             except Exception, e:
                 self.logger.error(e)

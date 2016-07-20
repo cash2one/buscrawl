@@ -133,16 +133,11 @@ class Glcx(SpiderBase):
                 bus_num = y[0].get_text().strip()
                 drv_date = sdate
                 drv_time = y[1].get_text().strip()
-                d_sta_name = y[3].get_text().strip().decode('utf-8')
+                # d_sta_name = y[3].get_text().strip().decode('utf-8')
                 vehicle_type = y[4].get_text().strip().decode('utf-8')
                 full_price = y[6].get_text().strip()
                 extra = y[7].get_text().strip()
                 left_tickets = y[10].get_text().strip()
-                # if end != d_sta_name:
-                #     e = '%s - %s - %s - %s - %s - %s' %(start, d_sta_name, end, bus_num, full_price, drv_date)
-                #     self.logger.info(e)
-                #     #continue
-                #     # end = d_sta_name
                 extra = {'startNo': y[11].get_text().strip()}
                 attrs = dict(
                     s_province='山东',

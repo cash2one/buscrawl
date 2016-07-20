@@ -137,7 +137,7 @@ class Zhw(SpiderBase):
             i = i + 1
             try:
                 y = x.find_all('td')
-                sts = x.find('input', attrs={'class': 'g_table_btn', 'onclick': True}).get('value')
+                sts = x.find('input', attrs={'class': 'g_table_btn'}).get('value')
                 drv_date = y[0].get_text().strip()
                 drv_time = y[1].get_text().strip()
                 s_sta_name = y[2].get_text().strip()

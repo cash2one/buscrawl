@@ -55,26 +55,35 @@ class SpiderBase(scrapy.Spider):
             return 1        # 从第二天开始爬
         return 0            # 爬当天的
 
-    def get_dest_list(self, province, city):
+    def get_dest_list(self, province, city, station=""):
         """
         获取目的地, 先从数据库获取,为空则去网络找
         """
-        lst = self.get_dest_list_from_db(province, city)
+        lst = self.get_dest_list_from_db(province, city, station=station)
         if not lst:
             lst = self.get_dest_list_from_web(province, city)
         return lst
 
-    def get_dest_list_from_db(self, province, city):
+    def get_dest_list_from_db(self, province, city, station=""):
         """
         从数据库获取目的地
         """
+        province, city, station = unicode(province), unicode(city), unicode(station)
         db_config = settings.get("MONGODB_CONFIG")
         client = MongoClient(db_config["url"])
         db = client[db_config["db"]]
-        res = db.open_city.find_one({"province": province, "city_name": city})
+
         lst = []
-        if res:
-            lst = res["dest_list"]
+        provinces = [province.rstrip("省"), province.rstrip("省") + "省", province]
+        citys = [city.rstrip("市").rstrip("区").rstrip("县"), city]
+        city_res = db.open_city.find_one({"province": {"$in": provinces}, "city_name": {"$in": citys}})
+        if city_res:
+            if station:
+                sta_res = db.open_station.find_one({"city": city_res["_id"], "sta_name": station})
+                if sta_res:
+                    lst = sta_res["dest_info"]
+            if not lst:
+                lst = city_res["dest_list"]
         client.close()
         return lst
 

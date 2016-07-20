@@ -2,14 +2,9 @@
 # encoding: utf-8
 
 import scrapy
-import json
 import datetime
 import urllib
 from bs4 import BeautifulSoup as bs
-import re
-# from fabric.colors import green, red
-# from cchardet import detect
-# from scrapy.shell import inspect_response
 
 from datetime import datetime as dte
 from BusCrawl.item import LineItem
@@ -18,10 +13,6 @@ from base import SpiderBase
 from scrapy.conf import settings
 from pymongo import MongoClient
 import requests
-from pprint import pprint
-# import cStringIO
-# from PIL import Image
-# import ipdb
 
 db_config = settings.get("MONGODB_CONFIG")
 city = MongoClient(db_config["url"])[db_config["db"]]['zhwcity']
@@ -38,16 +29,12 @@ class Zhw(SpiderBase):
             'scrapy.contrib.downloadermiddleware.useragent.UserAgentMiddleware': None,
             'BusCrawl.middleware.BrowserRandomUserAgentMiddleware': 400,
             'BusCrawl.middleware.ProxyMiddleware': 410,
-            # 'BusCrawl.middleware.TongChengHeaderMiddleware': 410,
         },
-        "DOWNLOAD_DELAY": 0.25,
+        # "DOWNLOAD_DELAY": 0.25,
         # "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
 
-    dcitys = city.find({'szCode': {'$exists': True}}).batch_size(30)
     url = 'http://www.zhwsbs.gov.cn:9013/shfw/zaotsTicket/pageLists.xhtml'
-    # base_url = 'http://www.hn96520.com/ajax/query.aspx?method=GetListByPY&q=b&limit=20&timestamp=1465204637302&global=410101'
-    # base_url = 'http://www.hn96520.com/placeorder.aspx?start=%E9%83%91%E5%B7%9E%E4%B8%AD%E5%BF%83%E7%AB%99&global=410101&end=%E6%9D%AD%E5%B7%9E&date=2016-05-30'
 
     def update_cookies(self):
         headers = {
@@ -64,7 +51,7 @@ class Zhw(SpiderBase):
         }
         today = datetime.date.today()
         sdate = str(today + datetime.timedelta(days=1))
-        for x in xrange(5):
+        for x in xrange(3):
             code, cookies = vcode_zhw()
             data['SchDstNodeName'] ='广东东站'
             data['SchDate'] = sdate
@@ -78,7 +65,7 @@ class Zhw(SpiderBase):
                 print info.get_text()
 
     def start_requests(self):
-        days = 7
+        days = 8
         today = datetime.date.today()
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:47.0) Gecko/20100101 Firefox/47.0",
@@ -92,13 +79,13 @@ class Zhw(SpiderBase):
             'StartStation': '"-"',
             'SchDstNodeName': '',
         }
-        d = {
+        sta_info = {
             u'香洲长途站': 'C1K001-102017',
             u'上冲站': 'C1K027-102018',
             u'南溪站': 'C1K013-102019',
             u'拱北通大站': 'C1K030-102023',
             u'斗门站': 'C2K003-102027',
-            u'井岸站': 'C2K001-102028',
+            # u'井岸站': 'C2K001-102028',
             u'红旗站': 'C1K006-102030',
             u'三灶站': 'C1K004-102031',
             u'平沙站': 'C1K007-102032',
@@ -109,20 +96,19 @@ class Zhw(SpiderBase):
             u'西埔站': 'XPZ001-102029',
         }
         code, cookies = self.update_cookies()
-        for z in d:
+        for s_name, s_id in sta_info.items():
+            start = {"name": s_name, "id": s_id, "code": get_pinyin_first_litter(s_name)}
             for y in xrange(self.start_day(), days):
-                for x in city.find({'szCode': {'$exists': True}}).batch_size(16):
-                    # if z != 'C1K001-102017' or x.get('szCode') != '广州东站':
-                    #     continue
-                    start = x.get('city_name')
-                    end = x.get('szCode')
+                for es in self.get_dest_list("广东", "珠海", s_name):
+                    name, d_code = es["name"], es["code"]
+                    end = {"name": name, "code": d_code}
                     sdate = str(today + datetime.timedelta(days=y))
-                    if self.has_done(z, end, sdate):
+                    if self.has_done(start["name"], end["name"], sdate):
                         continue
-                    data['SchDstNodeName'] = end
+                    data['SchDstNodeName'] = end["name"]
                     data['SchDate'] = sdate
                     data['checkCode'] = code
-                    data['StartStation'] = d[z]
+                    data['StartStation'] = s_id
                     yield scrapy.Request(
                         url=self.url,
                         callback=self.parse_line,
@@ -131,44 +117,27 @@ class Zhw(SpiderBase):
                         headers=headers,
                         cookies=dict(cookies),
                         meta={
-                            's_city_name': '珠海',
                             'start': start,
                             'end': end,
                             'sdate': sdate,
-                            'z': z,
                         },
                     )
 
-        # 初始化抵达城市
-        # letter = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-        # for x in letter:
-        #     url = 'http://www.zhwsbs.gov.cn:9013/shfw/zaotsTicket/findCity.xhtml?term={0}%2520%2520&featureClass=P&style=full&maxRows=8&name_startsWith={1}++'.format(x, x)
-        #     yield scrapy.Request(self.url, callback=self.parse_dcity,meta={'s_city_name': '珠海'})
-
-    # 初始化到达城市
-    def parse_dcity(self, response):
-        s_city_name = response.meta['s_city_name'].decode('utf-8')
-        soup = json.loads(response.body)
-        for data in soup:
-            data['city_name'] = s_city_name
-            if city.find({'szCode': data['szCode'], 'zmCode': data['zmCode'], 'sname': data['sname']}).count() <= 0:
-                city.save(dict(data))
-
     def parse_line(self, response):
-        s_city_name = response.meta['s_city_name'].decode('utf-8')
-        start = response.meta['start'].decode('utf-8')
-        end = response.meta['end'].decode('utf-8')
+        end = response.meta['end']
+        start = response.meta['start']
         sdate = response.meta['sdate'].decode('utf-8')
-        z = response.meta['z'].decode('utf-8')
-        self.mark_done(z, end, sdate)
+        self.mark_done(start["name"], end["name"], sdate)
+
         soup = bs(response.body, 'lxml')
         info = soup.find('table', attrs={'id': 'changecolor'})
         items = info.find_all('tr', attrs={'id': True})
+        self.logger.info("%s=>%s %s, result: %s", start["name"], end["name"], sdate, len(items))
         for i, x in enumerate(items):
             i = i + 1
             try:
                 y = x.find_all('td')
-                sts = x.find('input', attrs={'disabled': 'disabled'})
+                sts = x.find('input', attrs={'class': 'g_table_btn', 'onclick': True}).get('value')
                 drv_date = y[0].get_text().strip()
                 drv_time = y[1].get_text().strip()
                 s_sta_name = y[2].get_text().strip()
@@ -188,13 +157,13 @@ class Zhw(SpiderBase):
                 attrs = dict(
                     s_province='广东',
                     s_city_id="",
-                    s_city_name=s_city_name,
+                    s_city_name="珠海",
                     s_sta_name=s_sta_name,
-                    s_city_code=get_pinyin_first_litter(s_city_name),
-                    s_sta_id='',
-                    d_city_name=end,
+                    s_city_code="zh",
+                    s_sta_id=start["id"],
+                    d_city_name=end["name"],
                     d_city_id="",
-                    d_city_code=get_pinyin_first_litter(end),
+                    d_city_code=end["code"],
                     d_sta_id="",
                     d_sta_name=d_sta_name,
                     drv_date=drv_date,
@@ -204,7 +173,7 @@ class Zhw(SpiderBase):
                     distance='',
                     vehicle_type=vehicle_type,
                     seat_type="",
-                    bus_num='',
+                    bus_num=extra['txtSchLocalCode'],
                     full_price=float(extra['txtSchPrice']),
                     half_price=float(extra['txtSchPrice']) / 2,
                     fee=0.0,
@@ -214,9 +183,8 @@ class Zhw(SpiderBase):
                     crawl_source="zhw",
                     shift_id="",
                 )
-                # pprint(attrs)
-                if not sts:
+                if sts in [u'不在服务时间', u'立即购买']:
                     yield LineItem(**attrs)
 
-            except:
-                pass
+            except Exception, e:
+                self.logger.error(e)

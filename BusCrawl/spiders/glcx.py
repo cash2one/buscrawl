@@ -14,6 +14,7 @@ from BusCrawl.utils.tool import get_pinyin_first_litter
 from base import SpiderBase
 from scrapy.conf import settings
 from pymongo import MongoClient
+from scrapy.shell import inspect_response
 # import requests
 # import cStringIO
 # from PIL import Image
@@ -51,43 +52,33 @@ class Glcx(SpiderBase):
     def start_requests(self):
         days = 7
         today = datetime.date.today()
-        d = {
-            u'济南长途汽车总站': '1',
-            u'济南长途汽车总站南区': '2',
-            u'济南长途汽车东站': '3',
-            u'章丘长途汽车总站': '4',
-        }
         for x in city.find().batch_size(16):
             for y in xrange(self.start_day(), days):
-                for z in d:
-                    # if z != 'C1K001-102017' or x.get('szCode') != '广州东站':
-                    #     continue
-                    start_id = d[z]
-                    end_id = x.get('end_id')
-                    sdate = str(today + datetime.timedelta(days=y))
-                    data = {
-                        'stationId': start_id,
-                        'portId': end_id,
-                        'startTime': sdate,
-                    }
-                    # print data
-                    if self.has_done(z, x['end'], sdate):
-                        continue
-                    yield scrapy.Request(
-                        url=self.url,
-                        callback=self.parse_line,
-                        method='POST',
-                        body=urllib.urlencode(data),
-                        headers=self.headers,
-                        meta={
-                            's_city_name': '济南',
-                            'start_id': start_id,
-                            'start': z,
-                            'end_id': end_id,
-                            'end': x['end'],
-                            'sdate': sdate,
-                        },
-                    )
+               start_id = x['start_id']
+               end_id = x.get('end_id')
+               sdate = str(today + datetime.timedelta(days=y))
+               data = {
+                   'stationId': start_id,
+                   'portId': end_id,
+                   'startTime': sdate,
+               }
+               if self.has_done(x['start'], x['end'], sdate):
+                   continue
+               yield scrapy.Request(
+                   url=self.url,
+                   callback=self.parse_line,
+                   method='POST',
+                   body=urllib.urlencode(data),
+                   headers=self.headers,
+                   meta={
+                       's_city_name': '济南',
+                       'start_id': start_id,
+                       'start': x['start'],
+                       'end_id': end_id,
+                       'end': x['end'],
+                       'sdate': sdate,
+                   },
+               )
 
         # 初始化抵达城市
         # url = 'http://www.0000369.cn/buytks!list.action'
@@ -98,18 +89,27 @@ class Glcx(SpiderBase):
         s_city_name = response.meta['s_city_name'].decode('utf-8')
         soup = bs(response.body, 'lxml')
         info = soup.find_all('script', attrs={'src': False})[2]
-        info = str(info).split()
+        info = str(info).split('new Array();')
         data = {'s_city_name': s_city_name}
-        for x in info:
+        d = {
+            '1': u'济南长途汽车总站',
+            '2': u'济南长途汽车总站南区',
+            '3': u'济南长途汽车东站',
+            '4': u'章丘长途汽车总站',
+        }
+        for i, x in enumerate(info):
             try:
-                tmp = x.split("'")
-                data['end'] = tmp[1].decode('utf-8')
-                data['end_id'] = tmp[-2]
-                # print len(tmp)
-                if len(tmp) != 7:
-                    continue
-                if city.find({'end': data['end']}).count() <= 0:
-                    city.save(dict(data))
+                pk = 'aff%s' %(i)
+                if pk in x:
+                    tmp = x.split(');')
+                    for y in tmp:
+                        z = y.split("'")
+                        data['end'] = z[1].decode('utf-8')
+                        data['end_id'] = z[-2]
+                        data['start'] = d[str(i)]
+                        data['start_id'] = str(i)
+                        if city.find({'start': data['start'], 'end': data['end']}).count() <= 0:
+                            city.save(dict(data))
             except:
                 pass
 
@@ -138,6 +138,10 @@ class Glcx(SpiderBase):
                 full_price = y[6].get_text().strip()
                 extra = y[7].get_text().strip()
                 left_tickets = y[10].get_text().strip()
+                if end != d_sta_name:
+                    print start, d_sta_name, end, bus_num, full_price
+                    #continue
+                    end = d_sta_name
                 extra = {'startNo': y[11].get_text().strip()}
                 attrs = dict(
                     s_province='山东',
@@ -146,11 +150,11 @@ class Glcx(SpiderBase):
                     s_sta_name=start,
                     s_city_code=get_pinyin_first_litter(s_city_name),
                     s_sta_id=start_id,
-                    d_city_name=d_sta_name,
+                    d_city_name=end,
                     d_city_id='',
-                    d_city_code=get_pinyin_first_litter(d_sta_name),
+                    d_city_code=get_pinyin_first_litter(end),
                     d_sta_id=end_id,
-                    d_sta_name=d_sta_name,
+                    d_sta_name=end,
                     drv_date=drv_date,
                     drv_time=drv_time,
                     drv_datetime=dte.strptime("%s %s" % (
@@ -168,7 +172,7 @@ class Glcx(SpiderBase):
                     crawl_source="glcx",
                     shift_id="",
                 )
-                if end == d_sta_name and int(left_tickets):
+                if int(left_tickets):
                     yield LineItem(**attrs)
 
             except:

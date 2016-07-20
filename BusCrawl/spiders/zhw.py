@@ -2,7 +2,6 @@
 # encoding: utf-8
 
 import scrapy
-import json
 import datetime
 import urllib
 from bs4 import BeautifulSoup as bs
@@ -174,7 +173,7 @@ class Zhw(SpiderBase):
                     distance='',
                     vehicle_type=vehicle_type,
                     seat_type="",
-                    bus_num='',
+                    bus_num=extra['txtSchLocalCode'],
                     full_price=float(extra['txtSchPrice']),
                     half_price=float(extra['txtSchPrice']) / 2,
                     fee=0.0,

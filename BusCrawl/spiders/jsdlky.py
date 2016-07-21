@@ -37,7 +37,7 @@ class JsdlkySpider(SpiderBase):
             # 'BusCrawl.middleware.ZjgsmHeaderMiddleware': 410,
             'BusCrawl.middleware.ProxyMiddleware': 410,
         },
-        "DOWNLOAD_DELAY": 0.5,
+        "DOWNLOAD_DELAY": 0.1,
         "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
 
@@ -46,15 +46,16 @@ class JsdlkySpider(SpiderBase):
         # line_url = "http://58.213.132.27:8082/nj_weixinService/2.0/queryBus"
         line_url = "http://58.213.132.28/weixin/proxy/queryBus"
         today = datetime.date.today()
+        trans = {"南京汽车客运站(小红山站)": "南京客运南站"}
         for sta_info in START_STA_LIST:
             start = {
                 "city_name": "南京",
                 "city_code": "nj",
-                "sta_name": sta_info["stname"],
+                "sta_name": trans.get(sta_info["stname"], sta_info["stname"]),
                 "sta_code": sta_info["query_code"],
             }
-            for s in self.get_dest_list("江苏", start["city_name"]):
-                name, code = s.split("|")
+            for s in self.get_dest_list("江苏", start["city_name"], start["sta_name"]):
+                name, code = s["name"], s["code"]
                 end = {"city_name": name, "city_code": code}
                 self.logger.info("start %s ==> %s" % (start["sta_name"], end["city_name"]))
                 for i in range(self.start_day(), 8):
@@ -74,7 +75,7 @@ class JsdlkySpider(SpiderBase):
                     #     "secret_key": md5("&".join(map(lambda a:"%s=%s" % (a[0], a[1]), sorted(params.items(), key=lambda i: i[0])))),
                     # }
                     req_data = {
-                        "ewx": "FSclq1vvBHkQRfFqCaVal5+g6aovi02md1tfoQkuFUjwpwMPj4cjwu0EEWzvYfwohaqwrerSReE3zaLOAa1g85WWGXWruPxN2bD04NjmfV8=",
+                        "ewx": "ROxgn80ecZQrWIzo4Ca89MVgGD4LZ9pGp0PNwOwzlC6k0r9EcmpJGpyt37mOv9LBMl2kG6Wlp9CI0TllRW3Yi3qvIAMPhsGeiQp1wO0MChQ=",
                         "drive_date": sdate,
                         "rst_name": start["sta_name"],
                         "dst_name": end["city_name"],
@@ -88,17 +89,17 @@ class JsdlkySpider(SpiderBase):
         start = response.meta["start"]
         end= response.meta["end"]
         sdate = response.meta["sdate"]
-        self.mark_done(start["sta_name"], end["city_name"], sdate)
         res = json.loads(response.body)
         if res["rtn_code"] != "00":
             self.logger.error("parse_line: Unexpected return, %s", res)
             return
         shift_list = res["data"] or []
+        self.mark_done(start["sta_name"], end["city_name"], sdate)
 
         for d in shift_list:
             drv_datetime = dte.strptime("%s %s" % (d["drive_date"], d["plan_time"]), "%Y%m%d %H%M")
             s_sta_name = d["rst_name"]
-            if u"���" in s_sta_name:  # 有乱码
+            if u"��" in s_sta_name:  # 有乱码
                 s_sta_name = start["sta_name"]
             attrs = dict(
                 s_province = "江苏",

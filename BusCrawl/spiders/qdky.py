@@ -36,7 +36,7 @@ class Qdky(SpiderBase):
             'BusCrawl.middleware.ProxyMiddleware': 410,
             # 'BusCrawl.middleware.TongChengHeaderMiddleware': 410,
         },
-        "DOWNLOAD_DELAY": 3,
+        "DOWNLOAD_DELAY": 0.75,
         # "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
 
@@ -51,7 +51,6 @@ class Qdky(SpiderBase):
         for x in xrange(5):
             r = requests.get(self.url, headers=self.headers)
             soup = bs(r.content, 'lxml')
-            print soup
             try:
                 state = soup.find('input', attrs={'id': '__VIEWSTATE'}).get('value', '')
                 valid = soup.find('input', attrs={'id': '__EVENTVALIDATION'}).get('value', '')
@@ -61,7 +60,7 @@ class Qdky(SpiderBase):
                 pass
 
     def start_requests(self):
-        days = 3
+        days = 1
         today = datetime.date.today()
         data = {
             '__EVENTTARGET': '',
@@ -78,13 +77,14 @@ class Qdky(SpiderBase):
             'ctl00$ContentPlaceHolder1$Button_1_cx': '车次查询',
 
         }
+        state, valid, cookies = self.update_state()
+        print len(state)
         for x in city.find({'end': {'$exists': True}}).batch_size(16):
             for y in xrange(self.start_day(), days):
                 start = x['start'].split('.')[-1]
                 end = x['end']
-                if '安庆' not in end:
-                    continue
-                state, valid, cookies = self.update_state()
+                # if '安庆' not in end:
+                #     continue
                 end_id = x.get('end_id')
                 sdate = str(today + datetime.timedelta(days=y))
                 data['__VIEWSTATE'] = state
@@ -109,7 +109,7 @@ class Qdky(SpiderBase):
                     },
                 )
 
-        # 初始化抵达城市
+        # # 初始化抵达城市
         # url = 'http://ticket.qdjyjt.com/Scripts/destination.js'
         # yield scrapy.Request(url, callback=self.parse_dcity, meta={'s_city_name': '青岛'})
 
@@ -139,7 +139,10 @@ class Qdky(SpiderBase):
             try:
                 for y in sta_info.values():
                     tmp = x.split("'")
-                    data['end'] = tmp[-2].decode('utf-8')
+                    end = tmp[-2].decode('utf-8')
+                    p = re.compile(r'\w*', re.L)
+                    end = p.sub('', end)
+                    data['end'] = end
                     data['end_id'] = tmp[1]
                     data['start'] = y
                     print data['end'], data['end_id']
@@ -156,8 +159,11 @@ class Qdky(SpiderBase):
         sdate = response.meta['sdate'].decode('utf-8')
         self.mark_done(start, end, sdate)
         soup = bs(response.body, 'lxml')
-        info = soup.find('table', attrs={'id': 'ContentPlaceHolder1_GridViewbc'})
-        items = info.find_all('tr', attrs={'style': True})
+        try:
+            info = soup.find('table', attrs={'id': 'ContentPlaceHolder1_GridViewbc'})
+            items = info.find_all('tr', attrs={'style': True})
+        except:
+            return
         if len(items) == 0:
             return
         # inspect_response(response, self)
@@ -166,27 +172,26 @@ class Qdky(SpiderBase):
                 sts = x.find('input', attrs={'id': 'ContentPlaceHolder1_GridViewbc_Button1_0'}).get('value', '')
                 y = x.find_all('td')
                 left_tickets = y[3].get_text().strip()
-                print left_tickets
-                if '预订' == sts and '有票' == left_tickets:
-                    print 222222222222
+                if '预订' != sts and '有票' != left_tickets:
+                    continue
+                left_tickets = 5
                 bus_num = y[1].get_text().strip()
                 drv_date = sdate
                 drv_time = y[2].get_text().strip()
                 vehicle_type = y[5].get_text().strip().decode('utf-8')
                 full_price = y[6].get_text().strip()
-                extra = y[7].get_text().strip()
                 attrs = dict(
                     s_province='山东',
                     s_city_id="",
                     s_city_name='青岛',
                     s_sta_name=start,
-                    s_city_code=get_pinyin_first_litter(s_city_name),
-                    s_sta_id=start_id,
-                    d_city_name=d_sta_name,
+                    s_city_code=get_pinyin_first_litter(u'青岛'),
+                    s_sta_id='',
+                    d_city_name=end,
                     d_city_id='',
-                    d_city_code=get_pinyin_first_litter(d_sta_name),
-                    d_sta_id=end_id,
-                    d_sta_name=d_sta_name,
+                    d_city_code=get_pinyin_first_litter(end),
+                    d_sta_id='',
+                    end=end,
                     drv_date=drv_date,
                     drv_time=drv_time,
                     drv_datetime=dte.strptime("%s %s" % (
@@ -200,11 +205,12 @@ class Qdky(SpiderBase):
                     fee=0.0,
                     crawl_datetime=dte.now(),
                     extra_info='',
-                    left_tickets=int(left_tickets),
-                    crawl_source="glcx",
+                    left_tickets=left_tickets,
+                    crawl_source="qdky",
                     shift_id="",
                 )
-                yield LineItem(**attrs)
+                print attrs
+                # yield LineItem(**attrs)
 
             except:
                 pass

@@ -36,7 +36,7 @@ class Qdky(SpiderBase):
             'BusCrawl.middleware.ProxyMiddleware': 410,
             # 'BusCrawl.middleware.TongChengHeaderMiddleware': 410,
         },
-        "DOWNLOAD_DELAY": 0.1,
+        "DOWNLOAD_DELAY": 3,
         # "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
 
@@ -48,18 +48,74 @@ class Qdky(SpiderBase):
     }
 
     def update_state(self):
-        r = requests.get(self.url, headers=self.headers)
-        print r.ok
-        soup = bs(r.content, 'lxml')
-        state = soup.find('input', attrs={'id': '__VIEWSTATE'}).get('value', '')
-        valid = soup.find('input', attrs={'id': '__EVENTVALIDATION'}).get('value', '')
-        print len(state)
-        if state and valid and r.ok:
-            return (state, valid, dict(r.cookies))
+        for x in xrange(5):
+            r = requests.get(self.url, headers=self.headers)
+            soup = bs(r.content, 'lxml')
+            print soup
+            try:
+                state = soup.find('input', attrs={'id': '__VIEWSTATE'}).get('value', '')
+                valid = soup.find('input', attrs={'id': '__EVENTVALIDATION'}).get('value', '')
+                if state and valid and r.ok:
+                    return (state, valid, dict(r.cookies))
+            except:
+                pass
 
     def start_requests(self):
-        days = 7
+        days = 3
         today = datetime.date.today()
+        data = {
+            '__EVENTTARGET': '',
+            '__EVENTARGUMENT': '',
+            '__VIEWSTATE': '',
+            '__EVENTVALIDATION': '',
+            'ctl00$ContentPlaceHolder1$DropDownList3': '',
+            'ctl00$ContentPlaceHolder1$chengchezhan_id': '',
+            'destination-id': '',
+            'ctl00$ContentPlaceHolder1$mudizhan_id': '',
+            'tripDate': '',
+            'ctl00$ContentPlaceHolder1$chengcheriqi_id': '',
+            'ctl00$ContentPlaceHolder1$chengcheriqi_id0': '',
+            'ctl00$ContentPlaceHolder1$Button_1_cx': '车次查询',
+
+        }
+        for x in city.find({'end': {'$exists': True}}).batch_size(16):
+            for y in xrange(self.start_day(), days):
+                start = x['start'].split('.')[-1]
+                end = x['end']
+                if '安庆' not in end:
+                    continue
+                state, valid, cookies = self.update_state()
+                end_id = x.get('end_id')
+                sdate = str(today + datetime.timedelta(days=y))
+                data['__VIEWSTATE'] = state
+                data['__EVENTVALIDATION'] = valid
+                data['ctl00$ContentPlaceHolder1$DropDownList3'] = x['start']
+                data['destination-id'] = end_id
+                data['tripDate'] = sdate.replace('-', '/')
+                print start, end
+                # if self.has_done(start, end, sdate):
+                #     continue
+                yield scrapy.Request(
+                    url=self.url,
+                    callback=self.parse_line,
+                    method='POST',
+                    body=urllib.urlencode(data),
+                    headers=self.headers,
+                    cookies=cookies,
+                    meta={
+                        'start': start,
+                        'end': end,
+                        'sdate': sdate,
+                    },
+                )
+
+        # 初始化抵达城市
+        # url = 'http://ticket.qdjyjt.com/Scripts/destination.js'
+        # yield scrapy.Request(url, callback=self.parse_dcity, meta={'s_city_name': '青岛'})
+
+    # 初始化到达城市
+    def parse_dcity(self, response):
+        s_city_name = response.meta['s_city_name'].decode('utf-8')
         sta_info = {
             '1': '1.青岛站    ',
             '2': '2.沧口汽车站',
@@ -76,73 +132,21 @@ class Qdky(SpiderBase):
             '13': '9.平度汽车站',
             '14': 'E.华联火车站',
         }
-        data = {
-            '__EVENTTARGET': '',
-            '__EVENTARGUMENT': '',
-            '__VIEWSTATE': '',
-            '__EVENTVALIDATION': '',
-            'ctl00$ContentPlaceHolder1$DropDownList3': '',
-            'ctl00$ContentPlaceHolder1$chengchezhan_id': '',
-            'destination-id': '',
-            'ctl00$ContentPlaceHolder1$mudizhan_id': '',
-            'tripDate': '',
-            'ctl00$ContentPlaceHolder1$chengcheriqi_id': '',
-            'ctl00$ContentPlaceHolder1$chengcheriqi_id0': '',
-            'ctl00$ContentPlaceHolder1$Button_1_cx': '车次查询',
-
-        }
-
-        for x in city.find({'end': {'$exists': True}}).batch_size(16):
-            for y in xrange(self.start_day(), days):
-                for z in sta_info.values():
-                    start = z.split('.')[-1]
-                    end = x['end']
-                    if '安庆' not in end:
-                        continue
-                    state, valid, cookies = self.update_state()
-                    end_id = x.get('end_id')
-                    sdate = str(today + datetime.timedelta(days=y))
-                    data['__VIEWSTATE'] = state
-                    data['__EVENTVALIDATION'] = valid
-                    data['ctl00$ContentPlaceHolder1$DropDownList3'] = z
-                    data['destination-id'] = end_id
-                    print start, end
-                    # if self.has_done(start, end, sdate):
-                    #     continue
-                    yield scrapy.Request(
-                        url=self.url,
-                        callback=self.parse_line,
-                        method='POST',
-                        body=urllib.urlencode(data),
-                        headers=self.headers,
-                        cookies=cookies,
-                        meta={
-                            'start': start,
-                            'end': end,
-                            'sdate': sdate,
-                        },
-                    )
-
-        # 初始化抵达城市
-        # url = 'http://ticket.qdjyjt.com/Scripts/destination.js'
-        # yield scrapy.Request(url, callback=self.parse_dcity, meta={'s_city_name': '青岛'})
-
-    # 初始化到达城市
-    def parse_dcity(self, response):
-        s_city_name = response.meta['s_city_name'].decode('utf-8')
         soup = response.body.split('[')[-1].split(']')[0]
         info = soup.split('}')
         data = {'s_city_name': s_city_name}
         for x in info:
             try:
-                tmp = x.split("'")
-                data['end'] = tmp[-2].decode('utf-8')
-                data['end_id'] = tmp[1]
-                print data['end'], data['end_id']
-                if len(tmp) != 5:
-                    continue
-                if city.find({'end': data['end']}).count() <= 0:
-                    city.save(dict(data))
+                for y in sta_info.values():
+                    tmp = x.split("'")
+                    data['end'] = tmp[-2].decode('utf-8')
+                    data['end_id'] = tmp[1]
+                    data['start'] = y
+                    print data['end'], data['end_id']
+                    if len(tmp) != 5:
+                        continue
+                    if city.find({'end': data['end'], 'start': data['start']}).count() <= 0:
+                        city.save(dict(data))
             except:
                 pass
 
@@ -153,24 +157,24 @@ class Qdky(SpiderBase):
         self.mark_done(start, end, sdate)
         soup = bs(response.body, 'lxml')
         info = soup.find('table', attrs={'id': 'ContentPlaceHolder1_GridViewbc'})
-        print info
-        items = info.find_all('tr', attrs={'class': True})
+        items = info.find_all('tr', attrs={'style': True})
         if len(items) == 0:
             return
         # inspect_response(response, self)
         for x in items:
             try:
-                print x
+                sts = x.find('input', attrs={'id': 'ContentPlaceHolder1_GridViewbc_Button1_0'}).get('value', '')
                 y = x.find_all('td')
-                bus_num = y[0].get_text().strip()
+                left_tickets = y[3].get_text().strip()
+                print left_tickets
+                if '预订' == sts and '有票' == left_tickets:
+                    print 222222222222
+                bus_num = y[1].get_text().strip()
                 drv_date = sdate
-                drv_time = y[1].get_text().strip()
-                d_sta_name = y[3].get_text().strip().decode('utf-8')
-                vehicle_type = y[4].get_text().strip().decode('utf-8')
+                drv_time = y[2].get_text().strip()
+                vehicle_type = y[5].get_text().strip().decode('utf-8')
                 full_price = y[6].get_text().strip()
                 extra = y[7].get_text().strip()
-                left_tickets = y[10].get_text().strip()
-                extra = {'startNo': y[11].get_text().strip()}
                 attrs = dict(
                     s_province='山东',
                     s_city_id="",
@@ -195,13 +199,12 @@ class Qdky(SpiderBase):
                     half_price=float(full_price) / 2,
                     fee=0.0,
                     crawl_datetime=dte.now(),
-                    extra_info=extra,
+                    extra_info='',
                     left_tickets=int(left_tickets),
                     crawl_source="glcx",
                     shift_id="",
                 )
-                if end == d_sta_name and int(left_tickets):
-                    yield LineItem(**attrs)
+                yield LineItem(**attrs)
 
             except:
                 pass

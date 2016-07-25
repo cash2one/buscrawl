@@ -96,7 +96,7 @@ class HebkySpider(SpiderBase):
 #                                  callback=self.parse_start_city)
 
     def start_requests(self):
-        start_url = "http://www.hb96505.com//com/yxd/pris/wsgp/queryCity.action"
+        start_url = "http://60.2.147.28//com/yxd/pris/wsgp/queryCity.action"
         data = {
             "flag": "true",
             "isArrive ": "false",

@@ -62,7 +62,7 @@ class TongChengSpider(SpiderBase):
         lst = []
         for d in r.json()["response"]["body"]["destinationList"]:
             for c in d["cities"]:
-                lst.append("%s|%s" % (c["name"], c["shortEnName"]))
+                lst.append({"name": c["name"], "code": c["shortEnName"]})
         return set(lst)
 
     def start_requests(self):
@@ -75,7 +75,7 @@ class TongChengSpider(SpiderBase):
                 self.logger.info("start crawl city %s", name)
                 start = {"name": name, "province": p}
                 for s in self.get_dest_list(start["province"], start["name"]):
-                    name, code = s.split("|")
+                    name,code = s["name"], s["code"]
                     end = {"name": name, "short_pinyin": code}
 
                     today = datetime.date.today()

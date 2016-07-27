@@ -76,7 +76,6 @@ class CBDSpider(SpiderBase):
                     continue
 
                 for end in self.get_dest_list(province, start["city_name"]):
-                    self.logger.info("start %s ==> %s" % (start["city_name"], end["city_name"]))
                     for i in range(self.start_day(), 8):
                         sdate = str(today + datetime.timedelta(days=i))
                         if self.has_done(start["city_name"], end["city_name"], sdate):
@@ -98,6 +97,7 @@ class CBDSpider(SpiderBase):
         end= response.meta["end"]
         sdate = response.meta["sdate"]
         self.mark_done(start["city_name"], end["city_name"], sdate)
+        self.logger.info("start %s ==> %s" % (start["city_name"], end["city_name"]))
         try:
             res = json.loads(response.body)
         except Exception, e:

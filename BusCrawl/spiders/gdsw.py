@@ -52,7 +52,7 @@ class GdswSpider(SpiderBase):
                     sdate = (today+datetime.timedelta(days=i)).strftime("%Y%m%d")
                     if self.has_done(x, name, sdate):
                         continue
-                    params = {"fromcity": x,"schdate": sdate,"schtimeend":"","schtimestart":"","tocity":y}
+                    params = {"fromcity": x,"schdate": sdate,"schtimeend":"","schtimestart":"","tocity":name}
                     yield scrapy.Request(line_url,
                                          method="POST",
                                          body=json.dumps(params),
@@ -87,8 +87,6 @@ class GdswSpider(SpiderBase):
             return
         for d in res["data"]:
             drv_datetime = dte.strptime("%s %s" % (d["schdate"], d["sendtime"]), "%Y%m%d %H%M")
-            if not d["sell"]:
-                continue
             if not int(d["lefttickets"]):
                 continue
             attrs = dict(

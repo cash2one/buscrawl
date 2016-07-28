@@ -3,6 +3,8 @@
 import scrapy
 import json
 import datetime
+import requests
+import urllib
 
 from datetime import datetime as dte
 from BusCrawl.item import LineItem
@@ -26,6 +28,23 @@ class CBDSpider(SpiderBase):
         "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
 
+    def get_dest_list(self, province, city):
+        url = "http://www.chebada.com/Home/GetBusDestinations"
+        for city in [city, city+"市", city+"县", city.rstrip(u"市").rstrip("县")]:
+            r = requests.post(url, headers={"User-Agent": "Chrome", "Content-Type": "application/x-www-form-urlencoded"}, data=urllib.urlencode({"departure": city}))
+            lst = []
+            temp = {}
+            res = r.json()["response"]
+            if "body" not in res:
+                continue
+            for d in res["body"]["destinationList"]:
+                for c in d["cities"]:
+                    if c["name"] in temp:
+                        continue
+                    temp[c["name"]] = 1
+                    lst.append({"name": c["name"], "code": c["shortEnName"]})
+            return lst
+
     def start_requests(self):
         # 这是个pc网页页面
         line_url = "http://m.chebada.com/Schedule/GetBusSchedules"
@@ -45,6 +64,14 @@ class CBDSpider(SpiderBase):
             "扬中", "溧阳",
             "射阳", "滨海",
             "盱眙", "涟水",
+            "宝应", "丹阳",
+            "海安", "海门",
+
+            "金坛", "江都",
+            "启东", "如皋",
+            "如东", "泗阳",
+            "沭阳", "泰兴",
+            "仪征",
         ]
         for name in start_list:
             name = unicode(name)
@@ -55,10 +82,9 @@ class CBDSpider(SpiderBase):
             for s in self.get_dest_list(start["province"], start["name"]):
                 name, code = s["name"], s["code"]
                 end = {"name": name, "short_pinyin": code}
-                self.logger.info("start %s ==> %s" % (start["name"], end["name"]))
 
                 today = datetime.date.today()
-                for i in range(self.start_day(), 8):
+                for i in range(self.start_day(), 4):
                     sdate = str(today+datetime.timedelta(days=i))
                     if self.has_done(start["name"], end["name"], sdate):
                         self.logger.info("ignore %s ==> %s %s" % (start["name"], end["name"], sdate))
@@ -82,6 +108,7 @@ class CBDSpider(SpiderBase):
         end= response.meta["end"]
         sdate = response.meta["sdate"]
         self.mark_done(start["name"], end["name"], sdate)
+        self.logger.info("finish %s ==> %s" % (start["name"], end["name"]))
         try:
             res = json.loads(response.body)
         except Exception, e:
@@ -93,8 +120,8 @@ class CBDSpider(SpiderBase):
             return
 
         for d in res["body"]["scheduleList"]:
-            if int(d["canBooking"]) != 1:
-                continue
+            # if int(d["canBooking"]) != 1:
+            #     continue
             left_tickets = int(d["ticketLeft"])
             from_city = unicode(d["departure"])
             to_city = unicode(d["destination"])

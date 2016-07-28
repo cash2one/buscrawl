@@ -119,7 +119,7 @@ class SzkySpider(SpiderBase):
                     dest_list = self.get_dest_list("广东", '深圳')
                     for d in dest_list:
                         name, code = d["name"], d["code"]
-                        end = {"city_name": y, "city_code": get_pinyin_first_litter(y)}
+                        end = {"city_name": name, "city_code": code}
                         today = datetime.date.today()
                         for j in range(1, 7):
                             sdate = str(today+datetime.timedelta(days=j))

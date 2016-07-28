@@ -31,6 +31,14 @@ CITYS = {
         "扬中", "溧阳",
         "射阳", "滨海",
         "盱眙", "涟水",
+        "宝应", "丹阳",
+        "海安", "海门",
+
+        "金坛", "江都",
+        "启东", "如皋",
+        "如东", "泗阳",
+        "沭阳", "泰兴",
+        "仪征",
     ],
     "天津": [
         "天津"
@@ -58,12 +66,20 @@ class TongChengSpider(SpiderBase):
 
     def get_dest_list_from_web(self, province, city):
         url = "http://www.chebada.com/Home/GetBusDestinations"
-        r = requests.post(url, headers={"User-Agent": "Chrome", "Content-Type": "application/x-www-form-urlencoded"}, data=urllib.urlencode({"departure": city}))
-        lst = []
-        for d in r.json()["response"]["body"]["destinationList"]:
-            for c in d["cities"]:
-                lst.append({"name": c["name"], "code": c["shortEnName"]})
-        return set(lst)
+        for city in [city, city+"市", city+"县", city.rstrip(u"市").rstrip("县")]:
+            r = requests.post(url, headers={"User-Agent": "Chrome", "Content-Type": "application/x-www-form-urlencoded"}, data=urllib.urlencode({"departure": city}))
+            lst = []
+            temp = {}
+            res = r.json()["response"]
+            if "body" not in res:
+                continue
+            for d in res["body"]["destinationList"]:
+                for c in d["cities"]:
+                    if c["name"] in temp:
+                        continue
+                    temp[c["name"]] = 1
+                    lst.append({"name": c["name"], "code": c["shortEnName"]})
+            return lst
 
     def start_requests(self):
         # 这是个pc网页页面
@@ -75,11 +91,11 @@ class TongChengSpider(SpiderBase):
                 self.logger.info("start crawl city %s", name)
                 start = {"name": name, "province": p}
                 for s in self.get_dest_list(start["province"], start["name"]):
-                    name,code = s["name"], s["code"]
+                    name, code = s["name"], s["code"]
                     end = {"name": name, "short_pinyin": code}
 
                     today = datetime.date.today()
-                    for i in range(self.start_day(), 3):
+                    for i in range(self.start_day(), 8):
                         sdate = str(today + datetime.timedelta(days=i))
                         if self.has_done(start["name"], end["name"], sdate):
                             self.logger.info("ignore %s ==> %s %s" % (start["name"], end["name"], sdate))
@@ -167,7 +183,7 @@ class TongChengSpider(SpiderBase):
             return
         res = res["response"]
         if int(res["header"]["rspCode"]) != 0 or not res["body"]:
-            self.logger.error("parse_target_city: Unexpected return, %s, %s %s" % (res["header"], start["name"], end["name"]))
+            # self.logger.error("parse_target_city: Unexpected return, %s, %s %s" % (res["header"], start["name"], end["name"]))
             return
 
         for d in res["body"]["schedule"]:

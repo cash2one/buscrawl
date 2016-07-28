@@ -99,6 +99,8 @@ class JsdlkySpider(SpiderBase):
         for d in shift_list:
             drv_datetime = dte.strptime("%s %s" % (d["drive_date"], d["plan_time"]), "%Y%m%d %H%M")
             s_sta_name = d["rst_name"]
+            if u"��" in d["dst_name"]:
+                continue
             if u"��" in s_sta_name:  # 有乱码
                 s_sta_name = start["sta_name"]
             attrs = dict(

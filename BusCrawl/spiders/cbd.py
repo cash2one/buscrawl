@@ -3,6 +3,8 @@
 import scrapy
 import json
 import datetime
+import requests
+import urllib
 
 from datetime import datetime as dte
 from BusCrawl.item import LineItem
@@ -25,23 +27,64 @@ class CBDSpider(SpiderBase):
         #"DOWNLOAD_DELAY": 0.2,
         "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
-    base_url = "http://m.ctrip.com/restapi/busphp/app/index.php"
+
+    def get_dest_list(self, province, city):
+        url = "http://www.chebada.com/Home/GetBusDestinations"
+        for city in [city, city+"市", city+"县", city.rstrip(u"市").rstrip("县")]:
+            r = requests.post(url, headers={"User-Agent": "Chrome", "Content-Type": "application/x-www-form-urlencoded"}, data=urllib.urlencode({"departure": city}))
+            lst = []
+            temp = {}
+            res = r.json()["response"]
+            if "body" not in res:
+                continue
+            for d in res["body"]["destinationList"]:
+                for c in d["cities"]:
+                    if c["name"] in temp:
+                        continue
+                    temp[c["name"]] = 1
+                    lst.append({"name": c["name"], "code": c["shortEnName"]})
+            return lst
 
     def start_requests(self):
         # 这是个pc网页页面
         line_url = "http://m.chebada.com/Schedule/GetBusSchedules"
-        for name in ["苏州", "南京", "无锡", "常州", "南通", "张家港", "昆山", "吴江", "常熟", "太仓"]:
+        start_list = [
+            "苏州", "南京",
+            "无锡", "常州",
+            "南通", "张家港",
+            "昆山", "吴江",
+            "常熟", "太仓",
+            "镇江", "宜兴",
+            "江阴", "兴化",
+            "盐城", "扬州",
+            "连云港", "徐州",
+            "宿迁",
+            "淮安", "句容",
+            "靖江", "大丰",
+            "扬中", "溧阳",
+            "射阳", "滨海",
+            "盱眙", "涟水",
+            "宝应", "丹阳",
+            "海安", "海门",
+
+            "金坛", "江都",
+            "启东", "如皋",
+            "如东", "泗阳",
+            "沭阳", "泰兴",
+            "仪征",
+        ]
+        for name in start_list:
+            name = unicode(name)
             if not self.is_need_crawl(city=name):
                 continue
             self.logger.info("start crawl city %s", name)
             start = {"name": name, "province": "江苏"}
             for s in self.get_dest_list(start["province"], start["name"]):
-                name, code = s.split("|")
+                name, code = s["name"], s["code"]
                 end = {"name": name, "short_pinyin": code}
-                self.logger.info("start %s ==> %s" % (start["name"], end["name"]))
 
                 today = datetime.date.today()
-                for i in range(self.start_day(), 8):
+                for i in range(self.start_day(), 4):
                     sdate = str(today+datetime.timedelta(days=i))
                     if self.has_done(start["name"], end["name"], sdate):
                         self.logger.info("ignore %s ==> %s %s" % (start["name"], end["name"], sdate))
@@ -65,6 +108,7 @@ class CBDSpider(SpiderBase):
         end= response.meta["end"]
         sdate = response.meta["sdate"]
         self.mark_done(start["name"], end["name"], sdate)
+        self.logger.info("finish %s ==> %s" % (start["name"], end["name"]))
         try:
             res = json.loads(response.body)
         except Exception, e:
@@ -76,8 +120,8 @@ class CBDSpider(SpiderBase):
             return
 
         for d in res["body"]["scheduleList"]:
-            if int(d["canBooking"]) != 1:
-                continue
+            # if int(d["canBooking"]) != 1:
+            #     continue
             left_tickets = int(d["ticketLeft"])
             from_city = unicode(d["departure"])
             to_city = unicode(d["destination"])

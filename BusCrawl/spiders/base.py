@@ -59,8 +59,10 @@ class SpiderBase(scrapy.Spider):
         """
         获取目的地, 先从数据库获取,为空则去网络找
         """
+        self.logger.info("从db获取%s %s %s目的地", province, city, station)
         lst = self.get_dest_list_from_db(province, city, station=station)
         if not lst:
+            self.logger.info("从web获取%s %s %s目的地", province, city, station)
             lst = self.get_dest_list_from_web(province, city)
         return lst
 
@@ -77,13 +79,20 @@ class SpiderBase(scrapy.Spider):
         provinces = [province.rstrip("省"), province.rstrip("省") + "省", province]
         citys = [city.rstrip("市").rstrip("区").rstrip("县"), city]
         city_res = db.open_city.find_one({"province": {"$in": provinces}, "city_name": {"$in": citys}})
+
+        temp = {}
         if city_res:
             if station:
                 sta_res = db.open_station.find_one({"city": city_res["_id"], "sta_name": station})
                 if sta_res:
                     lst = sta_res["dest_info"]
-            if not lst:
-                lst = city_res["dest_list"]
+            else:
+                for sta_res in db.open_station.find({"city": city_res["_id"]}):
+                    for d in sta_res["dest_info"]:
+                        if (d["name"], d["dest_id"]) in temp:
+                            continue
+                        lst.append(d)
+                        temp[(d["name"], d["dest_id"])] = 1
         client.close()
         return lst
 

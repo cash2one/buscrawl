@@ -34,49 +34,6 @@ class FjkySpider(SpiderBase):
 #        "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
 
-    def query_all_end_station(self):
-        r = get_redis()
-        key = "fjky_end_station"
-        end_station_list = r.get(key)
-        if end_station_list:
-            return end_station_list
-        else:
-            end_station_list = []
-#             letter = 'abcdefghijklmnopqrstuvwxyz'
-            letter = 'xm'
-            for i in letter:
-                for j in letter:
-                    query = i+j
-                    end_station_url = 'http://www.968980.cn/com/yxd/pris/openapi/depotQueryByName.action'
-                    data = {
-                          "type": "2",
-                          "InputStr": query,
-                          }
-                    proxies={"http": "http://192.168.1.53:8888"}
-                    res_lists = requests.post(end_station_url, data=data,proxies=proxies)
-                    res_lists = res_lists.json()
-                    for res_list in res_lists['values']['resultList']:
-                        end_station_list.append(json.dumps(res_list))
-            r.set(key, json.dumps(list(set(end_station_list))))
-            r.expire(key, 2*24*60*60)
-            end_station_list = r.get(key)
-            if end_station_list:
-                return end_station_list
-        return end_station_list
-
-    def is_end_city(self, start, end):
-        if not hasattr(self, "_sta_dest_list"):
-            self._sta_dest_list = {}
-        s_sta_name = start[1]
-
-        if s_sta_name not in self._sta_dest_list:
-            self._sta_dest_list[s_sta_name] = self.db.line.distinct('d_city_name', {'crawl_source': 'fjky', 's_sta_name': s_sta_name})
-        result = self._sta_dest_list[s_sta_name]
-        if end['depotName'] not in result:
-            return 0
-        else:
-            return 1
-
     def query_start_predate(self, code):
         url = 'http://www.968980.cn/com/yxd/pris/openapi/queryPreDate.action'
         data = {
@@ -96,9 +53,8 @@ class FjkySpider(SpiderBase):
                          '山东','广西壮族自治','江西','河南','浙江','安徽',
                          '湖北','湖南',"贵州",'陕西','江苏','内蒙古自治',
                          "四川",'海南','山东','甘肃','青海','宁夏回族自治',
-                        "新疆维吾尔自治",'西藏自治','贵州')
+                         "新疆维吾尔自治",'西藏自治','贵州')
         rds = get_redis()
-        dest_str = ''
         rds_key = "crawl:dest:fjky16"
         dest_str = rds.get(rds_key)
         if not dest_str:
@@ -167,15 +123,12 @@ class FjkySpider(SpiderBase):
         for i in res['values']['list']:
             for j in i['list']:
                 start_list.append(j)
-        print len(start_list)
         end_list = self.get_dest_list(start_list[0])
-#         print end_list
-        print len(end_list)
 #         end_list=[]
 #         start_list=[]
         line_url = 'http://www.968980.cn/com/yxd/pris/openapi/queryAllTicket.action'
         for start in start_list:
-            if not self.is_need_crawl(city=start['name']) or start['name'] in (u'保定', u'石家庄'):
+            if not self.is_need_crawl(city=start['name']):
                 continue
 #                 preDate = self.query_start_predate(start[0])
 # #                 preDate = 0
@@ -211,9 +164,6 @@ class FjkySpider(SpiderBase):
             res = json.loads(response.body)
         except Exception, e:
             raise e
-        if res["values"]["resultList"]:
-            print res["values"]["resultList"]
-            print start["name"], end["name"]
         if res["akfAjaxResult"] != "0":
             #self.logger.error("parse_line: Unexpected return, %s, %s->%s, %s", sdate, start["city_name"], end["city_name"], res["header"])
             return

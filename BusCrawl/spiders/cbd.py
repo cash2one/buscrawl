@@ -25,18 +25,35 @@ class CBDSpider(SpiderBase):
         #"DOWNLOAD_DELAY": 0.2,
         "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
-    base_url = "http://m.ctrip.com/restapi/busphp/app/index.php"
 
     def start_requests(self):
         # 这是个pc网页页面
         line_url = "http://m.chebada.com/Schedule/GetBusSchedules"
-        for name in ["苏州", "南京", "无锡", "常州", "南通", "张家港", "昆山", "吴江", "常熟", "太仓"]:
+        start_list = [
+            "苏州", "南京",
+            "无锡", "常州",
+            "南通", "张家港",
+            "昆山", "吴江",
+            "常熟", "太仓",
+            "镇江", "宜兴",
+            "江阴", "兴化",
+            "盐城", "扬州",
+            "连云港", "徐州",
+            "宿迁",
+            "淮安", "句容",
+            "靖江", "大丰",
+            "扬中", "溧阳",
+            "射阳", "滨海",
+            "盱眙", "涟水",
+        ]
+        for name in start_list:
+            name = unicode(name)
             if not self.is_need_crawl(city=name):
                 continue
             self.logger.info("start crawl city %s", name)
             start = {"name": name, "province": "江苏"}
             for s in self.get_dest_list(start["province"], start["name"]):
-                name, code = s.split("|")
+                name, code = s["name"], s["code"]
                 end = {"name": name, "short_pinyin": code}
                 self.logger.info("start %s ==> %s" % (start["name"], end["name"]))
 

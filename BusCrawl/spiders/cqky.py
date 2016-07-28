@@ -37,39 +37,10 @@ class CqkySpider(SpiderBase):
         yield scrapy.Request(start_url,
                              callback=self.parse_start_city,)
 
-    def get_dest_list(self, start_info):
-        rds = get_redis()
-        rds_key = "crawl:dest:cqky:%s" % start_info["s_city_name"]
-        dest_str = rds.get(rds_key)
-        if not dest_str:
-            ts = int(time.time())
-            code = "car12308com"
-            key = "car12308com201510"
-            service_id = "U0102"
-            sdata = start_info["s_city_name"]
-            if sdata == "重庆主城":
-                sdata="重庆"
-            tmpl = {
-                "merchantCode": code,
-                "version": "1.4.0",
-                "timestamp": ts,
-                "serviceID": service_id,
-                "data": sdata,
-                "sign": md5("%s%s%s%s%s" % (code, service_id, ts, sdata, md5(key))),
-            }
-            base_url = "http://qcapi.fangbian.com/fbapi.asmx/Query"
-            r = requests.post(base_url,
-                              data=urllib.urlencode(tmpl),
-                              headers={"User-Agent": "Chrome", "Content-Type": "application/x-www-form-urlencoded"})
-            lst = r.json()["data"]
-            dest_str = json.dumps(lst)
-            rds.set(rds_key, dest_str)
-        lst = json.loads(dest_str)
-        return lst
-
     def parse_start_city(self, response):
         res = json.loads(re.findall(r"var _stationList=(\S+)</script>", response.body)[0].replace("Pros", '"Pros"').replace("Areas", '"Areas"').replace("Stations", '"Stations"'))
         line_url = "http://www.96096kp.com/UserData/MQCenterSale.aspx"
+        trans = {u"重庆主城": "重庆"}
         for d in res["Areas"][0]["AreaData"]:
             start = {
                 "province": "重庆",
@@ -79,11 +50,10 @@ class CqkySpider(SpiderBase):
             }
             if not self.is_need_crawl(city=start["s_city_name"]):
                 continue
-            for s in self.get_dest_list(start):
-                name, code = s.split("|")
+            for s in self.get_dest_list(province="重庆", city=trans.get(start["s_city_name"], start["s_city_name"])):
+                name, code = s["name"], s["code"]
                 end = {"d_city_name": name, "d_city_code": code}
                 today = datetime.date.today()
-                self.logger.info("start %s ==> %s" % (start["s_city_name"], end["d_city_name"]))
                 for i in range(self.start_day(), 8):
                     sdate = str(today + datetime.timedelta(days=i))
                     if self.has_done(start["s_city_name"], end["d_city_name"], sdate):
@@ -120,6 +90,7 @@ class CqkySpider(SpiderBase):
         for k in set(re.findall("([A-Za-z]+):", content)):
             content = re.sub(r"\b%s\b" % k, '"%s"' % k, content)
 
+        self.logger.info("finish %s ==> %s" % (start["s_city_name"], end["d_city_name"]))
         try:
             res = json.loads(content)
         except Exception, e:

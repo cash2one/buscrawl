@@ -11,7 +11,7 @@ from base import SpiderBase
 from BusCrawl.utils.tool import get_pinyin_first_litter
 
 PROVINCE_TO_CITY = {
-    "浙江": [],
+    "浙江": ["杭州"],
     "江苏": ["宿迁", "镇江", "常州", "南通", "苏州", "徐州", "连云港", "淮安", "泰州", "无锡", "南京"],
     "安徽": ["宁国", "滁州", "安庆", "明光", "全椒", "天长", "歙县"],
 }
@@ -66,7 +66,7 @@ class BabaSpider(SpiderBase):
                              body=json.dumps(fd),
                              callback=self.parse_start_city)
 
-    def get_dest_list(self, province, city):
+    def get_dest_list_from_web(self, province, city):
         dest_url = "http://s4mdata.bababus.com:80/app/v3/ticket/getStationList.htm"
         dest_list = []
         for c in [chr(i) for i in range(97, 123)]:
@@ -78,7 +78,13 @@ class BabaSpider(SpiderBase):
             import requests
             r = requests.post(dest_url, data=json.dumps(fd), headers=headers)
             res = r.json()
-            dest_list.extend(res["content"]["toStationList"])
+            for d in res["content"]["toStationList"]:
+                end = {
+                    "name": d["stationName"],
+                    "code": get_pinyin_first_litter(d["stationName"]),
+                    "dest_id": d["stationId"],
+                }
+                dest_list.append(end)
         return dest_list
 
     def parse_start_city(self, response):
@@ -100,13 +106,12 @@ class BabaSpider(SpiderBase):
                 "city_code": info["allSpell"],
                 "city_id": info["cityId"],
             }
-            for info in self.get_dest_list(province, name):
+            for d in self.get_dest_list(province, name):
                 end = {
-                    "city_name": info["stationName"],
-                    "city_code": get_pinyin_first_litter(info["stationName"]),
-                    "city_id": info["stationId"],
+                    "city_name": d["name"],
+                    "city_code": d["code"],
+                    "city_id": d["dest_id"],
                 }
-                self.logger.info("start %s ==> %s" % (start["city_name"], end["city_name"]))
                 today = datetime.date.today()
                 for i in range(self.start_day(), 8):
                     sdate = str(today + datetime.timedelta(days=i))
@@ -133,14 +138,14 @@ class BabaSpider(SpiderBase):
         start = response.meta["start"]
         end = response.meta["end"]
         sdate = response.meta["date"]
-        self.mark_done(start["city_name"], end["city_name"], sdate)
         try:
             res = json.loads(response.body)
         except Exception, e:
             raise e
         if res["returnNo"] != "0000":
-            #self.logger.error("parse_line: Unexpected return, %s, %s->%s, %s", sdate, start["city_name"], end["city_name"], res["header"])
             return
+        self.logger.info("finish %s ==> %s" % (start["city_name"], end["city_name"]))
+        self.mark_done(start["city_name"], end["city_name"], sdate)
         for d in res["content"]["busList"]:
             try:
                 drv_datetime = dte.strptime("%s %s" % (d["leaveDate"], d["leaveTime"]), "%Y-%m-%d %H:%M")
@@ -157,7 +162,7 @@ class BabaSpider(SpiderBase):
                 d_city_code=end["city_code"],
                 d_city_id = end["city_id"],
                 d_sta_name = d["endStation"],
-                d_sta_id = d["endStationId"],
+                d_sta_id = d.get("endStationId", ""),
                 drv_date = d["leaveDate"],
                 drv_time = d["leaveTime"],
                 drv_datetime = drv_datetime,

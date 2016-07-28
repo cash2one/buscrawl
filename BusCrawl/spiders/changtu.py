@@ -40,7 +40,7 @@ class ChangtuSpider(SpiderBase):
         "DOWNLOADER_MIDDLEWARES": {
             'scrapy.contrib.downloadermiddleware.useragent.UserAgentMiddleware': None,
             'BusCrawl.middleware.BrowserRandomUserAgentMiddleware': 400,
-            # 'BusCrawl.middleware.ProxyMiddleware': 410,
+            'BusCrawl.middleware.ChangtuProxyMiddleware': 410,
         },
         #"DOWNLOAD_DELAY": 0.2,
         "RANDOMIZE_DOWNLOAD_DELAY": True,
@@ -108,13 +108,13 @@ class ChangtuSpider(SpiderBase):
             res = json.loads(response.body)
         except Exception, e:
             raise e
-        if res["bookFlag"] != "Y":
-            #self.logger.error("parse_target_city: Unexpected return, %s" % res)
-            return
+        # if res["bookFlag"] != "Y":
+        #     #self.logger.error("parse_target_city: Unexpected return, %s" % res)
+        #     return
 
         for d in res["schList"]:
-            if int(d["bookFlag"]) != 2:
-                continue
+            # if int(d["bookFlag"]) != 2:
+            #     continue
 
             attrs = dict(
                 s_province = start["province"],

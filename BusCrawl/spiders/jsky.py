@@ -66,7 +66,7 @@ class JskySpider(SpiderBase):
             self.logger.info("start crawl city %s", name)
             start = {"name": name, "province": "江苏"}
             for s in self.get_dest_list(start["province"], start["name"]):
-                name, code = s.split("|")
+                name, code = s["name"], s["code"]
                 end = {"name": name, "short_pinyin": code}
                 self.logger.info("start %s ==> %s" % (start["name"], end["name"]))
 

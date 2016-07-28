@@ -117,7 +117,7 @@ class Bus365Spider(SpiderBase):
         if len(city_name) > 2 and (city_name.endswith('市') or city_name.endswith('县')):
             city_name = city_name[0:-1]
         for s in self.get_dest_list(start['province'], city_name):
-            name, code = s.split("|")
+            name, code = s["name"], s["code"]
             end = {"city_name": name, "city_code": code}
             today = datetime.date.today()
             for i in range(1, 7):

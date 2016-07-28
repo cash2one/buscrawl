@@ -44,13 +44,13 @@ class GdswSpider(SpiderBase):
                 continue
             dest_list = self.get_dest_list("广东", x)
             start = {"city_name": x, "city_code": get_pinyin_first_litter(x)}
-            for y in dest_list:
-                y = y.split("|")[0]
-                end = {"city_name": y, "city_code": get_pinyin_first_litter(y)}
-                self.logger.info("start %s ==> %s" % (x, y))
+            for d in dest_list:
+                name, code = d["name"], d["code"]
+                end = {"city_name": d, "city_code": code}
+                self.logger.info("start %s ==> %s" % (x, name))
                 for i in range(self.start_day(), 8):
                     sdate = (today+datetime.timedelta(days=i)).strftime("%Y%m%d")
-                    if self.has_done(x, y, sdate):
+                    if self.has_done(x, name, sdate):
                         continue
                     params = {"fromcity": x,"schdate": sdate,"schtimeend":"","schtimestart":"","tocity":y}
                     yield scrapy.Request(line_url,

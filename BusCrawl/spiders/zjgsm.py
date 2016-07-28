@@ -73,7 +73,7 @@ class ZjgsmSpider(SpiderBase):
         for d in res["responseData"]:
             start["sta_name"] = d["stationname"]
             for s in self.get_dest_list("江苏", start["city_name"]):
-                name, code = s.split("|")
+                name, code = s["name"], s["code"]
                 end = {"city_name": name, "city_code": code}
                 self.logger.info("start %s ==> %s" % (start["sta_name"], end["city_name"]))
                 today = datetime.date.today()

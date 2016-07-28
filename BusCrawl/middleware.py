@@ -8,7 +8,7 @@ class ProxyMiddleware(object):
     "代理ip切换"
 
     def process_request(self, request, spider):
-#         request.meta['proxy'] = "http://192.168.1.53:8888" 
+#         request.meta['proxy'] = "http://192.168.1.53:8888"
         pass
 
 
@@ -38,6 +38,16 @@ class E8sProxyMiddleware(object):
     def process_request(self, request, spider):
         rds = get_redis()
         ipstr = rds.srandmember("proxy:e8s")
+        if ipstr:
+            request.meta['proxy'] = "http://%s" % ipstr
+
+
+class ChangtuProxyMiddleware(object):
+    "代理ip切换"
+
+    def process_request(self, request, spider):
+        rds = get_redis()
+        ipstr = rds.srandmember("proxy:changtu")
         if ipstr:
             request.meta['proxy'] = "http://%s" % ipstr
 

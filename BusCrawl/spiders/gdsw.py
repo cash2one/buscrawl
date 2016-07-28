@@ -87,8 +87,6 @@ class GdswSpider(SpiderBase):
             return
         for d in res["data"]:
             drv_datetime = dte.strptime("%s %s" % (d["schdate"], d["sendtime"]), "%Y%m%d %H%M")
-            if not d["sell"]:
-                continue
             if not int(d["lefttickets"]):
                 continue
             attrs = dict(

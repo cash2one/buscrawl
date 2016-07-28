@@ -64,7 +64,7 @@ class TongChengSpider(SpiderBase):
     }
     base_url = "http://m.ctrip.com/restapi/busphp/app/index.php"
 
-    def get_dest_list(self, province, city):
+    def get_dest_list_from_web(self, province, city):
         url = "http://www.chebada.com/Home/GetBusDestinations"
         for city in [city, city+"市", city+"县", city.rstrip(u"市").rstrip("县")]:
             r = requests.post(url, headers={"User-Agent": "Chrome", "Content-Type": "application/x-www-form-urlencoded"}, data=urllib.urlencode({"departure": city}))
@@ -90,7 +90,7 @@ class TongChengSpider(SpiderBase):
                     continue
                 self.logger.info("start crawl city %s", name)
                 start = {"name": name, "province": p}
-                for s in self.get_dest_list_from_web(start["province"], start["name"]):
+                for s in self.get_dest_list(start["province"], start["name"]):
                     name, code = s["name"], s["code"]
                     end = {"name": name, "short_pinyin": code}
 

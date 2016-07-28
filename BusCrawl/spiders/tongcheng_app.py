@@ -90,7 +90,7 @@ class TongChengSpider(SpiderBase):
                     continue
                 self.logger.info("start crawl city %s", name)
                 start = {"name": name, "province": p}
-                for s in self.get_dest_list_from_web(start["province"], start["name"]):
+                for s in self.get_dest_list(start["province"], start["name"]):
                     name, code = s["name"], s["code"]
                     end = {"name": name, "short_pinyin": code}
 

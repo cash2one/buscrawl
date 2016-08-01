@@ -8,7 +8,7 @@ class ProxyMiddleware(object):
     "代理ip切换"
 
     def process_request(self, request, spider):
-#         request.meta['proxy'] = "http://192.168.1.53:8888"
+#         request.meta['proxy'] = "http://192.168.1.51:8888"
         pass
 
 

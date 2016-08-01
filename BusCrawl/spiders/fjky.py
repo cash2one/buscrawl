@@ -48,7 +48,7 @@ class FjkySpider(SpiderBase):
             predate = res['values']['preDate']
         return predate
 
-    def get_dest_list(self, start_info):
+    def get_init_dest_list(self, start_info):
         province_list = ('吉林','辽宁', '河北','黑龙江','广东',"云南",'山西',
                          '山东','广西壮族自治','江西','河南','浙江','安徽',
                          '湖北','湖南',"贵州",'陕西','江苏','内蒙古自治',
@@ -123,7 +123,7 @@ class FjkySpider(SpiderBase):
         for i in res['values']['list']:
             for j in i['list']:
                 start_list.append(j)
-        end_list = self.get_dest_list(start_list[0])
+#         end_list = self.get_init_dest_list(start_list[0])
 #         end_list=[]
 #         start_list=[]
         line_url = 'http://www.968980.cn/com/yxd/pris/openapi/queryAllTicket.action'
@@ -133,13 +133,14 @@ class FjkySpider(SpiderBase):
 #                 preDate = self.query_start_predate(start[0])
 # #                 preDate = 0
 #                 if preDate:
+            end_list = self.get_dest_list('福建', start['name'])
             for end in end_list:
-#                 if self.is_end_city(start['name'], end):
+                end['code'] = end['dest_id']
                 today = datetime.date.today()
                 for j in range(1, 3):
                     sdate = str(today+datetime.timedelta(days=j))
                     if self.has_done(start['name'], end["name"], sdate):
-                        self.logger.info("ignore %s ==> %s %s" % (start['name'], end["name"], sdate))
+                        self.logger.info("ignore %s ==> %s %s" % (start['name'],end["name"], sdate))
                         continue
                     data = {
                         "arrivalDepotCode": end['code'],

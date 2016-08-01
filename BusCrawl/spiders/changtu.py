@@ -76,7 +76,6 @@ class ChangtuSpider(SpiderBase):
                 "short_pinyin": city["endFirstLetterAll"],
                 "end_type": city["endTypeId"],
             }
-            self.logger.info("start %s ==> %s" % (start["name"], end["name"]))
 
             today = datetime.date.today()
             for i in range(self.start_day(), 8):
@@ -104,6 +103,7 @@ class ChangtuSpider(SpiderBase):
         end= response.meta["end"]
         sdate = response.meta["sdate"]
         self.mark_done(start["name"], end["name"], sdate)
+        self.logger.info("finish %s ==> %s" % (start["name"], end["name"]))
         try:
             res = json.loads(response.body)
         except Exception, e:

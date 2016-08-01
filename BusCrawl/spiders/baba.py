@@ -46,20 +46,21 @@ class BabaSpider(SpiderBase):
                 "channelVer": "BabaBus",
                 "usId": "",
                 "appId": "com.hundsun.InternetSaleTicket",
-                "appVer": "1.3.0",
+                "appVer": "1.4.0",
                 "loginStatus": "0",
                 "imei": "864895020513527",
                 "mobileVer": "6.0",
                 "terminalType": "1",
                 "platformCode": "01",
+                "phone": "",
             },
             "key": ""
         }
         return tmpl
 
     def start_requests(self):
-        start_url = "http://s4mdata.bababus.com:80/app/v4/ticket/cityAllListFrom.htm"
-        content = {"dataVersion": ""}
+        start_url = "http://s4mdata.bababus.com:80/app/v5/ticket/cityAllListFrom.htm"
+        content = {"dataVersion": "", "searchType": "0"}
         fd = self.post_data_templ(content)
         yield scrapy.Request(start_url,
                              method="POST",
@@ -67,10 +68,10 @@ class BabaSpider(SpiderBase):
                              callback=self.parse_start_city)
 
     def get_dest_list_from_web(self, province, city):
-        dest_url = "http://s4mdata.bababus.com:80/app/v3/ticket/getStationList.htm"
+        dest_url = 'http://s4mdata.bababus.com:80/app/v5/ticket/cityAllList.htm'
         dest_list = []
         for c in [chr(i) for i in range(97, 123)]:
-            content = {"searchType": "1", "dataName": c, "beginCityName": city}
+            content = {"searchType": "0", "dataVersion": "", "beginCityName": city}
             fd = self.post_data_templ(content)
 
             ua = "Mozilla/5.0 (Linux; U; Android 2.2; fr-lu; HTC Legend Build/FRF91) AppleWebKit/533.1 (KHTML, like Gecko)  Version/4.0 Mobile Safari/533.1"
@@ -78,11 +79,11 @@ class BabaSpider(SpiderBase):
             import requests
             r = requests.post(dest_url, data=json.dumps(fd), headers=headers)
             res = r.json()
-            for d in res["content"]["toStationList"]:
+            for d in res["content"]["cityList"]:
                 end = {
-                    "name": d["stationName"],
-                    "code": get_pinyin_first_litter(d["stationName"]),
-                    "dest_id": d["stationId"],
+                    "name": d["cityName"],
+                    "code": get_pinyin_first_litter(d["cityName"]),
+                    "dest_id": d["cityId"],
                 }
                 dest_list.append(end)
         return dest_list
@@ -92,7 +93,7 @@ class BabaSpider(SpiderBase):
         if res["returnNo"] != "0000":
             self.logger.error("parse_start_city: Unexpected return, %s", res)
             return
-        line_url = "http://s4mdata.bababus.com:80/app/v4/ticket/busList.htm"
+        line_url = "http://s4mdata.bababus.com:80/app/v5/ticket/busList.htm"
         for info in res["content"]["cityList"]:
             name = info["cityName"]
             if name not in CITY_TO_PROVINCE:
@@ -174,7 +175,7 @@ class BabaSpider(SpiderBase):
                 half_price = float(d["fullPrice"])/2,
                 fee = 0,
                 crawl_datetime = dte.now(),
-                extra_info = {"depotName": d["depotName"], "sbId": d["sbId"], "stId": d["stId"], "depotId": d["depotId"]},
+                extra_info = {"depotName": d.get("depotName", ""), "sbId": d["sbId"], "stId": d["stId"], "depotId": d["depotId"]},
                 left_tickets = int(d["remainCount"]),
                 crawl_source = "baba",
                 shift_id="",

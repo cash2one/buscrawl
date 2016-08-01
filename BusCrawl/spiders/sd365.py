@@ -5,28 +5,23 @@ import scrapy
 import json
 import datetime
 import urllib
-from bs4 import BeautifulSoup as bs
-import re
-import time
-# from fabric.colors import green, red
-# from cchardet import detect
-# from scrapy.shell import inspect_response
 
+from bs4 import BeautifulSoup as bs
 from datetime import datetime as dte
 from BusCrawl.item import LineItem
 from BusCrawl.utils.tool import get_pinyin_first_litter
 from base import SpiderBase
-from scrapy.conf import settings
-from pymongo import MongoClient
 import requests
-from pprint import pprint
-# import cStringIO
-# from PIL import Image
-# import ipdb
-# from seleniumrequests import PhantomJS
 
-db_config = settings.get("MONGODB_CONFIG")
-city = MongoClient(db_config["url"])[db_config["db"]]['sd365city']
+PROVINCE_TO_CITY = {
+    "山东": ["烟台市","蓬莱市","海阳市","栖霞市","招远市","莱州市","莱阳市","龙口市","济南市","滕州市","淄博市","济宁市","滨州市","东营市","聊城市","德州市","潍坊市","三门峡","莱芜市","枣庄市","威海市","榆林","临沂市","文登","荣成","乳山","石岛","寿光","泰安","新泰市","肥城市","菏泽市"],
+    "天津": ["天津市",]
+}
+
+CITY_TO_PROVINCE = {}
+for p, lst in PROVINCE_TO_CITY.items():
+    for c in lst:
+        CITY_TO_PROVINCE[unicode(c)] = p
 
 class Sd365(SpiderBase):
     name = "sd365"
@@ -39,205 +34,135 @@ class Sd365(SpiderBase):
             'scrapy.contrib.downloadermiddleware.useragent.UserAgentMiddleware': None,
             'BusCrawl.middleware.BrowserRandomUserAgentMiddleware': 400,
             'BusCrawl.middleware.ProxyMiddleware': 410,
-            # 'BusCrawl.middleware.TongChengHeaderMiddleware': 410,
         },
-        "DOWNLOAD_DELAY": 0.1,
-        # "RANDOMIZE_DOWNLOAD_DELAY": True,
+        # "DOWNLOAD_DELAY": 0.1,
+        "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:47.0) Gecko/20100101 Firefox/47.0",
-        'Content-Type': 'application/x-www-form-urlencoded',
-    }
-    vdate = (datetime.datetime.now() + datetime.timedelta(days=1)).strftime('%Y-%m-%d')
-    dcitys = city.find().batch_size(16)
 
-    def get_fromid(self):
-        url = 'http://www.36565.cn/js/data/buscityjs.js'
-        r = requests.get(url)
-        info = r.json().values()[0].split('@')
-        res = {}
-        for x in info:
-            try:
-                y = x.split('|')
-                res[y[1]] = y[2]
-            except:
-                pass
-        return res
+    @classmethod
+    def get_all_start_cities(cls):
+        if not hasattr(cls, "_name_to_info"):
+            url = 'http://www.36565.cn/js/data/buscityjs.js'
+            r = requests.get(url, headers={"User-Agent": "Chrome/51.0.2704.106"})
+            name_to_info = {}
+            # pls|蓬莱市|370600|penglaishi|pls|370684
+            for s in  r.json().values()[0].split('@'):
+                if not s:
+                    continue
+                code, name, parent_id, pinyin, code, my_id = s.split("|")
+                name_to_info[name] = {"name": name, "code": code, "parent_id": parent_id, "id": my_id, "province": CITY_TO_PROVINCE[name]}
+            cls._name_to_info = name_to_info
+        return cls._name_to_info
+
+    def get_dest_list_from_web(self, province, city, station=""):
+        start_info = self.get_all_start_cities()[city]
+        url = "http://www.365tkt.com/js/data/cityport_%s.js" % start_info["parent_id"]
+        r = requests.get(url, headers={"User-Agent": "Chrome/51.0.2704.106"})
+
+        lst = []
+        for line in r.content.split(";"):
+            if not line:
+                continue
+            tmp_lst = eval(line.split("=")[1].strip())
+            # tmp_lst eg: ['123401', '诸城', 'ZC', 'ZHUCHENG']
+            if not tmp_lst:
+                continue
+            dest_id, name, code, py = tmp_lst
+            lst.append({"code": code, "name": name, "dest_id": dest_id})
+        return lst
 
     def get_pre(self, url):
-        r = requests.get(url, headers=self.headers)
-        try:
-            code = r.content.split('code:')[-1].split()[0].split('"')[1]
-        except:
-            code = ''
+        headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:47.0) Gecko/20100101 Firefox/47.0",
+                #'Content-Type': 'application/x-www-form-urlencoded',
+        }
+        r = requests.get(url, headers=headers)
+        code = r.content.split('code:')[-1].split()[0].split('"')[1]
         soup = bs(r.content, 'lxml')
         info = soup.find_all('input', attrs={'class': 'filertctrl', 'name': 'siids'})
-        sids = ''
-        for x in info:
-            sids += x['value'] + ','
-        if code and sids:
-            return code, sids
-        else:
-            return ''
+        sids = ','.join([x["value"] for x in info])
+        return code, sids
 
     def start_requests(self):
-        # days = 7
-        # today = datetime.date.today()
-        # if self.city_list:
-        #     self.dcitys = city.find({'s_city_name': {'$in': self.city_list, 'crawl_source': 'sd365', 'drv_date': self.vdate}}).batch_size(16)
-        # for x in self.dcitys:
-        #     for y in xrange(self.start_day(), days):  # self.start_day()
-        #         start = x['s_city_name']
-        #         end = x['d_city_name']
-        #         sdate = str(today + datetime.timedelta(days=y))
-        #         # if self.has_done(start, end, sdate):
-        #         #     continue
-        #         last_url = x['extra_info']['last_url']
-        #         last_url = re.sub(r'\d{4}\-\d{2}\-\d{2}', sdate, last_url)
-        #         print last_url
-        #         yield scrapy.Request(
-        #           url=last_url,
-        #           callback=self.parse_line,
-        #           method='GET',
-        #           headers=self.headers,
-        #           meta={
-        #               'start': start,
-        #               'end': end,
-        #               'sdate': sdate,
-        #               'last_url': last_url,
-        #           },
-        #         )
-
-
         days = 7
         today = datetime.date.today()
-        data = {
-            'a': 'getlinebysearch',
-            'c': 'tkt3',
-            'toid': '',
-            'type': '0',
-        }
-        if self.city_list:
-            self.dcitys = city.find({'s_city_name': {'$in': self.city_list}}).batch_size(16)
-        for x in self.dcitys:
-            start = x.get('s_city_name')
-            # if start == '济宁市':
-            #     continue
-            end = x.get('d_city_name')
-            url = 'http://www.36565.cn/?c=tkt3&a=search&fromid=&from={0}&toid=&to={1}&date={2}&time=0#'.format(start, end, self.vdate)
-            res = self.get_pre(url)
-            if not res:
+        for name, s_info in self.get_all_start_cities().items():
+            start = s_info
+            if not self.is_need_crawl(start["province"], start["name"]):
                 continue
-            print url, res
-            for y in xrange(self.start_day(), days):  # self.start_day()
-                sdate = str(today + datetime.timedelta(days=y))
-                if self.has_done(start, end, sdate):
-                    continue
-                data['code'] = res[0]
-                data['date'] = sdate
-                data['sids'] = res[1][:-1]
-                data['to'] = end
-                last_url = 'http://www.36565.cn/?' + urllib.urlencode(data)
-                yield scrapy.Request(
-                  url=last_url,
-                  callback=self.parse_line,
-                  method='GET',
-                  headers=self.headers,
-                  meta={
-                      'start': start,
-                      'end': end,
-                      'sdate': sdate,
-                      'last_url': last_url,
-                  },
-                )
+            for d_info in self.get_dest_list(start["province"], start["name"]):
+                end = d_info
+                url = 'http://www.36565.cn/?c=tkt3&a=search&fromid=&from={0}&toid=&to={1}&date={2}&time=0#'.format(start["name"], end["name"], str(today + datetime.timedelta(days=1)))
+                code, sids = self.get_pre(url)
 
-        # 初始化抵达城市
-        # res = self.get_fromid()
-        # for x in res.items():
-        #     url = 'http://www.36565.cn/js/data/cityport_{0}.js?_={1}'.format(x[1], time.time())
-        #     yield scrapy.Request(url, callback=self.parse_dcity, meta={'s_city_name': x[0], 'fromid': x[1]})
-
-    # 初始化到达城市
-    def parse_dcity(self, response):
-        s_city_name = response.meta['s_city_name'].decode('utf-8')
-        fromid = response.meta['fromid'].decode('utf-8')
-        print s_city_name
-        info = response.body.split('[]')[2].split(';')
-        data = {'s_city_name': s_city_name, 'fromid': fromid}
-        print len(info)
-        for x in info:
-            try:
-                y = x.split('=')[1].split(',')
-                data['d_city_name'] = y[1].split("'")[1]
-                data['toid'] = y[0].split("'")[1]
-                # if city.find({'s_city_name': data['s_city_name'], 'd_city_name': data['d_city_name'], 'toid': data['toid']}).count() <= 0:
-                city.save(dict(data))
-            except:
-                pass
+                for y in xrange(self.start_day(), days):
+                    sdate = str(today + datetime.timedelta(days=y))
+                    if self.has_done(start, end, sdate):
+                        continue
+                    data = {
+                        'a': 'getlinebysearch',
+                        'c': 'tkt3',
+                        'toid': '',
+                        'type': '0',
+                        'code': code,
+                        'date': sdate,
+                        'sids': sids,
+                        'to': end["name"],
+                    }
+                    last_url = 'http://www.36565.cn/?' + urllib.urlencode(data)
+                    yield scrapy.Request(url=last_url, callback=self.parse_line,meta={'start': start, 'end': end, 'sdate': sdate})
 
     def parse_line(self, response):
-        start = response.meta['start'].decode('utf-8')
-        end = response.meta['end'].decode('utf-8')
-        sdate = response.meta['sdate'].decode('utf-8')
-        last_url = response.meta['last_url']
+        start = response.meta['start']
+        end = response.meta['end']
+        sdate = response.meta['sdate']
         self.mark_done(start, end, sdate)
-        if response.body == '[]' or response.body == '0':
+        res_lst = json.loads(response.body)
+        if response.body.strip() == "[]":
             return
-        soup = json.loads(response.body)
-        s_province = '山东'
-        if start in ["天津", "天津市"]:
-            s_province = '天津'
-        for x in soup:
-            try:
-                drv_date = x['bpnDate']
-                drv_time = x['bpnSendTime']
-                s_sta_name = x['shifazhan']
-                s_sta_id = x['siID']
-                d_sta_name = x['prtName']
-                # d_sta_name = x['bpnSendPort']
-                left_tickets = x['bpnLeftNum']
-                vehicle_type = x['btpName']
-                extra = {
-                    'sid': x['siID'],
-                    'dpid': x['prtID'],
-                    'l': x['bliID'],
-                    't': x['bpnDate'],
-                    'last_url': last_url,
-                }
-                bus_num = x['bliID']
-                full_price = x['prcPrice']
-                attrs = dict(
-                    s_province=s_province,
-                    s_city_id="",
-                    s_city_name=start,
-                    s_sta_name=s_sta_name,
-                    s_city_code=get_pinyin_first_litter(start),
-                    s_sta_id=s_sta_id,
-                    d_city_name=end,
-                    d_city_id="",
-                    d_city_code=get_pinyin_first_litter(end),
-                    d_sta_id="",
-                    d_sta_name=d_sta_name,
-                    drv_date=drv_date,
-                    drv_time=drv_time,
-                    drv_datetime=dte.strptime("%s %s" % (
-                        drv_date, drv_time), "%Y-%m-%d %H:%M"),
-                    distance='',
-                    vehicle_type=vehicle_type,
-                    seat_type="",
-                    bus_num=bus_num,
-                    full_price=float(full_price),
-                    half_price=float(full_price) / 2,
-                    fee=0.0,
-                    crawl_datetime=dte.now(),
-                    extra_info=extra,
-                    left_tickets=int(left_tickets),
-                    crawl_source="sd365",
-                    shift_id="",
-                )
-                # pprint(attrs)
-                if int(left_tickets):
-                    yield LineItem(**attrs)
-
-            except:
-                pass
+        for x in res_lst:
+            drv_date = x['bpnDate']
+            drv_time = x['bpnSendTime']
+            s_sta_name = x['shifazhan']
+            s_sta_id = x['siID']
+            d_sta_name = x['prtName']
+            left_tickets = x['bpnLeftNum']
+            vehicle_type = x['btpName']
+            extra = {
+                'sid': x['siID'],
+                'dpid': x['prtID'],
+                'l': x['bliID'],
+                't': x['bpnDate'],
+            }
+            bus_num = x['bliID']
+            full_price = x['prcPrice']
+            attrs = dict(
+                s_province=start["province"],
+                s_city_id=start["id"],
+                s_city_name=start["name"],
+                s_sta_name=s_sta_name,  # 不太确定
+                s_city_code=start["code"],
+                s_sta_id=s_sta_id,
+                d_city_name=end["name"],
+                d_city_id=end["dest_id"],
+                d_city_code=end["code"],
+                d_sta_id="",
+                d_sta_name=d_sta_name,
+                drv_date=drv_date,
+                drv_time=drv_time,
+                drv_datetime=dte.strptime("%s %s" % (drv_date, drv_time), "%Y-%m-%d %H:%M"),
+                distance='',
+                vehicle_type=vehicle_type,
+                seat_type="",
+                bus_num=bus_num,
+                full_price=float(full_price),
+                half_price=float(full_price) / 2,
+                fee=0.0,
+                crawl_datetime=dte.now(),
+                extra_info=extra,
+                left_tickets=int(left_tickets),
+                crawl_source="sd365",
+                shift_id="",
+            )
+            if int(left_tickets):
+                yield LineItem(**attrs)

@@ -151,7 +151,8 @@ class GzqcpSpider(SpiderBase):
             print start['name'],start['code']
 #         start_list_bak=[]
         dest_dict = {}
-        for start in start_list_bak[:35]:
+        print len(start_list_bak)
+        for start in start_list_bak[:50]:
             end_list = self.get_dest_list(start)
             print 111111111, start['name'], len(end_list)
             dest_dict.update({start['name']: len(end_list)})

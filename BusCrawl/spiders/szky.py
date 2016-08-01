@@ -115,7 +115,7 @@ class SzkySpider(SpiderBase):
                         "Referer": "http://124.172.118.225/User/Default.aspx",
                         "X-Requested-With": "XMLHttpRequest",
                     })
-            for k, (name, w_code) in station_dict.items():
+            for k, (start_name, w_code) in station_dict.items():
                     dest_list = self.get_dest_list("广东", '深圳')
                     for d in dest_list:
                         name, code = d["name"], d["code"]
@@ -123,8 +123,8 @@ class SzkySpider(SpiderBase):
                         today = datetime.date.today()
                         for j in range(1, 7):
                             sdate = str(today+datetime.timedelta(days=j))
-                            if self.has_done(name, end['city_name'], sdate):
-                                self.logger.info("ignore %s ==> %s %s" % (name,end['city_name'],sdate))
+                            if self.has_done(start_name, end['city_name'], sdate):
+                                self.logger.info("ignore %s ==> %s %s" % (start_name,end['city_name'],sdate))
                                 continue
                             data = {
                                 "DstNode": end['city_name'],
@@ -153,7 +153,7 @@ class SzkySpider(SpiderBase):
                                                      headers=headers,
                                                      formdata=data,
                                                      callback=self.parse_line,
-                                                     meta={"start": name, "end": end, "date": sdate}
+                                                     meta={"start": start_name, "end": end, "date": sdate}
                                                     )
 
     def parse_line(self, response):

@@ -115,8 +115,9 @@ class SzkySpider(SpiderBase):
                         "Referer": "http://124.172.118.225/User/Default.aspx",
                         "X-Requested-With": "XMLHttpRequest",
                     })
+            
+            dest_list = self.get_dest_list("广东", '深圳')
             for k, (start_name, w_code) in station_dict.items():
-                    dest_list = self.get_dest_list("广东", '深圳')
                     for d in dest_list:
                         name, code = d["name"], d["code"]
                         end = {"city_name": name, "city_code": code}
@@ -161,6 +162,7 @@ class SzkySpider(SpiderBase):
         start = response.meta["start"]
         end = response.meta["end"]
         sdate = response.meta["date"]
+        self.logger.info("finish %s ==> %s" % (start, end["city_name"]))
         self.mark_done(start, end['city_name'], sdate)
         res = json.loads(trans_js_str(response.body))
         for d in res["data"]:

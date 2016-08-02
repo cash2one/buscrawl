@@ -52,6 +52,16 @@ class ChangtuProxyMiddleware(object):
             request.meta['proxy'] = "http://%s" % ipstr
 
 
+class Sd365ProxyMiddleware(object):
+    "代理ip切换"
+
+    def process_request(self, request, spider):
+        rds = get_redis()
+        ipstr = rds.srandmember("proxy:sd365")
+        if ipstr:
+            request.meta['proxy'] = "http://%s" % ipstr
+
+
 class CbdHeaderMiddleware(object):
 
     def process_request(self, request, spider):

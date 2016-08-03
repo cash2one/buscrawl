@@ -89,10 +89,10 @@ class GzqcpSpider(SpiderBase):
         lst = json.loads(dest_str)
         return lst
     
-    def query_start_predate(self, code):
+    def query_start_predate(self, start):
         url = 'http://www.gzsqcp.com/com/yxd/pris/openapi/queryPreDate.action'
         data = {
-          "startDepotCode": code,
+          "startDepotCode": start['code'],
           }
         proxies = {
             'http': 'http://192.168.1.51:8888',
@@ -102,7 +102,7 @@ class GzqcpSpider(SpiderBase):
         try:
             res = res.json()
         except:
-            print 111111111111111111111111111111,code
+            print 111111111111111111111111111111,start['code'],start['name']
         predate = 0
         if res['akfAjaxResult'] != '0':
             predate = 0
@@ -127,8 +127,6 @@ class GzqcpSpider(SpiderBase):
         for i in res["values"]["list"]:
             for j in i['list']:
                 start_list.append(j)
-        print start_list
-        print len(start_list)
         line_url = 'http://www.gzsqcp.com/com/yxd/pris/openapi/queryAllTicket.action'
 #         start_list = [{u'code': u'520100', u'name': u'贵阳'}]
 #         for end in end_list:
@@ -138,7 +136,7 @@ class GzqcpSpider(SpiderBase):
         for start in start_list:
             if not self.is_need_crawl(city=start['name']):
                 continue
-            preDate = self.query_start_predate(start['code'])
+            preDate = self.query_start_predate(start)
             if not preDate:
                 continue
             start_list_bak.append(start)
@@ -147,32 +145,30 @@ class GzqcpSpider(SpiderBase):
 # #                         {u'iststation': u'2', u'depotCode': u'520301ZYA@gydsys', u'depotName': u'\u9075\u4e49'}
 #                         ]
 #             end_list = []
-        for start in start_list_bak:
-            print start['name'],start['code']
-#         start_list_bak=[]
-        dest_dict = {}
         print len(start_list_bak)
-        for start in start_list_bak[:50]:
+        for start in start_list_bak:
             end_list = self.get_dest_list(start)
             print 111111111, start['name'], len(end_list)
-            dest_dict.update({start['name']: len(end_list)})
-            end_list = []
-        print dest_dict
-        if 0:
+#             end_list= []
             for end in end_list:
-                print end['depotName'],end['depotCode']
-                if end['depotName'] != '成都':
-                    continue
-                print end['depotName'],end['depotCode']
+#                 if end['iststation'] == "1":
+#                     if end["depotName"].endswith(('市',"县","州")):
+#                         print  end['depotCode'],end["depotName"]
+                if '@' in end["depotCode"]:
+                    arriveIsArea = '2'
+                elif end['depotCode'] in ['520203LZA', '520382YAA']:
+                    arriveIsArea = '0'
+                else:
+                    arriveIsArea = '1'
                 today = datetime.date.today()
-                for i in range(1, 3):
+                for i in range(1, 1):
                     sdate = str(today+datetime.timedelta(days=i))
-#                     if self.has_done(start["name"], end["depotName"]+end['depotCode'], sdate):
-#                         self.logger.info("ignore %s ==> %s %s" % (start["name"], end["depotName"], sdate))
-#                         continue
+                    if self.has_done(start["name"], end["depotName"]+end['depotCode'], sdate):
+                        self.logger.info("ignore %s ==> %s %s" % (start["name"], end["depotName"], sdate))
+                        continue
                     data = {
                         "arrivalDepotCode": end['depotCode'],
-                        "arriveIsArea": '2',
+                        "arriveIsArea": arriveIsArea,
                         "beginTime": sdate,
                         "startDepotCode": start['code'],
                         "startIsArea": "1",
@@ -182,13 +178,15 @@ class GzqcpSpider(SpiderBase):
                                              method="POST",
                                              formdata=data,
                                              callback=self.parse_line,
-                                             meta={"start": start, "end": end, "date": sdate})
+                                             meta={"start": start, "end": end, "date": sdate,'arriveIsArea':arriveIsArea})
 
     def parse_line(self, response):
         "解析班车"
         start = response.meta["start"]
         end = response.meta["end"]
         sdate = response.meta["date"]
+        arriveIsArea = response.meta["arriveIsArea"]
+        self.logger.info("finish %s ==> %s" % (start["name"], end["depotName"]))
         self.mark_done(start["name"], end["depotName"]+end['depotCode'], sdate)
         try:
             res = json.loads(response.body)
@@ -197,8 +195,8 @@ class GzqcpSpider(SpiderBase):
         if res["akfAjaxResult"] != "0":
             #self.logger.error("parse_line: Unexpected return, %s, %s->%s, %s", sdate, start["city_name"], end["city_name"], res["header"])
             return
-#         if res["values"]["resultList"]:
-#             print res["values"]["resultList"]
+        if res["values"]["resultList"]:
+            print res["values"]["resultList"]
         for d in res["values"]["resultList"]:
             if d['stopFlag'] == '0':
 #                 if not self.is_internet(start['code'], d["busCompanyCode"]):
@@ -228,38 +226,10 @@ class GzqcpSpider(SpiderBase):
                     half_price = float(d["fullPrice"])/2,
                     fee = 0,
                     crawl_datetime = dte.now(),
-                    extra_info = {"busCodeType": d["busCodeType"], "regsName": d["regsName"], "busCompanyCode": d["busCompanyCode"],"s_code": start["code"],'e_code':end['depotCode']},
+                    extra_info = {"busCodeType": d["busCodeType"], "regsName": d["regsName"], "busCompanyCode": d["busCompanyCode"],
+                                  "s_code": start["code"],'e_code':end['depotCode'],'arriveIsArea':arriveIsArea},
                     left_tickets = int(d["remainSeats"]),
                     crawl_source = "gzqcp",
                     shift_id="",
                 )
                 yield LineItem(**attrs)
-
-    def is_internet(self, s_code, busCompanyCode):
-        r = get_redis()
-        key = "%s_%s" % (s_code, busCompanyCode)
-        t = r.get(key)
-        if t == '1':
-            return True
-        elif t == '0':
-            return False
-        else:
-            data = {
-                "startDepotCode": s_code,
-                "busCompanyCode": busCompanyCode,
-                }
-            headers = {
-                "User-Agent": "Dalvik/1.6.0 (Linux; U; Android 4.4.4; MI 4W MIUI/V7.1.3.0.KXDCNCK)",
-                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-            }
-            url = "http://www.gzsqcp.com/com/yxd/pris/wsgp/isInternet.action"
-            res = requests.post(url, data=data, headers=headers)
-            ret = res.json()
-            result = ret['values']['result']
-            r.set(key, result)
-            r.expire(key, 10*60*60)
-            if result == '1':
-                return True
-            elif result == '0':
-                return False
-        return True

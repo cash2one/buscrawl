@@ -39,9 +39,7 @@ class GzqcpSpider(SpiderBase):
                  "新疆维吾尔自治",'西藏自治','贵州','福建')
         rds = get_redis()
         dest_str = ''
-        rds_key = "crawl:dest:gzqcp2:%s" % start_info['name']
-        
-
+        rds_key = "crawl:dest:gzqcp:%s" % start_info['name']
         dest_str = rds.get(rds_key)
 #         if not dest_str:
 #             dest_str = '[]'
@@ -65,8 +63,8 @@ class GzqcpSpider(SpiderBase):
                         'http': 'http://192.168.1.51:8888',
                         'https': 'http://192.168.1.51:8888',
                         }
-                    res = requests.post(target_url, data=data, proxies=proxies)
-#                     res = requests.post(target_url, data=data)
+#                     res = requests.post(target_url, data=data, proxies=proxies)
+                    res = requests.post(target_url, data=data)
                     try:
                         res_lists = res.json()
                     except Exception, e:
@@ -98,7 +96,8 @@ class GzqcpSpider(SpiderBase):
             'http': 'http://192.168.1.51:8888',
             'https': 'http://192.168.1.51:8888',
         }
-        res = requests.post(url, data=data,proxies=proxies)
+#         res = requests.post(url, data=data,proxies=proxies)
+        res = requests.post(url, data=data)
         try:
             res = res.json()
         except:

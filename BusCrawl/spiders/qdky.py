@@ -2,26 +2,34 @@
 # encoding: utf-8
 
 import scrapy
-# import json
 import datetime
 import urllib
 from bs4 import BeautifulSoup as bs
 import re
+import requests
 
 from datetime import datetime as dte
 from BusCrawl.item import LineItem
 from BusCrawl.utils.tool import get_pinyin_first_litter
+from BusCrawl.utils.tool import get_redis
 from base import SpiderBase
-from scrapy.conf import settings
-from pymongo import MongoClient
-import requests
-# import cStringIO
-# from PIL import Image
-# import ipdb
 
-db_config = settings.get("MONGODB_CONFIG")
-city = MongoClient(db_config["url"])[db_config["db"]]['qdkycity']
-
+STATION_INFO = {
+    '1.青岛站': ("青岛",),
+    '2.沧口汽车站': ("青岛",),
+    '3.青岛西站': ("青岛",),
+    'B.青岛北站': ("青岛",),
+    'C.青岛海泊河': ("青岛",),
+    'D.青岛东站': ("青岛",),
+    'F.利津路站': ("青岛",),
+    'A.黄岛开发区': ("青岛",),
+    '5.胶州汽车站': ("青岛",),  # 胶州
+    '8.胶南汽车站': ("青岛",),
+    '4.即墨汽车站': ("即墨",), # 即墨
+    '7.莱西汽车站': ("莱西",), # 莱西
+    '9.平度汽车站': ("平度",), # 平度
+    'E.华联火车站': ("青岛",),
+}
 
 class Qdky(SpiderBase):
     name = "qdky"
@@ -36,12 +44,10 @@ class Qdky(SpiderBase):
             'BusCrawl.middleware.ProxyMiddleware': 410,
             # 'BusCrawl.middleware.QdkyProxyMiddleware': 410,
         },
-        "DOWNLOAD_DELAY": 0.75,
+        # "DOWNLOAD_DELAY": 0.75,
         # "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
 
-    # dcitys = city.find({'start_id': {'$exists': True}}).batch_size(16)
-    # url = 'http://ticket.qdjyjt.com/'
     url = 'http://www.qdjyjt.com/infor/select1.aspx'
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:47.0) Gecko/20100101 Firefox/47.0",
@@ -56,11 +62,12 @@ class Qdky(SpiderBase):
         '6': 'D.青岛东站  ',
         '7': 'F.利津路站  ',
         '8': 'A.黄岛开发区',
-        '9': '5.胶州汽车站',
+
+        '9': '5.胶州汽车站',  # 胶州
         '10': '8.胶南汽车站',
-        '11': '4.即墨汽车站',
-        '12': '7.莱西汽车站',
-        '13': '9.平度汽车站',
+        '11': '4.即墨汽车站', # 即墨
+        '12': '7.莱西汽车站', # 莱西
+        '13': '9.平度汽车站', # 平度
         '14': 'E.华联火车站',
     }
 
@@ -75,6 +82,21 @@ class Qdky(SpiderBase):
                     return (state, valid, dict(r.cookies))
             except:
                 pass
+
+    @classmethod
+    def proxy_get(cls, url, **kwargs):
+        rds = get_redis()
+        for i in range(10):
+            ipstr = rds.srandmember("proxy:qdky")
+            if ipstr:
+                kwargs["proxies"] = {"http": "http://%s" % ipstr}
+            r = requests.get(url, **kwargs)
+            if r.status_code == 200:
+                return r
+
+    def get_dest_list_from_web(self, province, city, station=""):
+        url = "http://ticket.qdjyjt.com/Scripts/destination.js"
+        r = self.proxy_get(url, headers={"User-Agent": "Chrome/51.0.2704.106"})
 
     def start_requests(self):
         days = 10

@@ -115,7 +115,6 @@ class SzkySpider(SpiderBase):
                         "Referer": "http://124.172.118.225/User/Default.aspx",
                         "X-Requested-With": "XMLHttpRequest",
                     })
-            
             dest_list = self.get_dest_list("广东", '深圳')
             for k, (start_name, w_code) in station_dict.items():
                     for d in dest_list:

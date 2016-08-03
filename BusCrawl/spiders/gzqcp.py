@@ -33,10 +33,10 @@ class GzqcpSpider(SpiderBase):
 
     def get_dest_list(self, start_info):
         province_list = ('吉林','辽宁', '河北','黑龙江','广东',"云南",'山西',
-                 '山东','广西壮族自治','江西','河南','浙江','安徽',
-                 '湖北','湖南',"贵州",'陕西','江苏','内蒙古自治',
-                 "四川",'海南','山东','甘肃','青海','宁夏回族自治',
-                 "新疆维吾尔自治",'西藏自治','贵州','福建')
+                         '山东','广西壮族自治','江西','河南','浙江','安徽',
+                         '湖北','湖南',"贵州",'陕西','江苏','内蒙古自治',
+                         "四川",'海南','山东','甘肃','青海','宁夏回族自治',
+                         "新疆维吾尔自治",'西藏自治','贵州','福建')
         rds = get_redis()
         dest_str = ''
         rds_key = "crawl:dest:gzqcp:%s" % start_info['name']
@@ -59,10 +59,10 @@ class GzqcpSpider(SpiderBase):
                             "InputStr": query,
                             "type": "2",
                           }
-                    proxies = {
-                        'http': 'http://192.168.1.51:8888',
-                        'https': 'http://192.168.1.51:8888',
-                        }
+#                     proxies = {
+#                         'http': 'http://192.168.1.51:8888',
+#                         'https': 'http://192.168.1.51:8888',
+#                         }
 #                     res = requests.post(target_url, data=data, proxies=proxies)
                     res = requests.post(target_url, data=data)
                     try:
@@ -92,16 +92,17 @@ class GzqcpSpider(SpiderBase):
         data = {
           "startDepotCode": start['code'],
           }
-        proxies = {
-            'http': 'http://192.168.1.51:8888',
-            'https': 'http://192.168.1.51:8888',
-        }
+#         proxies = {
+#             'http': 'http://192.168.1.51:8888',
+#             'https': 'http://192.168.1.51:8888',
+#         }
 #         res = requests.post(url, data=data,proxies=proxies)
         res = requests.post(url, data=data)
         try:
             res = res.json()
         except:
-            print 111111111111111111111111111111,start['code'],start['name']
+            predate = 5
+            return predate
         predate = 0
         if res['akfAjaxResult'] != '0':
             predate = 0
@@ -147,8 +148,6 @@ class GzqcpSpider(SpiderBase):
         print len(start_list_bak)
         for start in start_list_bak:
             end_list = self.get_dest_list(start)
-            print 111111111, start['name'], len(end_list)
-#             end_list= []
             for end in end_list:
 #                 if end['iststation'] == "1":
 #                     if end["depotName"].endswith(('市',"县","州")):

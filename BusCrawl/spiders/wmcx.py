@@ -13,8 +13,11 @@ from BusCrawl.utils.tool import get_pinyin_first_litter
 PROVINCE_TO_CITY = {
     "浙江": [],
     "江苏": ["宿迁", "镇江", "常州", "南通", "苏州", "徐州", "连云港", "淮安", "泰州", "无锡", "南京"],
-    "安徽": ["宁国", "滁州", "安庆", "明光", "全椒", "天长", "歙县",
-            '宿松','枞阳','怀宁','潜山','岳西','太湖','桐城'],
+    "安徽": [
+            "宁国", "滁州", "安庆", "明光", "全椒", "天长", "歙县",
+            '宿松','枞阳', '怀宁','潜山','岳西','太湖','桐城',
+#             "巢湖南",'巢湖','含山','无为','宣城'
+            ],
 }
 
 CITY_TO_PROVINCE = {}
@@ -143,6 +146,8 @@ class BabaSpider(SpiderBase):
         if res["returnNo"] != "0000":
             #self.logger.error("parse_line: Unexpected return, %s, %s->%s, %s", sdate, start["city_name"], end["city_name"], res["header"])
             return
+        if res["content"]["busList"]:
+            print res["content"]["busList"]
         for d in res["content"]["busList"]:
             try:
                 drv_datetime = dte.strptime("%s %s" % (d["leaveDate"], d["leaveTime"]), "%Y-%m-%d %H:%M")

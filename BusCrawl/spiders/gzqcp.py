@@ -39,7 +39,7 @@ class GzqcpSpider(SpiderBase):
                          "新疆维吾尔自治",'西藏自治','贵州',
                          '福建')
         rds = get_redis()
-        rds_key = "crawl:dest:gzqcp132:%s" % start_info['name']
+        rds_key = "crawl:dest:gzqcp:%s" % start_info['name']
         dest_str = rds.get(rds_key)
         if not dest_str:
             lst = []

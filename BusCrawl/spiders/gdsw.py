@@ -46,7 +46,7 @@ class GdswSpider(SpiderBase):
             start = {"city_name": x, "city_code": get_pinyin_first_litter(x)}
             for d in dest_list:
                 name, code = d["name"], d["code"]
-                end = {"city_name": d, "city_code": code}
+                end = {"city_name": d["name"], "city_code": code}
                 self.logger.info("start %s ==> %s" % (x, name))
                 for i in range(self.start_day(), 8):
                     sdate = (today+datetime.timedelta(days=i)).strftime("%Y%m%d")

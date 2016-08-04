@@ -6,6 +6,7 @@ import json
 import datetime
 import urllib
 import requests
+import re
 
 from bs4 import BeautifulSoup as bs
 from datetime import datetime as dte
@@ -39,6 +40,7 @@ class Sd365(SpiderBase):
         "DOWNLOAD_DELAY": 0.1,
         "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
+    days = 7
 
     @classmethod
     def proxy_get(cls, url, **kwargs):
@@ -72,13 +74,7 @@ class Sd365(SpiderBase):
         r = self.proxy_get(url, headers={"User-Agent": "Chrome/51.0.2704.106"})
 
         lst = []
-        for line in r.content.split(";"):
-            if not line:
-                continue
-            tmp_lst = eval(line.split("=")[1].strip())
-            # tmp_lst eg: ['123401', '诸城', 'ZC', 'ZHUCHENG']
-            if not tmp_lst:
-                continue
+        for tmp_lst in re.findall(r"\['(\d+)','(\W+)','(\w+)','(\w+)'\]", r.content):
             dest_id, name, code, py = tmp_lst
             lst.append({"code": code, "name": name, "dest_id": dest_id})
         return lst
@@ -86,24 +82,35 @@ class Sd365(SpiderBase):
     def start_requests(self):
         today = datetime.date.today()
         for name, s_info in self.get_all_start_cities().items():
+            if name in ["石岛"]:
+                continue
             start = s_info
             if not self.is_need_crawl(start["province"], start["name"]):
                 continue
             for d_info in self.get_dest_list(start["province"], start["name"]):
                 end = d_info
                 url = 'http://www.36565.cn/?c=tkt3&a=search&fromid=&from={0}&toid=&to={1}&date={2}&time=0#'.format(start["name"], end["name"], str(today + datetime.timedelta(days=1)))
-                yield scrapy.Request(url=url, callback=self.parse_line_pre,meta={'start': start, 'end': end})
+
+                for y in xrange(self.start_day(), self.days):
+                    sdate = str(today + datetime.timedelta(days=y))
+                    if not self.has_done(start, end, sdate):
+                        forward= True
+                        break
+                else:
+                    forward = False
+                if not forward:
+                    continue
+                yield scrapy.Request(url=url, callback=self.parse_line_pre, meta={'start': start, 'end': end})
 
     def parse_line_pre(self, response):
         start = response.meta['start']
         end = response.meta['end']
-        days = 8
         today = datetime.date.today()
         code = response.body.split('code:')[-1].split()[0].split('"')[1]
         soup = bs(response.body, 'lxml')
         info = soup.find_all('input', attrs={'class': 'filertctrl', 'name': 'siids'})
         sids = ','.join([x["value"] for x in info])
-        for y in xrange(self.start_day(), days):
+        for y in xrange(self.start_day(), self.days):
             sdate = str(today + datetime.timedelta(days=y))
             if self.has_done(start, end, sdate):
                 continue
@@ -121,7 +128,7 @@ class Sd365(SpiderBase):
             yield scrapy.Request(url=last_url, callback=self.parse_line, meta={'start': start, 'end': end, 'sdate': sdate})
 
     def parse_line(self, response):
-        if response.body.strip() == "[]":
+        if response.body.strip() in ["[]", 0, "0"]:
             return
         res_lst = json.loads(response.body)
         start = response.meta['start']

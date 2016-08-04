@@ -32,12 +32,12 @@ class GzqcpSpider(SpiderBase):
     }
 
     def get_dest_list(self, start_info):
-        province_list = ['吉林','辽宁', '河北','黑龙江','广东',"云南",'山西',
+        province_list = ('吉林','辽宁', '河北','黑龙江','广东',"云南",'山西',
                          '山东','广西壮族自治','江西','河南','浙江','安徽',
                          '湖北','湖南',"贵州",'陕西','江苏','内蒙古自治',
                          "四川",'海南','山东','甘肃','青海','宁夏回族自治',
                          "新疆维吾尔自治",'西藏自治','贵州',
-                         '福建']
+                         '福建')
         rds = get_redis()
         rds_key = "crawl:dest:gzqcp132:%s" % start_info['name']
         dest_str = rds.get(rds_key)

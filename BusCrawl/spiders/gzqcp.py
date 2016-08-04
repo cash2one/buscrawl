@@ -32,19 +32,15 @@ class GzqcpSpider(SpiderBase):
     }
 
     def get_dest_list(self, start_info):
-        province_list = ('吉林','辽宁', '河北','黑龙江','广东',"云南",'山西',
+        province_list = ['吉林','辽宁', '河北','黑龙江','广东',"云南",'山西',
                          '山东','广西壮族自治','江西','河南','浙江','安徽',
                          '湖北','湖南',"贵州",'陕西','江苏','内蒙古自治',
                          "四川",'海南','山东','甘肃','青海','宁夏回族自治',
-                         "新疆维吾尔自治",'西藏自治','贵州','福建')
+                         "新疆维吾尔自治",'西藏自治','贵州',
+                         '福建']
         rds = get_redis()
-        dest_str = ''
-        rds_key = "crawl:dest:gzqcp:%s" % start_info['name']
+        rds_key = "crawl:dest:gzqcp132:%s" % start_info['name']
         dest_str = rds.get(rds_key)
-#         if not dest_str:
-#             dest_str = '[]'
-#         lst = json.loads(dest_str)
-#         return lst
         if not dest_str:
             lst = []
             letter = 'abcdefghijklmnopqrstuvwxyz'
@@ -145,7 +141,6 @@ class GzqcpSpider(SpiderBase):
 # #                         {u'iststation': u'2', u'depotCode': u'520301ZYA@gydsys', u'depotName': u'\u9075\u4e49'}
 #                         ]
 #             end_list = []
-        print len(start_list_bak)
         for start in start_list_bak:
             end_list = self.get_dest_list(start)
             for end in end_list:
@@ -159,7 +154,7 @@ class GzqcpSpider(SpiderBase):
                 else:
                     arriveIsArea = '1'
                 today = datetime.date.today()
-                for i in range(1, 1):
+                for i in range(1, 3):
                     sdate = str(today+datetime.timedelta(days=i))
                     if self.has_done(start["name"], end["depotName"]+end['depotCode'], sdate):
                         self.logger.info("ignore %s ==> %s %s" % (start["name"], end["depotName"], sdate))
@@ -176,7 +171,8 @@ class GzqcpSpider(SpiderBase):
                                              method="POST",
                                              formdata=data,
                                              callback=self.parse_line,
-                                             meta={"start": start, "end": end, "date": sdate,'arriveIsArea':arriveIsArea})
+                                             meta={"start": start, "end": end, 
+                                                   "date": sdate, 'arriveIsArea':arriveIsArea})
 
     def parse_line(self, response):
         "解析班车"
@@ -193,14 +189,8 @@ class GzqcpSpider(SpiderBase):
         if res["akfAjaxResult"] != "0":
             #self.logger.error("parse_line: Unexpected return, %s, %s->%s, %s", sdate, start["city_name"], end["city_name"], res["header"])
             return
-        if res["values"]["resultList"]:
-            print res["values"]["resultList"]
         for d in res["values"]["resultList"]:
             if d['stopFlag'] == '0':
-#                 if not self.is_internet(start['code'], d["busCompanyCode"]):
-#                     continue
-#                 if int(d["remainSeats"]) < 1:
-#                     continue
                 attrs = dict(
                     s_province = '贵州',
                     s_city_name = start["name"],

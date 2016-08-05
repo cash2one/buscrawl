@@ -56,7 +56,7 @@ class BjkySpider(SpiderBase):
         s_sta_name = start['name']
         if s_sta_name != u'首都机场站':
             if s_sta_name == u'丽泽桥':
-                s_sta_name = u'丽泽'
+                s_sta_name = u'丽泽客运站'
             else:
                 s_sta_name = s_sta_name+'客运站'
 
@@ -118,54 +118,54 @@ class BjkySpider(SpiderBase):
             self.logger.error("parse_url: cookie is expire", )
             return
         start_station_list = [
-#             {'name': u"六里桥",'code': "1000"},
-#             {'name': u"首都机场站",'code':"1112"},
-#             {'name': u"赵公口",'code':"1103"},
-#             {'name': u"木樨园",'code': "1104"},
+            {'name': u"六里桥",'code': "1000"},
+            {'name': u"首都机场站",'code':"1112"},
+            {'name': u"赵公口",'code':"1103"},
+            {'name': u"木樨园",'code': "1104"},
             {'name': u"丽泽桥",'code': "1106"},
-#             {'name': u"新发地",'code': "1107"},
-#             {'name': u"莲花池",'code': "1108"},
-#             {'name': u"四惠",'code': "1109"},
-#             {'name': u"永定门",'code': "1110"},
-#             {'name': u"北郊",'code': "1111"},
+            {'name': u"新发地",'code': "1107"},
+            {'name': u"莲花池",'code': "1108"},
+            {'name': u"四惠",'code': "1109"},
+            {'name': u"永定门",'code': "1110"},
+            {'name': u"北郊",'code': "1111"},
             ]
 
         queryline_url = "http://www.e2go.com.cn/TicketOrder/SearchSchedule"
-        end_station_list = self.query_all_end_station()
-        end_station_list = json.loads(end_station_list)
-        print "end_station_list",len(end_station_list)
-        print 'end_station_list',type(end_station_list)
+#         end_station_list = self.query_all_end_station()
+#         end_station_list = json.loads(end_station_list)
+#         print "end_station_list",len(end_station_list)
+#         print 'end_station_list',type(end_station_list)
 #         print end_station_list
         for start in start_station_list:
-#             dest_list = []
-#             dest_list = self.get_dest_list("北京", '北京', start["name"])
-#             print dest_list
-#             print 1111111111,start['name'], len(dest_list)
-#             for s in dest_list:
-#                 name, code = s["name"], s["code"]
-#                 end = {"StopName": name, "city_code": code, "StopId": s['dest_id']}
-            for end in end_station_list:
-                    end = json.loads(end)
-                    if self.is_end_city(start, end):
-                        today = datetime.date.today()
-                        for i in range(1, 3):
-                            sdate = str(today+datetime.timedelta(days=i))
-                            if self.has_done(start["name"], end["StopName"], sdate):
-                                self.logger.info("ignore %s ==> %s %s" % (start["name"], end["StopName"], sdate))
-                                continue
-                            data = {
-                                "ArrivingStop": unicode(end['StopName']),
-                                "ArrivingStopId": unicode(end['StopId']),
-                                "ArrivingStopJson": json.dumps(end),
-                                "DepartureDate": sdate,
-                                "Order": "DepartureTimeASC",
-                                "RideStation": start["name"],
-                                "RideStationId": start["code"]
-                            }
-                            yield scrapy.FormRequest(queryline_url, formdata=data,
-                                                     callback=self.parse_line,
-                                                     cookies=cookies,
-                                                     meta={"start": start,"end": end, "date": sdate})
+            dest_list = []
+            dest_list = self.get_dest_list("北京", '北京', start["name"])
+            print dest_list
+            print 1111111111, start['name'], len(dest_list)
+            for s in dest_list:
+                name, code = s["name"], s["code"]
+                end = {"StopName": name, "city_code": code, "StopId": s['dest_id']}
+#             for end in end_station_list:
+#                     end = json.loads(end)
+#                     if self.is_end_city(start, end):
+                today = datetime.date.today()
+                for i in range(1, 1):
+                    sdate = str(today+datetime.timedelta(days=i))
+                    if self.has_done(start["name"], end["StopName"], sdate):
+                        self.logger.info("ignore %s ==> %s %s" % (start["name"], end["StopName"], sdate))
+                        continue
+                    data = {
+                        "ArrivingStop": unicode(end['StopName']),
+                        "ArrivingStopId": unicode(end['StopId']),
+                        "ArrivingStopJson": json.dumps(end),
+                        "DepartureDate": sdate,
+                        "Order": "DepartureTimeASC",
+                        "RideStation": start["name"],
+                        "RideStationId": start["code"]
+                    }
+                    yield scrapy.FormRequest(queryline_url, formdata=data,
+                                             callback=self.parse_line,
+                                             cookies=cookies,
+                                             meta={"start": start,"end": end, "date": sdate})
 
     def parse_line(self, response):
         "解析班车"
@@ -174,9 +174,7 @@ class BjkySpider(SpiderBase):
         sdate = response.meta["date"]
         content = response.body
         self.mark_done(start["name"], end["StopName"], sdate)
-        if isinstance(content, unicode):
-            pass
-        else:
+        if not isinstance(content, unicode):
             content = content.decode('utf-8')
         sel = etree.HTML(content)
         scheduleList = sel.xpath('//div[@id="scheduleList"]/table/tbody/tr')

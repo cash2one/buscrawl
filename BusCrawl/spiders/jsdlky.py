@@ -4,12 +4,11 @@ import scrapy
 import json
 import urllib
 import datetime
-import time
 import requests
+import re
 
 from datetime import datetime as dte
 from BusCrawl.item import LineItem
-from BusCrawl.utils.tool import get_redis, md5
 from base import SpiderBase
 
 START_STA_LIST = [
@@ -41,6 +40,29 @@ class JsdlkySpider(SpiderBase):
         "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
 
+
+    def get_dest_list_from_web(self, province, city, station=""):
+        r = requests.get("http://www.jslw.gov.cn/index.do", headers={"Content-Type": "Chrome"})
+        lst = []
+        for s in re.findall(r"XX.module.address.source.fltDomestic =\"(\S+)\"", r.content)[0].split("@"):
+            if not s:
+                continue
+            code, name, id = s.split("|")
+            lst.append({"code": code, "name": unicode(name), "dest_id": id})
+        return lst
+
+    def get_dest_list(self, province, city, station=""):
+        lst = super(JsdlkySpider, self).get_dest_list(province, city, station)
+        lst2 = self.get_dest_list_from_web(province, city, station)
+        tmp = {d["name"]:1 for d in lst2}
+
+        new_lst = []
+        for d in lst:
+            if d["name"] in tmp:
+                new_lst.append(d)
+            else:
+                print "ignore", d["name"]
+        return new_lst
 
     def start_requests(self):
         # line_url = "http://58.213.132.27:8082/nj_weixinService/2.0/queryBus"

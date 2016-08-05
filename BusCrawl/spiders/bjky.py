@@ -128,34 +128,41 @@ class BjkySpider(SpiderBase):
             ]
 
         queryline_url = "http://www.e2go.com.cn/TicketOrder/SearchSchedule"
-        end_station_list = self.query_all_end_station()
-        end_station_list = json.loads(end_station_list)
-        print "end_station_list",len(end_station_list)
+#         end_station_list = self.query_all_end_station()
+#         end_station_list = json.loads(end_station_list)
+#         print "end_station_list",len(end_station_list)
 #         print 'end_station_list',type(end_station_list)
 #         print end_station_list
         for start in start_station_list:
-            for end in end_station_list:
-                    end = json.loads(end)
-                    if self.is_end_city(start, end):
-                        today = datetime.date.today()
-                        for i in range(1, 10):
-                            sdate = str(today+datetime.timedelta(days=i))
-                            if self.has_done(start["name"], end["StopName"], sdate):
-                                self.logger.info("ignore %s ==> %s %s" % (start["name"], end["StopName"], sdate))
-                                continue
-                            data = {
-                                "ArrivingStop": unicode(end['StopName']),
-                                "ArrivingStopId": unicode(end['StopId']),
-                                "ArrivingStopJson": json.dumps(end),
-                                "DepartureDate": sdate,
-                                "Order": "DepartureTimeASC",
-                                "RideStation": start["name"],
-                                "RideStationId": start["code"]
-                            }
-                            yield scrapy.FormRequest(queryline_url, formdata=data,
-                                                     callback=self.parse_line,
-                                                     cookies=cookies,
-                                                     meta={"start": start,"end": end, "date": sdate})
+            dest_list = []
+            dest_list = self.get_dest_list("北京", '北京', start["name"])
+            print dest_list
+            print 1111111111,start['name'], len(dest_list)
+            for s in dest_list:
+                name, code = s["name"], s["code"]
+                end = {"StopName": name, "city_code": code, "StopId": s['dest_id']}
+#             for end in end_station_list:
+#                     end = json.loads(end)
+#                     if self.is_end_city(start, end):
+                today = datetime.date.today()
+                for i in range(1, 1):
+                    sdate = str(today+datetime.timedelta(days=i))
+                    if self.has_done(start["name"], end["StopName"], sdate):
+                        self.logger.info("ignore %s ==> %s %s" % (start["name"], end["StopName"], sdate))
+                        continue
+                    data = {
+                        "ArrivingStop": unicode(end['StopName']),
+                        "ArrivingStopId": unicode(end['StopId']),
+                        "ArrivingStopJson": json.dumps(end),
+                        "DepartureDate": sdate,
+                        "Order": "DepartureTimeASC",
+                        "RideStation": start["name"],
+                        "RideStationId": start["code"]
+                    }
+                    yield scrapy.FormRequest(queryline_url, formdata=data,
+                                             callback=self.parse_line,
+                                             cookies=cookies,
+                                             meta={"start": start,"end": end, "date": sdate})
 
     def parse_line(self, response):
         "解析班车"

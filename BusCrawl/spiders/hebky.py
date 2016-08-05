@@ -126,8 +126,8 @@ class HebkySpider(SpiderBase):
         start_dict = {}
         for i in start_name:
             start_dict[i[0]] = i[1].split(',')
-        end_list = self.query_all_end_station()
-        end_list = json.loads(end_list)
+#         end_list = self.query_all_end_station()
+#         end_list = json.loads(end_list)
         line_url = 'http://60.2.147.28/com/yxd/pris/openapi/queryAllTicket.action'
         for k, v in start_dict.items():
             city_name = k
@@ -135,30 +135,34 @@ class HebkySpider(SpiderBase):
                 continue
             for i in v:
                     start = start_list[int(i)]
-#                 preDate = self.query_start_predate(start[0])
-# #                 preDate = 0
-#                 if preDate:
-                    for end in end_list:
-                        end = json.loads(end)
-                        if self.is_end_city(start, end):
-                            today = datetime.date.today()
-                            for j in range(1, 7):
-                                sdate = str(today+datetime.timedelta(days=j))
-                                if self.has_done(start[1], end["depotName"], sdate):
-                                    self.logger.info("ignore %s ==> %s %s" % (start[1], end["depotName"], sdate))
-                                    continue
-                                data = {
-                                    "arrivalDepotCode": end['depotCode'],
-                                    "beginTime": sdate,
-                                    "startName": unicode(start[1]),
-                                    "endName": unicode(end["depotName"]),
-                                    "startDepotCode": start[0]
-                                }
-                                yield scrapy.FormRequest(line_url,
-                                                         method="POST",
-                                                         formdata=data,
-                                                         callback=self.parse_line,
-                                                         meta={"start": start, "city_name": city_name, "end": end, "date": sdate})
+                    print start
+                    dest_list = []
+                    dest_list = self.get_dest_list("河北", city_name, start[1])
+                    print city_name, start[1], len(dest_list)
+                    dest_list = []
+                    for s in dest_list:
+                        name, code = s["name"], s["code"]
+                        end = {"depotName": name, "city_code": code, "depotCode": s['dest_id']}
+#                         end = json.loads(end)
+#                         if self.is_end_city(start, end):
+                        today = datetime.date.today()
+                        for j in range(1, 1):
+                            sdate = str(today+datetime.timedelta(days=j))
+                            if self.has_done(start[1], end["depotName"], sdate):
+                                self.logger.info("ignore %s ==> %s %s" % (start[1], end["depotName"], sdate))
+                                continue
+                            data = {
+                                "arrivalDepotCode": end['depotCode'],
+                                "beginTime": sdate,
+                                "startName": unicode(start[1]),
+                                "endName": unicode(end["depotName"]),
+                                "startDepotCode": start[0]
+                            }
+                            yield scrapy.FormRequest(line_url,
+                                                     method="POST",
+                                                     formdata=data,
+                                                     callback=self.parse_line,
+                                                     meta={"start": start, "city_name": city_name, "end": end, "date": sdate})
 
     def parse_line(self, response):
         "解析班车"

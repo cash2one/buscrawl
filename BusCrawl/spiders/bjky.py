@@ -139,8 +139,6 @@ class BjkySpider(SpiderBase):
         for start in start_station_list:
             dest_list = []
             dest_list = self.get_dest_list("北京", '北京', start["name"])
-            print dest_list
-            print 1111111111, start['name'], len(dest_list)
             for s in dest_list:
                 name, code = s["name"], s["code"]
                 end = {"StopName": name, "city_code": code, "StopId": s['dest_id']}
@@ -148,7 +146,7 @@ class BjkySpider(SpiderBase):
 #                     end = json.loads(end)
 #                     if self.is_end_city(start, end):
                 today = datetime.date.today()
-                for i in range(1, 1):
+                for i in range(1, 8):
                     sdate = str(today+datetime.timedelta(days=i))
                     if self.has_done(start["name"], end["StopName"], sdate):
                         self.logger.info("ignore %s ==> %s %s" % (start["name"], end["StopName"], sdate))
@@ -178,7 +176,7 @@ class BjkySpider(SpiderBase):
             content = content.decode('utf-8')
         sel = etree.HTML(content)
         scheduleList = sel.xpath('//div[@id="scheduleList"]/table/tbody/tr')
-        for i in range(0, len(scheduleList),2):
+        for i in range(0, len(scheduleList), 2):
             s = scheduleList[i]
             time = s.xpath('td[@class="departureTimeCell"]/span/text()')[0]
             station = s.xpath('td[@class="routeNameCell"]/span/text()')

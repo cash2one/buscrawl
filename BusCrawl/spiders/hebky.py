@@ -135,18 +135,15 @@ class HebkySpider(SpiderBase):
                 continue
             for i in v:
                     start = start_list[int(i)]
-                    print start
                     dest_list = []
                     dest_list = self.get_dest_list("河北", city_name, start[1])
-                    print city_name, start[1], len(dest_list)
-                    dest_list = []
                     for s in dest_list:
                         name, code = s["name"], s["code"]
                         end = {"depotName": name, "city_code": code, "depotCode": s['dest_id']}
 #                         end = json.loads(end)
 #                         if self.is_end_city(start, end):
                         today = datetime.date.today()
-                        for j in range(1, 1):
+                        for j in range(1, 7):
                             sdate = str(today+datetime.timedelta(days=j))
                             if self.has_done(start[1], end["depotName"], sdate):
                                 self.logger.info("ignore %s ==> %s %s" % (start[1], end["depotName"], sdate))

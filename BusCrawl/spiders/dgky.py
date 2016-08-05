@@ -122,52 +122,50 @@ class DgkySpider(SpiderBase):
 #             dest_list = self.get_dest_list("广东", '东莞')
             today = datetime.date.today()
             dest_list = self.get_dest_list("广东", '东莞', dg_name)
-            dest_list = []
-            for s in dest_list:
-                end = s["name"]
-                print 1111111, dg_name, len(dest_list)
-                dest_list = []
-                for j in range(1, 8):
-                    sdate = str(today+datetime.timedelta(days=j))
-    #                 dest_list = self.query_end_city(sw_name, sdate)
-#                     end = y.split("|")[0]
-                    if self.has_done(dg_name, end, sdate):
-                        self.logger.info("ignore %s ==> %s %s" % (dg_name, end, sdate))
-                        continue
-                    params = {
-                     "action": "queryclick",
-                     "Depot": k,
-                     "date": sdate,
-                     "Times": '',
-                     "num": "1",
-                     "Verifycode": code,
-                     "tanchu": 1
-                     }
-                    init_url_param = "%s%s" % (init_url, urllib.urlencode(params))
-                    station_url = init_url_param + '&station=%s' % json.dumps(end).replace('\u','%u')[1:-1]
-                    form, sel = self.is_end_station(station_url)
-                    if form:
-                        yield scrapy.Request(station_url,
-                                             method="GET",
-                                             callback=self.parse_line,
-                                             meta={'start_name': dg_name, 'sw_name': sw_name, 
-                                                   'start_code': k, 'end': end, 'sdate':sdate})
-                    else:
-                        station = sel.xpath('//a')
-                        for i in station:
-                            td = i.xpath('font/text()')
-                            href = i.xpath('@href')[0]
-                            station_name = td[0].replace('\r\n','').replace('\t','').replace(' ',  '')
-    #                         if station_name == end:
-    #                             continue
-                            station_url = "http://www.mp0769.com/cbprjdisp8.asp?"+href
-                            form, sel = self.is_end_station(station_url)
-                            if form:
-                                yield scrapy.Request(station_url,
-                                                     method="GET",
-                                                     callback=self.parse_line,
-                                                     meta={'start_name': dg_name, 'sw_name': sw_name, 
-                                                           'start_code': k, 'end': end,'sdate':sdate})
+            if dest_list:
+                for s in dest_list:
+                    end = s["name"]
+                    for j in range(1, 8):
+                        sdate = str(today+datetime.timedelta(days=j))
+        #                 dest_list = self.query_end_city(sw_name, sdate)
+    #                     end = y.split("|")[0]
+                        if self.has_done(dg_name, end, sdate):
+                            self.logger.info("ignore %s ==> %s %s" % (dg_name, end, sdate))
+                            continue
+                        params = {
+                         "action": "queryclick",
+                         "Depot": k,
+                         "date": sdate,
+                         "Times": '',
+                         "num": "1",
+                         "Verifycode": code,
+                         "tanchu": 1
+                         }
+                        init_url_param = "%s%s" % (init_url, urllib.urlencode(params))
+                        station_url = init_url_param + '&station=%s' % json.dumps(end).replace('\u','%u')[1:-1]
+                        form, sel = self.is_end_station(station_url)
+                        if form:
+                            yield scrapy.Request(station_url,
+                                                 method="GET",
+                                                 callback=self.parse_line,
+                                                 meta={'start_name': dg_name, 'sw_name': sw_name, 
+                                                       'start_code': k, 'end': end, 'sdate':sdate})
+                        else:
+                            station = sel.xpath('//a')
+                            for i in station:
+                                td = i.xpath('font/text()')
+                                href = i.xpath('@href')[0]
+                                station_name = td[0].replace('\r\n','').replace('\t','').replace(' ',  '')
+        #                         if station_name == end:
+        #                             continue
+                                station_url = "http://www.mp0769.com/cbprjdisp8.asp?"+href
+                                form, sel = self.is_end_station(station_url)
+                                if form:
+                                    yield scrapy.Request(station_url,
+                                                         method="GET",
+                                                         callback=self.parse_line,
+                                                         meta={'start_name': dg_name, 'sw_name': sw_name, 
+                                                               'start_code': k, 'end': end,'sdate':sdate})
 
     def is_end_station(self, station_url):
         req = self.urllib2.Request(station_url, headers=self.headers)

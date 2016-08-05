@@ -89,7 +89,6 @@ class DgkySpider(SpiderBase):
         req = self.urllib2.Request(url, headers=self.headers)
         result = self.urllib2.urlopen(req)
         code = ''
-        
         station_dict = {
             "1901": ("东莞总站","东莞总站"),
             "1902": ("市客运北站","汽车北站"),
@@ -122,11 +121,16 @@ class DgkySpider(SpiderBase):
 #             dest_list = [u'天河暨南大',u'中山城东站']
 #             dest_list = self.get_dest_list("广东", '东莞')
             today = datetime.date.today()
-            for j in range(1, 8):
-                sdate = str(today+datetime.timedelta(days=j))
-                dest_list = self.query_end_city(sw_name, sdate)
-                for y in dest_list:
-                    end = y.split("|")[0]
+            dest_list = self.get_dest_list("广东", '东莞', dg_name)
+            dest_list = []
+            for s in dest_list:
+                end = s["name"]
+                print 1111111, dg_name, len(dest_list)
+                dest_list = []
+                for j in range(1, 8):
+                    sdate = str(today+datetime.timedelta(days=j))
+    #                 dest_list = self.query_end_city(sw_name, sdate)
+#                     end = y.split("|")[0]
                     if self.has_done(dg_name, end, sdate):
                         self.logger.info("ignore %s ==> %s %s" % (dg_name, end, sdate))
                         continue
@@ -135,7 +139,7 @@ class DgkySpider(SpiderBase):
                      "Depot": k,
                      "date": sdate,
                      "Times": '',
-                     "num":"1",
+                     "num": "1",
                      "Verifycode": code,
                      "tanchu": 1
                      }

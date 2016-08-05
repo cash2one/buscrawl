@@ -43,7 +43,7 @@ class ChangtuSpider(SpiderBase):
             'BusCrawl.middleware.ChangtuProxyMiddleware': 410,
         },
         #"DOWNLOAD_DELAY": 0.2,
-        "RANDOMIZE_DOWNLOAD_DELAY": True,
+        #"RANDOMIZE_DOWNLOAD_DELAY": True,
     }
 
     def start_requests(self):

@@ -40,7 +40,6 @@ class JsdlkySpider(SpiderBase):
         "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
 
-
     def get_dest_list_from_web(self, province, city, station=""):
         r = requests.get("http://www.jslw.gov.cn/index.do", headers={"Content-Type": "Chrome"})
         lst = []
@@ -68,7 +67,7 @@ class JsdlkySpider(SpiderBase):
         # line_url = "http://58.213.132.27:8082/nj_weixinService/2.0/queryBus"
         line_url = "http://58.213.132.28/weixin/proxy/queryBus"
         today = datetime.date.today()
-        trans = {"南京汽车客运站(小红山站)": "南京客运南站"}
+        trans = {"南京汽车客运站(小红山站)": "南京汽车客运站"}
         for sta_info in START_STA_LIST:
             start = {
                 "city_name": "南京",

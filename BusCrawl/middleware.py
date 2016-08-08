@@ -81,6 +81,13 @@ class XyjtHeaderMiddleware(object):
             request.headers.setdefault("Content-Type", "application/x-www-form-urlencoded")
 
 
+class GlcxHeaderMiddleware(object):
+
+    def process_request(self, request, spider):
+        if request.method.lower() == "post":
+            request.headers.setdefault("Content-Type", "application/x-www-form-urlencoded")
+
+
 class ZjgsmHeaderMiddleware(object):
 
     def process_request(self, request, spider):

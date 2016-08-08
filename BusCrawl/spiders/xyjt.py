@@ -73,7 +73,7 @@ class Xyjt(SpiderBase):
             return
         for d in dest_list:
             for i in xrange(self.start_day(), 8):
-                dt = (today + datetime.timedelta(days=i)).today()
+                dt = (today + datetime.timedelta(days=i))
                 sdate = dt.strftime("%Y%m%d")
                 if self.has_done(start["sta_name"], d["name"], sdate):
                     continue

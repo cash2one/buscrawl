@@ -62,14 +62,16 @@ class Xyjt(SpiderBase):
             }
             yield scrapy.Request(url=line_url, callback=self.parse_viewstate, method='POST',body=urllib.urlencode(data), meta={"start": start})
 
-
     def parse_viewstate(self, response):
         soup = bs(response.body, "lxml")
         vs = soup.select_one("#__VIEWSTATE").get("value")
         start = response.meta['start']
         today = dte.today()
         line_url = "http://order.xuyunjt.com/wsdgbccx.aspx"
-        for d in self.get_dest_list("江苏", "徐州", station=start["sta_name"]):
+        dest_list = self.get_dest_list("江苏", "徐州", station=unicode(start["sta_name"]))
+        if not dest_list:
+            return
+        for d in dest_list:
             for i in xrange(self.start_day(), 8):
                 dt = (today + datetime.timedelta(days=i)).today()
                 sdate = dt.strftime("%Y%m%d")
@@ -101,6 +103,8 @@ class Xyjt(SpiderBase):
             td_lst = tr_o.select("td")
             index_tr = lambda idx: td_lst[idx].text.strip()
             drv_date, drv_time = index_tr(0), index_tr(5)
+            if u"流水" in drv_time:
+                continue
             attrs = dict(
                 s_province='江苏',
                 s_city_id=start["city_id"],

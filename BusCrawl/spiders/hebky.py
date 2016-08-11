@@ -64,7 +64,9 @@ class HebkySpider(SpiderBase):
                 query3 = lazy_pinyin(k['name'][0])[0]+lazy_pinyin(k['name'][1])[0]
                 query4 = k['code']
                 query5 = query1[:2]
-                quest_list = [query0, query1, query2, query3, query4, query5]
+                query6 = query0[:-2]
+                query7 = lazy_pinyin(k['name'][0])[0]+lazy_pinyin(k['name'][1])[0][:2]
+                quest_list = [query0, query1, query2, query3, query4, query5, query6,query7]
                 if len(query4) > 2:
                     quest_list.append(query4[:2])
                 for query in quest_list:

@@ -58,12 +58,13 @@ class HebkySpider(SpiderBase):
         if not dest_str:
             lst = []
             for k in dest_list:
+                query0 = ''.join(lazy_pinyin(k['name']))
                 query1 = lazy_pinyin(k['name'][0])[0]
                 query2 = lazy_pinyin(k['name'][0])[0]+lazy_pinyin(k['name'][1])[0][0]
                 query3 = lazy_pinyin(k['name'][0])[0]+lazy_pinyin(k['name'][1])[0]
                 query4 = k['code']
                 query5 = query1[:2]
-                quest_list = [query1, query2, query3, query4, query5]
+                quest_list = [query0, query1, query2, query3, query4, query5]
                 if len(query4) > 2:
                     quest_list.append(query4[:2])
                 for query in quest_list:
@@ -80,8 +81,8 @@ class HebkySpider(SpiderBase):
                         'http': 'http://192.168.1.51:8888',
                         'https': 'http://192.168.1.51:8888',
                         }
-                    res = requests.post(target_url, data=data, proxies=proxies)
-    #                     res = requests.post(target_url, data=data)
+#                     res = requests.post(target_url, data=data, proxies=proxies)
+                    res = requests.post(target_url, data=data)
                     try:
                         res_lists = res.json()
                     except Exception, e:

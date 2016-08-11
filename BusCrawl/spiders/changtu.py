@@ -27,6 +27,12 @@ START_LIST = [
     {"id": '536931', "name": '滨州', "pinyin": 'binzhoushi', "short_pinyin":'bz', "province": "山东"},
     {"id": '525881', "name": '德州', "pinyin": 'dezhoushi', "short_pinyin":'dz', "province": "山东"},
     {"id": '563649', "name": '聊城', "pinyin": 'liaochengshi', "short_pinyin":'lc', "province": "山东"},
+
+    # 湖南
+    {"id": '352228', "name": '张家界', "pinyin": 'zhangjiajieshi', "short_pinyin":'zjj', "province": "湖南"},
+    {"id": '375381', "name": '凤凰', "pinyin": 'fenghuangxian', "short_pinyin":'fh', "province": "湖南"},
+    {"id": '366953', "name": '怀化', "pinyin": 'huaihuashi', "short_pinyin":'hh', "province": "湖南"},
+    {"id": '361333', "name": '永州', "pinyin": 'yongzhoushi', "short_pinyin":'yz', "province": "湖南"},
 ]
 
 
@@ -40,10 +46,10 @@ class ChangtuSpider(SpiderBase):
         "DOWNLOADER_MIDDLEWARES": {
             'scrapy.contrib.downloadermiddleware.useragent.UserAgentMiddleware': None,
             'BusCrawl.middleware.BrowserRandomUserAgentMiddleware': 400,
-            'BusCrawl.middleware.ChangtuProxyMiddleware': 410,
+            #'BusCrawl.middleware.ChangtuProxyMiddleware': 410,
         },
-        #"DOWNLOAD_DELAY": 0.2,
-        #"RANDOMIZE_DOWNLOAD_DELAY": True,
+        "DOWNLOAD_DELAY": 0.5,
+        "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
 
     def start_requests(self):
@@ -55,8 +61,8 @@ class ChangtuSpider(SpiderBase):
                 c = chr(i)
                 url = dest_url % (d["id"], c)
                 yield scrapy.Request(url,
-                                     callback=self.parse_target_city,
-                                     meta={"start": d})
+                                    callback=self.parse_target_city,
+                                    meta={"start": d})
 
     def parse_target_city(self, response):
         c = response.body
@@ -68,6 +74,9 @@ class ChangtuSpider(SpiderBase):
 
         line_url = "http://www.changtu.com/chepiao/querySchList.htm"
         start = response.meta["start"]
+        days = 7
+        if start["name"] == "张家界":
+            days = 5
         for city in res:
             end = {
                 "id": city["endId"],
@@ -78,7 +87,7 @@ class ChangtuSpider(SpiderBase):
             }
 
             today = datetime.date.today()
-            for i in range(self.start_day(), 8):
+            for i in range(self.start_day(), days):
                 sdate = str(today+datetime.timedelta(days=i))
                 if self.has_done(start["name"], end["name"], sdate):
                     #self.logger.info("ignore %s ==> %s %s" % (start["name"], d["name"], sdate))
@@ -103,11 +112,11 @@ class ChangtuSpider(SpiderBase):
         end= response.meta["end"]
         sdate = response.meta["sdate"]
         self.mark_done(start["name"], end["name"], sdate)
-        self.logger.info("finish %s ==> %s" % (start["name"], end["name"]))
         try:
             res = json.loads(response.body)
         except Exception, e:
             raise e
+        self.logger.info("finish %s ==> %s" % (start["name"], end["name"]))
         # if res["bookFlag"] != "Y":
         #     #self.logger.error("parse_target_city: Unexpected return, %s" % res)
         #     return
@@ -126,7 +135,7 @@ class ChangtuSpider(SpiderBase):
                 d_city_name = end["name"],
                 d_city_id="%s|%s|%s" % (end["end_type"], end["pinyin"], end["id"]),
                 d_city_code=end["short_pinyin"],
-                d_sta_id=d["stopId"],
+                d_sta_id=d.get("stopId", ""),
                 d_sta_name=d["stopName"],
                 drv_date=d["drvDate"],
                 drv_time=d["drvTime"],

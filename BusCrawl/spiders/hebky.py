@@ -19,10 +19,11 @@ from pypinyin import pinyin, lazy_pinyin
 
 CITY_TO_STATION = {
        "唐山":[
-            u'唐山东站',
-            u'唐山西站', 
-            u'迁西站', u'迁安站', u'南堡站', u'滦县站', u'滦南站',
-            u'乐亭站', u'海港站', u'古冶站', u'丰南站', u'丰润站', u'曹妃甸站', u'玉田站', u'遵化站'
+#             u'唐山东站',
+#             u'唐山西站', 
+#             u'迁西站', u'迁安站', u'南堡站', u'滦县站', u'滦南站',
+#             u'乐亭站', u'海港站', u'古冶站', u'丰南站', u'丰润站', u'曹妃甸站', u'遵化站',
+             u'玉田站'
             ]
 }
 
@@ -52,7 +53,7 @@ class HebkySpider(SpiderBase):
                          "新疆维吾尔自治",'西藏自治','贵州',
                          '福建')
         rds = get_redis()
-        rds_key = "crawl:dest:hebky333:%s" % start_info['name']
+        rds_key = "crawl:dest:hebky332:%s" % start_info['name']
         dest_str = rds.get(rds_key)
         dest_list = self.get_dest_list("河北", '唐山', start_info['name'])
         if not dest_str:
@@ -64,12 +65,12 @@ class HebkySpider(SpiderBase):
                 query3 = lazy_pinyin(k['name'][0])[0]+lazy_pinyin(k['name'][1])[0]
                 query4 = k['code']
                 query5 = query1[:2]
-                query6 = query0[:-1]
                 query7 = lazy_pinyin(k['name'][0])[0]+lazy_pinyin(k['name'][1])[0][:-1]
-                quest_list = [query0, query1, query2, query3, query4, query5, query6,query7]
-                print quest_list
+                quest_list = [query0 ,query0[:-1], query0[:-2],query0[:-3], query1, query2, query3, query4, query5,query7]
                 if len(query4) > 2:
                     quest_list.append(query4[:2])
+                quest_list = list(set(quest_list))
+                lst = []
                 for query in quest_list:
                     target_url = 'http://60.2.147.28/com/yxd/pris/openapi/depotQueryByName.action'
                     data = {

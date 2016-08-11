@@ -52,7 +52,7 @@ class HebkySpider(SpiderBase):
                          "新疆维吾尔自治",'西藏自治','贵州',
                          '福建')
         rds = get_redis()
-        rds_key = "crawl:dest:hebky:%s" % start_info['name']
+        rds_key = "crawl:dest:hebky333:%s" % start_info['name']
         dest_str = rds.get(rds_key)
         dest_list = self.get_dest_list("河北", '唐山', start_info['name'])
         if not dest_str:
@@ -64,9 +64,10 @@ class HebkySpider(SpiderBase):
                 query3 = lazy_pinyin(k['name'][0])[0]+lazy_pinyin(k['name'][1])[0]
                 query4 = k['code']
                 query5 = query1[:2]
-                query6 = query0[:-2]
-                query7 = lazy_pinyin(k['name'][0])[0]+lazy_pinyin(k['name'][1])[0][:2]
+                query6 = query0[:-1]
+                query7 = lazy_pinyin(k['name'][0])[0]+lazy_pinyin(k['name'][1])[0][:-1]
                 quest_list = [query0, query1, query2, query3, query4, query5, query6,query7]
+                print quest_list
                 if len(query4) > 2:
                     quest_list.append(query4[:2])
                 for query in quest_list:
@@ -89,7 +90,8 @@ class HebkySpider(SpiderBase):
                         res_lists = res.json()
                     except Exception, e:
                         print e
-                    for m in res_lists['values']['resultList']:
+                    res_lists = res_lists['values']['resultList']
+                    for m in res_lists:
                         target_name = m['depotName'].strip()
                         if target_name.endswith('站') or '测试' in target_name or len(target_name) <2:
                             continue
@@ -102,6 +104,8 @@ class HebkySpider(SpiderBase):
                         m['depotName'] = target_name
                         if m not in lst:
                             lst.append(m)
+                    if res_lists:
+                        break
                 if not lst:
                     print 1111111111111111111,k['name']
             dest_str = json.dumps(lst)

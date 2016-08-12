@@ -19,11 +19,11 @@ from pypinyin import pinyin, lazy_pinyin
 
 CITY_TO_STATION = {
        "唐山":[
-#             u'唐山东站',
-#             u'唐山西站', 
-#             u'迁西站', u'迁安站', u'南堡站', u'滦县站', u'滦南站',
-#             u'乐亭站', u'海港站', u'古冶站', u'丰南站', u'丰润站', u'曹妃甸站', u'遵化站',
-             u'玉田站'
+            u'唐山东站',
+            u'唐山西站', 
+            u'迁西站', u'迁安站', u'南堡站', u'滦县站', u'滦南站',
+            u'乐亭站', u'海港站', u'古冶站', u'丰南站', u'丰润站', u'曹妃甸站', u'遵化站',
+            u'玉田站'
             ]
 }
 
@@ -53,25 +53,14 @@ class HebkySpider(SpiderBase):
                          "新疆维吾尔自治",'西藏自治','贵州',
                          '福建')
         rds = get_redis()
-        rds_key = "crawl:dest:hebky332:%s" % start_info['name']
+        rds_key = "crawl:dest:hebky:%s" % start_info['name']
         dest_str = rds.get(rds_key)
-        dest_list = self.get_dest_list("河北", '唐山', start_info['name'])
         if not dest_str:
             lst = []
-            for k in dest_list:
-                query0 = ''.join(lazy_pinyin(k['name']))
-                query1 = lazy_pinyin(k['name'][0])[0]
-                query2 = lazy_pinyin(k['name'][0])[0]+lazy_pinyin(k['name'][1])[0][0]
-                query3 = lazy_pinyin(k['name'][0])[0]+lazy_pinyin(k['name'][1])[0]
-                query4 = k['code']
-                query5 = query1[:2]
-                query7 = lazy_pinyin(k['name'][0])[0]+lazy_pinyin(k['name'][1])[0][:-1]
-                quest_list = [query0 ,query0[:-1], query0[:-2],query0[:-3], query1, query2, query3, query4, query5,query7]
-                if len(query4) > 2:
-                    quest_list.append(query4[:2])
-                quest_list = list(set(quest_list))
-                lst = []
-                for query in quest_list:
+            letter = 'abcdefghijklmnopqrstuvwxyz'
+            for i in letter:
+                for j in letter:
+                    query = i+j
                     target_url = 'http://60.2.147.28/com/yxd/pris/openapi/depotQueryByName.action'
                     data = {
                             "startCode": start_info['code'],
@@ -88,11 +77,12 @@ class HebkySpider(SpiderBase):
 #                     res = requests.post(target_url, data=data, proxies=proxies)
                     res = requests.post(target_url, data=data)
                     try:
-                        res_lists = res.json()
+                        res = res.json()
                     except Exception, e:
+                        continue
                         print e
-                    res_lists = res_lists['values']['resultList']
-                    for m in res_lists:
+                    res_list = res['values']['resultList']
+                    for m in res_list:
                         target_name = m['depotName'].strip()
                         if target_name.endswith('站') or '测试' in target_name or len(target_name) <2:
                             continue
@@ -105,10 +95,6 @@ class HebkySpider(SpiderBase):
                         m['depotName'] = target_name
                         if m not in lst:
                             lst.append(m)
-                    if res_lists:
-                        break
-                if not lst:
-                    print 1111111111111111111,k['name']
             dest_str = json.dumps(lst)
             rds.set(rds_key, dest_str)
         lst = json.loads(dest_str)

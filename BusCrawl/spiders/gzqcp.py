@@ -128,25 +128,14 @@ class GzqcpSpider(SpiderBase):
 #         for end in end_list:
 #             if end['depotName'] == '遵义':
 #                 print end
-        start_list_bak = []
         for start in start_list:
             if not self.is_need_crawl(city=start['name']):
                 continue
             preDate = self.query_start_predate(start)
             if not preDate:
                 continue
-            start_list_bak.append(start)
-#             end_list = [
-#                         {u'iststation': u'2', u'depotCode': u'1075@JYSYS', u'depotName': u'\u9075\u4e49'},
-# #                         {u'iststation': u'2', u'depotCode': u'520301ZYA@gydsys', u'depotName': u'\u9075\u4e49'}
-#                         ]
-#             end_list = []
-        for start in start_list_bak:
             end_list = self.get_dest_list(start)
             for end in end_list:
-#                 if end['iststation'] == "1":
-#                     if end["depotName"].endswith(('市',"县","州")):
-#                         print  end['depotCode'],end["depotName"]
                 if '@' in end["depotCode"]:
                     arriveIsArea = '2'
                 elif end['depotCode'] in ['520203LZA', '520382YAA']:
@@ -154,7 +143,7 @@ class GzqcpSpider(SpiderBase):
                 else:
                     arriveIsArea = '1'
                 today = datetime.date.today()
-                for i in range(1, 3):
+                for i in range(1, int(preDate)+1):
                     sdate = str(today+datetime.timedelta(days=i))
                     if self.has_done(start["name"], end["depotName"]+end['depotCode'], sdate):
                         self.logger.info("ignore %s ==> %s %s" % (start["name"], end["depotName"], sdate))

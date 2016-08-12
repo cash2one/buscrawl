@@ -21,9 +21,9 @@ CITY_TO_STATION = {
        "唐山":[
             u'唐山东站',
             u'唐山西站', 
-            u'迁西站', u'迁安站', u'南堡站', u'滦县站', u'滦南站',
-            u'乐亭站', u'海港站', u'古冶站', u'丰南站', u'丰润站', u'曹妃甸站', u'遵化站',
-            u'玉田站'
+#             u'迁西站', u'迁安站', u'南堡站', u'滦县站', u'滦南站',
+#             u'乐亭站', u'海港站', u'古冶站', u'丰南站', u'丰润站', u'曹妃甸站', u'遵化站',
+#             u'玉田站'
             ]
 }
 
@@ -58,9 +58,10 @@ class HebkySpider(SpiderBase):
         if not dest_str:
             lst = []
             letter = 'abcdefghijklmnopqrstuvwxyz'
+            letter = '1'
             for i in letter:
                 for j in letter:
-                    query = i+j
+                    query = self.get_dest_list('河北', '唐山', start_info['name'])
                     target_url = 'http://60.2.147.28/com/yxd/pris/openapi/depotQueryByName.action'
                     data = {
                             "startCode": start_info['code'],
@@ -74,7 +75,6 @@ class HebkySpider(SpiderBase):
                         'http': 'http://192.168.1.51:8888',
                         'https': 'http://192.168.1.51:8888',
                         }
-#                     res = requests.post(target_url, data=data, proxies=proxies)
                     res = requests.post(target_url, data=data)
                     try:
                         res = res.json()
@@ -82,6 +82,8 @@ class HebkySpider(SpiderBase):
                         continue
                         print e
                     res_list = res['values']['resultList']
+                    if not res_list:
+                        print 111111111111,start_info['name'],query
                     for m in res_list:
                         target_name = m['depotName'].strip()
                         if target_name.endswith('站') or '测试' in target_name or len(target_name) <2:
@@ -146,8 +148,8 @@ class HebkySpider(SpiderBase):
 #                 dest_list = self.get_dest_list("河北", city_name, start[1])
                 end_list = self.get_init_dest_list(start)
                 print start['name'], len(end_list)
-#                 for end in end_list:
-#                     print start['name'],end['depotCode'],end["depotName"],end['iststation']
+                for end in end_list:
+                    print start['name'],end['depotCode'],end["depotName"],end['iststation']
                 end_list =[]
                 for end in end_list:
                     if '@' in end["depotCode"]:

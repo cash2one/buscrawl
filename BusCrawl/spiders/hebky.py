@@ -60,8 +60,9 @@ class HebkySpider(SpiderBase):
             letter = 'abcdefghijklmnopqrstuvwxyz'
             letter = '1'
             for i in letter:
-                for j in letter:
-                    query = self.get_dest_list('河北', '唐山', start_info['name'])
+                dest_list = self.get_dest_list('河北', '唐山', start_info['name'])
+                for j in dest_list:
+                    query = j['name']
                     target_url = 'http://60.2.147.28/com/yxd/pris/openapi/depotQueryByName.action'
                     data = {
                             "startCode": start_info['code'],

@@ -58,11 +58,9 @@ class HebkySpider(SpiderBase):
         if not dest_str:
             lst = []
             letter = 'abcdefghijklmnopqrstuvwxyz'
-            letter = '1'
             for i in letter:
-                dest_list = self.get_dest_list('河北', '唐山', start_info['name'])
-                for j in dest_list:
-                    query = j['name']
+                for j in letter:
+                    query = i+j
                     target_url = 'http://60.2.147.28/com/yxd/pris/openapi/depotQueryByName.action'
                     data = {
                             "startCode": start_info['code'],
@@ -83,8 +81,6 @@ class HebkySpider(SpiderBase):
                         continue
                         print e
                     res_list = res['values']['resultList']
-                    if not res_list:
-                        print 111111111111,start_info['name'],query
                     for m in res_list:
                         target_name = m['depotName'].strip()
                         if target_name.endswith('站') or '测试' in target_name or len(target_name) <2:

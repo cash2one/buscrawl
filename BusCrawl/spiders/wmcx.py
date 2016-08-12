@@ -87,11 +87,11 @@ class BabaSpider(SpiderBase):
 
     def parse_start_city(self, response):
         res = json.loads(response.body)
+        return
         if res["returnNo"] != "0000":
             self.logger.error("parse_start_city: Unexpected return, %s", res)
             return
         line_url = "http://s4mdata.wanmeibus.com:80/app/v4/ticket/busList.htm"
-        print res["content"]["cityList"]
         for info in res["content"]["cityList"]:
             name = info["cityName"]
             if name not in CITY_TO_PROVINCE:

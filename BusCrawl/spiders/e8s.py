@@ -71,7 +71,7 @@ class E8sSpider(SpiderBase):
             if not self.is_end_city(start, d):
                 continue
             today = datetime.date.today()
-            for i in range(1, 10):
+            for i in range(1, 1):
                 sdate = str(today+datetime.timedelta(days=i))
                 if self.has_done(start["city_name"], d["stopName"], sdate):
                     self.logger.info("ignore %s ==> %s %s" % (start["city_name"], d["stopName"], sdate))

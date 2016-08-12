@@ -20,7 +20,7 @@ from pypinyin import pinyin, lazy_pinyin
 CITY_TO_STATION = {
        "唐山":[
             u'唐山东站',
-            u'唐山西站', 
+#             u'唐山西站', 
 #             u'迁西站', u'迁安站', u'南堡站', u'滦县站', u'滦南站',
 #             u'乐亭站', u'海港站', u'古冶站', u'丰南站', u'丰润站', u'曹妃甸站', u'遵化站',
 #             u'玉田站'
@@ -41,11 +41,11 @@ class HebkySpider(SpiderBase):
             'BusCrawl.middleware.ProxyMiddleware': 410,
             'BusCrawl.middleware.HebkyHeaderMiddleware': 410,
         },
-#        "DOWNLOAD_DELAY": 0.1,
-       "RANDOMIZE_DOWNLOAD_DELAY": True,
+        "DOWNLOAD_DELAY": 0.1,
+#        "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
 
-    def get_init_dest_list(self, start_info):
+    def get_init_dest_list_bak(self, start_info):
         province_list = ('吉林','辽宁', '河北','黑龙江','广东',"云南",'山西',
                          '山东','广西壮族自治','江西','河南','浙江','安徽',
                          '湖北','湖南',"贵州",'陕西','江苏','内蒙古自治',
@@ -98,6 +98,59 @@ class HebkySpider(SpiderBase):
             rds.set(rds_key, dest_str)
         lst = json.loads(dest_str)
         return lst
+    
+    def get_init_dest_list(self, start_info):
+        province_list = ('吉林','辽宁', '河北','黑龙江','广东',"云南",'山西',
+                         '山东','广西壮族自治','江西','河南','浙江','安徽',
+                         '湖北','湖南',"贵州",'陕西','江苏','内蒙古自治',
+                         "四川",'海南','山东','甘肃','青海','宁夏回族自治',
+                         "新疆维吾尔自治",'西藏自治','贵州')
+        rds = get_redis()
+        rds_key = "crawl:dest:hebky"
+        dest_str = rds.get(rds_key)
+        if not dest_str:
+            target_url = "http://60.2.147.28//com/yxd/pris/wsgp/queryCity.action"
+            data = {
+                "flag": "false",
+                "isArrive": "true",
+                "isStart": "false",
+                "isindexCity": "false",
+                "iststation": "0",
+                "startCode": start_info['code'],
+                "tabLevel": '0',
+                "zjm": '',
+                }
+            r = requests.post(target_url,
+                              data=urllib.urlencode(data),
+                              headers={"User-Agent": "Chrome", "Content-Type": "application/x-www-form-urlencoded"})
+            res = r.json()
+            lst = []
+            if res['values']['ca']:
+                for i in res['values']['ca'][0]:
+                    tmp = {}
+                    tmp['depotCode'] = i[0]
+                    tmp['iststation'] = i[4]
+                    if i[4] in ['0']:
+                        continue
+                    else:
+                        tmp['depotName'] = i[1].strip(' ')
+                    target_name = tmp['depotName']
+#                     if target_name.endswith('站'):
+#                         continue
+#                     if '直辖' not in target_name:
+#                         if not target_name or len(target_name) > 4:
+#                             if target_name.startswith(province_list):
+#                                 target_name1 = target_name
+#                                 for j in province_list:
+#                                     if target_name.startswith(j):
+#                                         target_name = target_name.replace(j, '')
+#                                         break
+                    tmp['depotName'] = target_name
+                    lst.append(tmp)
+            dest_str = json.dumps(lst)
+            rds.set(rds_key, dest_str)
+        lst = json.loads(dest_str)
+        return lst
 
     def query_start_predate(self, code):
         url = 'http://60.2.147.28/com/yxd/pris/openapi/queryPreDate.action'
@@ -138,23 +191,20 @@ class HebkySpider(SpiderBase):
             print city_name
             if not self.is_need_crawl(city=city_name):
                 continue
+            end_list = self.get_init_dest_list({'code':'ZD1302070179'})
+            print len(end_list)
             for start in all_start_list:
                 if start['name'] not in station_list:
                     continue
 #                 dest_list = []
 #                 dest_list = self.get_dest_list("河北", city_name, start[1])
-                end_list = self.get_init_dest_list(start)
-                print start['name'], len(end_list)
-                for end in end_list:
-                    print start['name'],end['depotCode'],end["depotName"],end['iststation']
-                end_list =[]
                 for end in end_list:
                     if '@' in end["depotCode"]:
                         arriveIsArea = '2'
                     else:
                         arriveIsArea = '0'
                     today = datetime.date.today()
-                    for i in range(1, 3):
+                    for i in range(1, 2):
                         sdate = str(today+datetime.timedelta(days=i))
                         if self.has_done(start["name"], end["depotName"]+end['depotCode'], sdate):
                             self.logger.info("ignore %s ==> %s %s" % (start["name"], end["depotName"], sdate))
@@ -165,7 +215,6 @@ class HebkySpider(SpiderBase):
                             "beginTime": sdate,
                             "startDepotCode": start['code'],
                             "startIsArea": "0",
-                            "test": end["depotName"]
                         }
                         yield scrapy.FormRequest(line_url,
                                                  method="POST",
@@ -182,7 +231,7 @@ class HebkySpider(SpiderBase):
         sdate = response.meta["date"]
         arriveIsArea = response.meta["arriveIsArea"]
         self.logger.info("finish %s ==> %s" % (start["name"], end["depotName"]))
-        self.mark_done(start["name"], end["depotName"], sdate)
+        self.mark_done(start["name"], end["depotName"]+end['depotCode'], sdate)
         try:
             res = json.loads(response.body)
         except Exception, e:

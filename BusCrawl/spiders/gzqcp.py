@@ -143,7 +143,7 @@ class GzqcpSpider(SpiderBase):
                 else:
                     arriveIsArea = '1'
                 today = datetime.date.today()
-                for i in range(1, int(preDate)+1):
+                for i in range(0, int(preDate)+1):
                     sdate = str(today+datetime.timedelta(days=i))
                     if self.has_done(start["name"], end["depotName"]+end['depotCode'], sdate):
                         self.logger.info("ignore %s ==> %s %s" % (start["name"], end["depotName"], sdate))
@@ -183,13 +183,13 @@ class GzqcpSpider(SpiderBase):
                 attrs = dict(
                     s_province = '贵州',
                     s_city_name = start["name"],
-                    s_city_id = '',
+                    s_city_id = start['code'],
                     s_city_code= get_pinyin_first_litter(start["name"]),
                     s_sta_name = d["startDepotName"],
                     s_sta_id = d["startDepotCode"],
                     d_city_name = end["depotName"],
                     d_city_code=get_pinyin_first_litter(end["depotName"]),
-                    d_city_id = '',
+                    d_city_id = end['depotCode'],
                     d_sta_name = d["arrivalDepotName"],
                     d_sta_id = d["arrivalDepotCode"],
                     drv_date = d["departDate"],

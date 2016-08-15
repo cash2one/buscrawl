@@ -33,6 +33,11 @@ START_LIST = [
     {"id": '375381', "name": '凤凰', "pinyin": 'fenghuangxian', "short_pinyin":'fh', "province": "湖南"},
     {"id": '366953', "name": '怀化', "pinyin": 'huaihuashi', "short_pinyin":'hh', "province": "湖南"},
     {"id": '361333', "name": '永州', "pinyin": 'yongzhoushi', "short_pinyin":'yz', "province": "湖南"},
+
+    # 广东
+    {"id": '102755', "name": '湛江', "pinyin": 'zhanjiangshi', "short_pinyin":'zj', "province": "广东"},
+    {"id": '104725', "name": '茂名', "pinyin": 'maomingshi', "short_pinyin":'mm', "province": "广东"},
+    {"id": '99049', "name": '珠海', "pinyin": 'zhuhaishi', "short_pinyin":'zh', "province": "广东"},
 ]
 
 

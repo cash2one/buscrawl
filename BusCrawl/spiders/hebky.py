@@ -188,23 +188,25 @@ class HebkySpider(SpiderBase):
             for j in i['list']:
                 all_start_list.append(j)
         for city_name, station_list in CITY_TO_STATION.iteritems():
-            print city_name
             if not self.is_need_crawl(city=city_name):
                 continue
-            end_list = self.get_init_dest_list({'code':'ZD1302070179'})
-            print len(end_list)
+#             end_list = self.get_init_dest_list({'code':'ZD1302070179'})
+#             print len(end_list)
             for start in all_start_list:
                 if start['name'] not in station_list:
                     continue
-#                 dest_list = []
-#                 dest_list = self.get_dest_list("河北", city_name, start[1])
-                for end in end_list:
+                dest_list = []
+                dest_list = self.get_dest_list("河北", city_name, start['name'])
+                for end in dest_list:
+                    end.update({'depotName': end['name'],
+                                "depotCode": end['dest_id']
+                                })
                     if '@' in end["depotCode"]:
                         arriveIsArea = '2'
                     else:
                         arriveIsArea = '0'
                     today = datetime.date.today()
-                    for i in range(1, 2):
+                    for i in range(1, 7):
                         sdate = str(today+datetime.timedelta(days=i))
                         if self.has_done(start["name"], end["depotName"]+end['depotCode'], sdate):
                             self.logger.info("ignore %s ==> %s %s" % (start["name"], end["depotName"], sdate))
@@ -236,9 +238,6 @@ class HebkySpider(SpiderBase):
             res = json.loads(response.body)
         except Exception, e:
             raise e
-        if  res["values"]["resultList"]:
-            print res["values"]["resultList"]
-            print start["name"] ,end["depotName"]
         if res["akfAjaxResult"] != "0":
             #self.logger.error("parse_line: Unexpected return, %s, %s->%s, %s", sdate, start["city_name"], end["city_name"], res["header"])
             return
@@ -249,13 +248,13 @@ class HebkySpider(SpiderBase):
                 attrs = dict(
                     s_province = '河北',
                     s_city_name = city_name,
-                    s_city_id = '',
+                    s_city_id = start['code'],
                     s_city_code= get_pinyin_first_litter(unicode(city_name)),
                     s_sta_name = d["startDepotName"],
                     s_sta_id = d["startDepotCode"],
                     d_city_name = end["depotName"],
                     d_city_code=get_pinyin_first_litter(end["depotName"]),
-                    d_city_id = '',
+                    d_city_id = end['depotCode'],
                     d_sta_name = d["arrivalDepotName"],
                     d_sta_id = d["arrivalDepotCode"],
                     drv_date = d["departDate"],

@@ -139,7 +139,7 @@ class Qdky(SpiderBase):
                 name, dest_id = d["value"], d["zdbm"]
                 end = {"city_name": name, 'city_id': dest_id}
                 today = datetime.date.today()
-                for j in range(1, 2):
+                for j in range(1, 3):
                     sdate = str(today+datetime.timedelta(days=j))
                     if self.has_done(station_name, end['city_name'], sdate):
                         self.logger.info("ignore %s ==> %s %s" % (station_name, end['city_name'],sdate))
@@ -198,7 +198,7 @@ class Qdky(SpiderBase):
         s_station_name = response.meta['s_station_name']
         end = response.meta['end']
         sdate = response.meta['date']
-#         self.mark_done(station_name, end, sdate)
+        self.mark_done(station_name, end['city_name'], sdate)
         soup = bs(response.body, 'lxml')
         scl_list = soup.find('table', attrs={'id': 'ContentPlaceHolder1_GridViewbc'})
         if not scl_list:

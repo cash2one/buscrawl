@@ -8,7 +8,7 @@ class ProxyMiddleware(object):
     "代理ip切换"
 
     def process_request(self, request, spider):
-#         request.meta['proxy'] = "http://192.168.1.51:8888"
+#         request.meta['proxy'] = "http://192.168.1.47:8888"
         pass
 
 
@@ -58,6 +58,16 @@ class Sd365ProxyMiddleware(object):
     def process_request(self, request, spider):
         rds = get_redis()
         ipstr = rds.srandmember("proxy:sd365")
+        if ipstr:
+            request.meta['proxy'] = "http://%s" % ipstr
+
+
+class QdkyProxyMiddleware(object):
+    "代理ip切换"
+
+    def process_request(self, request, spider):
+        rds = get_redis()
+        ipstr = rds.srandmember("proxy:qdky")
         if ipstr:
             request.meta['proxy'] = "http://%s" % ipstr
 
@@ -216,6 +226,13 @@ class FjkyHeaderMiddleware(object):
 
     def process_request(self, request, spider):
         request.headers.setdefault("Content-Type", "application/x-www-form-urlencoded")
+
+
+class QdkyHeaderMiddleware(object):
+
+    def process_request(self, request, spider):
+        request.headers.setdefault("Content-Type", "application/x-www-form-urlencoded")
+        request.headers.setdefault("Upgrade-Insecure-Requests", "1")
 
 
 class MobileRandomUserAgentMiddleware(UserAgentMiddleware):

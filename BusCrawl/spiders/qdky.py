@@ -30,11 +30,12 @@ class Qdky(SpiderBase):
             'BusCrawl.middleware.QdkyProxyMiddleware': 410,
             'BusCrawl.middleware.QdkyHeaderMiddleware': 400,
         },
-        # "DOWNLOAD_DELAY": 0.75,
-        "RANDOMIZE_DOWNLOAD_DELAY": True,
+        "DOWNLOAD_DELAY": 0.75,
+#         "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
 
     def get_init_dest_list(self):
+#         return [{"zdbm":'000382',"value":'QJ七级'}]
         lst = [{"zdbm":'000025',"value":'HY海阳'},{"zdbm":'000028',"value":'LGZ留格庄'},{"zdbm":'000032',"value":'RS乳山'},{"zdbm":'000043',"value":'WD文登'},{"zdbm":'000051',"value":'RC荣城'},{"zdbm":'000057',"value":'LD俚岛'},
             {"zdbm":'000109',"value":'LY莱阳'},{"zdbm":'000116',"value":'QX栖霞'},{"zdbm":'000130',"value":'PL蓬莱'},{"zdbm":'000143',"value":'ZY招远'},{"zdbm":'000154',"value":'HC黄城'},{"zdbm":'000185',"value":'TY桃园'},
             {"zdbm":'000190',"value":'YT烟台'},{"zdbm":'000213',"value":'BS北墅'},{"zdbm":'000261',"value":'TC桃村'},{"zdbm":'000271',"value":'XJD徐家店'},{"zdbm":'000281',"value":'GC郭城'},{"zdbm":'000296',"value":'MP牟平'},
@@ -106,7 +107,6 @@ class Qdky(SpiderBase):
 
     def parse_start_city(self, response):
         soup = BeautifulSoup(response.body, "lxml")
-        print response.body
         params = {
             "__EVENTARGUMENT": soup.select("#__EVENTARGUMENT")[0].get("value"),
             "__EVENTTARGET": soup.select("#__EVENTTARGET")[0].get("value"),
@@ -131,66 +131,44 @@ class Qdky(SpiderBase):
             '9.平度汽车站': ("平度","平度汽车站"), # 平度
         }
         today = datetime.date.today()
-        dest_list = self.get_init_dest_list()
+#         dest_list = self.get_init_dest_list()
         for s_station_name, (city_name, station_name) in STATION_INFO.items():
             if not self.is_need_crawl(city=station_name):
                 continue
-            for d in dest_list:
-                name, dest_id = d["value"], d["zdbm"]
-                end = {"city_name": name, 'city_id': dest_id}
-                today = datetime.date.today()
-                for j in range(1, 3):
-                    sdate = str(today+datetime.timedelta(days=j))
-                    if self.has_done(station_name, end['city_name'], sdate):
-                        self.logger.info("ignore %s ==> %s %s" % (station_name, end['city_name'],sdate))
-                        continue
-                    data = {}
-                    data.update(params)
-                    data.update({
-                        'ctl00$ContentPlaceHolder1$DropDownList3': unicode(s_station_name),
-                        'ctl00$ContentPlaceHolder1$chengchezhan_id': '',
-                        'destination-id': unicode(end['city_id']),
-                        'ctl00$ContentPlaceHolder1$mudizhan_id': '',
-                        'tripDate': unicode(sdate.replace('-', '/')),
-                        'ctl00$ContentPlaceHolder1$chengcheriqi_id': '',
-                        'ctl00$ContentPlaceHolder1$chengcheriqi_id0': '',
-                        'ctl00$ContentPlaceHolder1$Button_1_cx': u'车次查询',
-                    })
-                    yield scrapy.FormRequest(url,
-                                             method="POST",
-                                             formdata=data,
-                                             callback=self.parse_line,
-                                             meta={"city_name": city_name,
-                                                   "station_name": station_name,
-                                                   "s_station_name": s_station_name,
-                                                   "end": end, "date": sdate
-                                                   }
-                                            )
-
-
-#     # 初始化到达城市
-#     def parse_dcity(self, response):
-#         s_city_name = response.meta['s_city_name'].decode('utf-8')
-#         soup = response.body.split('[')[-1].split(']')[0]
-#         info = soup.split('}')
-#         data = {'s_city_name': s_city_name}
-#         for x in info:
-#             try:
-#                 for y in self.sta_info.values():
-#                     tmp = x.split("'")
-#                     end = tmp[-2].decode('utf-8')
-#                     p = re.compile(r'\w*', re.L)
-#                     end = p.sub('', end)
-#                     data['end'] = end
-#                     data['end_id'] = tmp[1]
-#                     data['start'] = y
-#                     print data['end'], data['end_id']
-#                     if len(tmp) != 5:
-#                         continue
-#                     if city.find({'end': data['end'], 'start': data['start']}).count() <= 0:
-#                         city.save(dict(data))
-#             except:
-#                 pass
+            dest_list = self.get_dest_list('山东', city_name, station_name)
+            if dest_list:
+                for d in dest_list:
+    #                 name, dest_id = d["value"], d["zdbm"]
+                    name, dest_id = d["name"], d["dest_id"]
+                    end = {"city_name": name, 'city_id': dest_id}
+                    today = datetime.date.today()
+                    for j in range(1, 5):
+                        sdate = str(today+datetime.timedelta(days=j))
+                        if self.has_done(station_name, end['city_name'], sdate):
+                            self.logger.info("ignore %s ==> %s %s" % (station_name, end['city_name'],sdate))
+                            continue
+                        data = {}
+                        data.update(params)
+                        data.update({
+                            'ctl00$ContentPlaceHolder1$DropDownList3': unicode(s_station_name),
+                            'ctl00$ContentPlaceHolder1$chengchezhan_id': '',
+                            'destination-id': unicode(end['city_id']),
+                            'ctl00$ContentPlaceHolder1$mudizhan_id': '',
+                            'tripDate': unicode(sdate.replace('-', '/')),
+                            'ctl00$ContentPlaceHolder1$chengcheriqi_id': '',
+                            'ctl00$ContentPlaceHolder1$chengcheriqi_id0': '',
+                            'ctl00$ContentPlaceHolder1$Button_1_cx': u'车次查询',
+                        })
+                        yield scrapy.FormRequest(url,
+                                                 method="POST",
+                                                 formdata=data,
+                                                 callback=self.parse_line,
+                                                 meta={"city_name": city_name,
+                                                       "station_name": station_name,
+                                                       "s_station_name": s_station_name,
+                                                       "end": end, "date": sdate
+                                                       }
+                                                 )
 
     def parse_line(self, response):
         city_name = response.meta['city_name']

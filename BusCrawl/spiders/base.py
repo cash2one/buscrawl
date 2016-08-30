@@ -55,18 +55,18 @@ class SpiderBase(scrapy.Spider):
             return 1        # 从第二天开始爬
         return 0            # 爬当天的
 
-    def get_dest_list(self, province, city, station=""):
+    def get_dest_list(self, province, city, station="", **kwargs):
         """
         获取目的地, 先从数据库获取,为空则去网络找
         """
         self.logger.info("从db获取%s %s %s目的地", province, city, station)
-        lst = self.get_dest_list_from_db(province, city, station=station)
+        lst = self.get_dest_list_from_db(province, city, station=station, **kwargs)
         if not lst:
             self.logger.info("从web获取%s %s %s目的地", province, city, station)
-            lst = self.get_dest_list_from_web(province, city)
+            lst = self.get_dest_list_from_web(province, city, **kwargs)
         return lst
 
-    def get_dest_list_from_db(self, province, city, station=""):
+    def get_dest_list_from_db(self, province, city, station="", **kwargs):
         """
         从数据库获取目的地
         """
@@ -96,7 +96,7 @@ class SpiderBase(scrapy.Spider):
         client.close()
         return lst
 
-    def get_dest_list_from_web(self, province, city):
+    def get_dest_list_from_web(self, province, city, **kwargs):
         """
         由子类实现
         """

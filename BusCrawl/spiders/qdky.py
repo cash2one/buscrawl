@@ -151,12 +151,12 @@ class Qdky(SpiderBase):
                         data.update(params)
                         data.update({
                             'ctl00$ContentPlaceHolder1$DropDownList3': unicode(s_station_name),
-                            'ctl00$ContentPlaceHolder1$chengchezhan_id': '',
+                            'ctl00$ContentPlaceHolder1$chengchezhan_id': s_station_name[0],
                             'destination-id': unicode(end['city_id']),
-                            'ctl00$ContentPlaceHolder1$mudizhan_id': '',
+                            'ctl00$ContentPlaceHolder1$mudizhan_id': unicode(end['city_id']),
                             'tripDate': unicode(sdate.replace('-', '/')),
-                            'ctl00$ContentPlaceHolder1$chengcheriqi_id': '',
-                            'ctl00$ContentPlaceHolder1$chengcheriqi_id0': '',
+                            'ctl00$ContentPlaceHolder1$chengcheriqi_id': unicode(sdate.replace('-', '')),
+                            'ctl00$ContentPlaceHolder1$chengcheriqi_id0': unicode(sdate.replace('-', '/')),
                             'ctl00$ContentPlaceHolder1$Button_1_cx': u'车次查询',
                         })
                         yield scrapy.FormRequest(url,

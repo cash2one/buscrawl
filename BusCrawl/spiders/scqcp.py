@@ -170,7 +170,7 @@ class ScqcpSpider(SpiderBase):
                 half_price=float(d["halfPrice"]),
                 fee = float(d["servicePrice"]),
                 crawl_datetime = dte.now(),
-                extra_info = {"sign_id": d["signId"]},
+                extra_info = {"sign_id": d["signId"],'end':end},
                 left_tickets = int(d["amount"]),
                 crawl_source = "scqcp",
                 shift_id="",

@@ -123,21 +123,16 @@ class FjkySpider(SpiderBase):
         for i in res['values']['list']:
             for j in i['list']:
                 start_list.append(j)
-#         end_list = self.get_init_dest_list(start_list[0])
-#         end_list=[]
-#         start_list=[]
+        end_list = self.get_init_dest_list(start_list[0])
         line_url = 'http://www.968980.cn/com/yxd/pris/openapi/queryAllTicket.action'
         for start in start_list:
             if not self.is_need_crawl(city=start['name']):
                 continue
-#                 preDate = self.query_start_predate(start[0])
-# #                 preDate = 0
-#                 if preDate:
-            end_list = self.get_dest_list('福建', start['name'])
+#             end_list = self.get_dest_list('福建', start['name'])
             for end in end_list:
-                end['code'] = end['dest_id']
+#                 end['code'] = end['dest_id']
                 today = datetime.date.today()
-                for j in range(1, 7):
+                for j in range(0, 3):
                     sdate = str(today+datetime.timedelta(days=j))
                     if self.has_done(start['name'], end["name"], sdate):
                         self.logger.info("ignore %s ==> %s %s" % (start['name'],end["name"], sdate))

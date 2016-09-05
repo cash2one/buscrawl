@@ -28,6 +28,7 @@ HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36"
 }
 
+
 class AnxingBusSpider(SpiderBase):
     name = "anxingbus"
     custom_settings = {
@@ -40,14 +41,16 @@ class AnxingBusSpider(SpiderBase):
             'BusCrawl.middleware.BrowserRandomUserAgentMiddleware': 400,
             'BusCrawl.middleware.ProxyMiddleware': 410,
         },
-        "DOWNLOAD_DELAY": 0.5,
+        # "DOWNLOAD_DELAY": 0.5,
         "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
+
     def start_requests(self):
         url = "http://www.anxingbus.com/sell/GetCity"
         yield scrapy.Request(url, callback=self.parse_starting, headers=HEADERS)
 
     def get_dest_list_from_web(self, province, city, unitid=""):
+    # def get_dest_list(self, province, city, unitid=""):
         data = {"unitid": unitid, "cityName": city}
         url = "http://www.anxingbus.com/sell/GetEndStations?"+urllib.urlencode(data)
         r = requests.get(url, headers=HEADERS)
@@ -63,7 +66,6 @@ class AnxingBusSpider(SpiderBase):
 
     def parse_starting(self, response):
         ret = json.loads(response.body)
-        url = "http://api.lvtu100.com/products/getgoods"
         url = "http://www.anxingbus.com/sell/GetBus"
 
         today = datetime.date.today()
@@ -73,8 +75,7 @@ class AnxingBusSpider(SpiderBase):
                 if city_id != lst[0]:
                     raise Exception()
                 city_name = unicode(lst[1])
-                if not city_name in C2P:
-                    #print city_name, "没在列表上"
+                if city_name not in C2P:
                     continue
                 start = {"city_id": city_id, "city_name": city_name, "city_code": lst[3], "unitid": lst[9], "province": C2P[city_name]}
                 if not self.is_need_crawl(city=start["city_name"], province=C2P[city_name]):
@@ -90,8 +91,8 @@ class AnxingBusSpider(SpiderBase):
                             "cityID": start["city_id"],
                             "sellPlateStationID": "",
                             "sellStationID": "",
-                            "endCityID": "",
-                            "endStationID": end["dest_id"],
+                            "endCityID": end["dest_id"],
+                            "endStationID": "",
                             "busStartTime": sdate,
                             "busEndTime": "%s 23:59:59" % sdate,
                             "curPage": 1,
@@ -103,13 +104,13 @@ class AnxingBusSpider(SpiderBase):
         start = response.meta["start"]
         end= response.meta["end"]
         sdate = response.meta["sdate"]
-        self.mark_done(start["city_name"], end["name"], sdate)
-        self.logger.info("start %s ==> %s" % (start["city_name"], end["name"]))
         try:
             res = json.loads(response.body)
         except Exception, e:
             print response.body
             raise e
+        self.mark_done(start["city_name"], end["name"], sdate)
+        self.logger.info("finish %s ==> %s %s" % (start["city_name"], end["name"], sdate))
 
         for d in res["data"]:
             drv_datetime=dte.strptime(d["BusTime"], "%Y-%m-%d %H:%M")

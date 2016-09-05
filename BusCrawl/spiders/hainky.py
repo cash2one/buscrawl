@@ -35,66 +35,88 @@ class HainkySpider(SpiderBase):
     }
 
     def start_requests(self):
-        url = 'http://www.0898hq.com:8088/HaiQiServer/purposeAction!getPurposes.action'
+#         url = 'http://www.0898hq.com:8088/HaiQiServer/purposeAction!getPurposes.action'
         station_dict ={
-            "50":("海口汽车南站","海口"),
-            "3":("海口汽车东站","海口"),
-            "4":("海口西站(省际总站)","海口"),
-            "1":("港口客运站(秀英港)","海口"),
-            "5":("儋州(那大)车站","儋州"),
-            "6":("三亚车站","三亚"),
-            "23":("三亚西站","三亚"),
-            "7":("文昌车站",'文昌'),
-            "8":("五指山车站",'五指山'),
-            "9":("东方(八所)车站",'东方'),
-            "10":("定安车站",'定安'),
-            "11":("万宁车站",'万宁'),
-            "12":("琼海(加积)车站",'琼海'),
-            "13":("陵水车站",'陵水'),
-            "14":("屯昌车站",'屯昌'),
-            "15":("临高车站",'临高'),
-            "16":("昌江车站",'昌江'),
-            "17":("白沙车站",'白沙'),
-            "18":("乐东车站",'乐东'),
-            "19":("保亭车站",'保亭'),
-            "20":("澄迈车站",'澄迈'),
-            "21":("琼中车站",'琼中'),
-            "22":("黄流车站",'乐东')
+            "50":("海口汽车南站","海口",3),
+            "3":("海口汽车东站","海口",3),
+            "4":("海口西站(省际总站)","海口",7),
+            "1":("港口客运站(秀英港)","海口",7),
+            "5":("儋州(那大)车站","儋州",7),
+            "6":("三亚车站","三亚",7),
+            "23":("三亚西站","三亚",7),
+            "7":("文昌车站",'文昌',3),
+            "8":("五指山车站",'五指山',3),
+            "9":("东方(八所)车站",'东方',3),
+            "10":("定安车站",'定安',2),
+            "11":("万宁车站",'万宁',5),
+            "12":("琼海(加积)车站",'琼海',3),
+            "13":("陵水车站",'陵水',3),
+            "14":("屯昌车站",'屯昌',3),
+            "15":("临高车站",'临高',3),
+            "16":("昌江车站",'昌江',3),
+            "17":("白沙车站",'白沙',3),
+            "18":("乐东车站",'乐东',7),
+            "19":("保亭车站",'保亭',3),
+            "20":("澄迈车站",'澄迈',3),
+            "21":("琼中车站",'琼中',3),
+            "22":("黄流车站",'乐东',3),
             }
-        for czbh, (station_name, city_name) in station_dict.items():
-            data = {"czbh": czbh}
+        for czbh, (station_name, city_name, prv_date) in station_dict.items():
+#             data = {"czbh": czbh}
             start = {"czbh": czbh, 
                      "station_name": station_name,
                      "city_name": city_name}
-            yield scrapy.FormRequest(url,
-                                     method="POST",
-                                     formdata=data,
-                                     callback=self.parse_target_city,
-                                     meta={"start": start})
-
-    def parse_target_city(self, response):
-        "解析目的地城市"
-        res = json.loads(response.body)
-        start = response.meta["start"]
-        url = "http://www.0898hq.com:8088/HaiQiServer//queryScheduledAction!queryScheduled.action"
-        for d in res:
-            today = datetime.date.today()
-            for i in range(0, 3):
-                sdate = str(today+datetime.timedelta(days=i))
+            line_url = "http://www.0898hq.com:8088/HaiQiServer//queryScheduledAction!queryScheduled.action"
+            dest_list = self.get_dest_list("海南", city_name, station_name)
+            for d in dest_list:
+                d["zdmc"] = d['name']
+                today = datetime.date.today()
+                for i in range(0, prv_date+1):
+                    sdate = str(today+datetime.timedelta(days=i))
+#                     if self.has_done(start['station_name'], d["zdmc"], sdate):
+#                         self.logger.info("ignore %s ==> %s %s" % (start['station_name'], d["zdmc"], sdate))
+#                         continue
+                    fd = {
+                        "ddzm": d["zdmc"],
+                        "fcrq": sdate,
+                        "fcsj_e": "24:00",
+                        "fcsj_b": "00:00",
+                        "czbh": start['czbh']
+                    }
+                    yield scrapy.FormRequest(line_url,
+                                             formdata=fd,
+                                             callback=self.parse_line,
+                                             meta={"start": start, "end": d, "sdate": sdate})
+            
+#             yield scrapy.FormRequest(url,
+#                                      method="POST",
+#                                      formdata=data,
+#                                      callback=self.parse_target_city,
+#                                      meta={"start": start})
+# 
+#     def parse_target_city(self, response):
+#         "解析目的地城市"
+#         res = json.loads(response.body)
+#         start = response.meta["start"]
+#         url = "http://www.0898hq.com:8088/HaiQiServer//queryScheduledAction!queryScheduled.action"
+#         for d in res:
+#             today = datetime.date.today()
+#             for i in range(0, 3):
+#                 sdate = str(today+datetime.timedelta(days=i))
 #                 if self.has_done(start['station_name'], d["zdmc"], sdate):
 #                     self.logger.info("ignore %s ==> %s %s" % (start['station_name'], d["zdmc"], sdate))
 #                     continue
-                fd = {
-                    "ddzm": d["zdmc"],
-                    "fcrq": sdate,
-                    "fcsj_e": "24:00",
-                    "fcsj_b": "00:00",
-                    "czbh": start['czbh']
-                }
-                yield scrapy.FormRequest(url,
-                                         formdata=fd,
-                                         callback=self.parse_line,
-                                         meta={"start": start, "end": d, "sdate": sdate})
+#                 fd = {
+#                     "ddzm": d["zdmc"],
+#                     "fcrq": sdate,
+#                     "fcsj_e": "24:00",
+#                     "fcsj_b": "00:00",
+#                     "czbh": start['czbh']
+#                 }
+#                 yield scrapy.FormRequest(url,
+#                                          formdata=fd,
+#                                          callback=self.parse_line,
+#                                          meta={"start": start, "end": d, "sdate": sdate})
 
     def parse_line(self, response):
         "解析班车"
@@ -102,7 +124,7 @@ class HainkySpider(SpiderBase):
                  '山东','广西壮族自治','江西','河南','浙江','安徽',
                  '湖北','湖南',"贵州",'陕西','江苏','内蒙古自治',
                  "四川",'海南','山东','甘肃','青海','宁夏回族自治',
-                 "新疆维吾尔自治",'西藏自治','贵州')
+                 "新疆维吾尔自治",'西藏自治','贵州','广西')
         start = response.meta["start"]
         end = response.meta["end"]
         sdate = response.meta["sdate"]

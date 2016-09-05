@@ -117,14 +117,14 @@ class HainkySpider(SpiderBase):
         res = node_find.findall('ScheduledBus')
         for d in res:
             s_sta_name = start['station_name']
-            if len(s_sta_name) >= 4:
-                if s_sta_name.startswith(province_list):
-                    for j in province_list:
-                        if s_sta_name.startswith(j):
-                            s_sta_name = s_sta_name.replace(j, '')
-                            break
             s_sta_id = start['czbh']
             d_city_name = end['zdmc']
+            if len(d_city_name) >= 4:
+                if d_city_name.startswith(province_list):
+                    for j in province_list:
+                        if d_city_name.startswith(j):
+                            d_city_name = d_city_name.replace(j, '')
+                            break
             d_sta_name = d.find('MDZMC').text
             drv_time = d.find('FCSJ').text
             distance = d.find('LC').text

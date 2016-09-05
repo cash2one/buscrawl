@@ -63,7 +63,7 @@ class HainkySpider(SpiderBase):
             }
         for czbh, (station_name, city_name, prv_date) in station_dict.items():
 #             data = {"czbh": czbh}
-            start = {"czbh": czbh, 
+            start = {"czbh": czbh,
                      "station_name": station_name,
                      "city_name": city_name}
             line_url = "http://www.0898hq.com:8088/HaiQiServer//queryScheduledAction!queryScheduled.action"
@@ -178,7 +178,7 @@ class HainkySpider(SpiderBase):
                 half_price = float(full_price)/2,
                 fee = 0,
                 crawl_datetime = dte.now(),
-                extra_info = {'end':end},
+                extra_info = {},
                 left_tickets = int(left_tickets),
                 crawl_source = "hainky",
                 shift_id='',

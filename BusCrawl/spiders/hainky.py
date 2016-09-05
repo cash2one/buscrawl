@@ -81,9 +81,9 @@ class HainkySpider(SpiderBase):
             today = datetime.date.today()
             for i in range(0, 3):
                 sdate = str(today+datetime.timedelta(days=i))
-                if self.has_done(start['station_name'], d["zdmc"], sdate):
-                    self.logger.info("ignore %s ==> %s %s" % (start['station_name'], d["zdmc"], sdate))
-                    continue
+#                 if self.has_done(start['station_name'], d["zdmc"], sdate):
+#                     self.logger.info("ignore %s ==> %s %s" % (start['station_name'], d["zdmc"], sdate))
+#                     continue
                 fd = {
                     "ddzm": d["zdmc"],
                     "fcrq": sdate,
@@ -98,6 +98,11 @@ class HainkySpider(SpiderBase):
 
     def parse_line(self, response):
         "解析班车"
+        province_list = ('吉林','辽宁', '河北','黑龙江','广东',"云南",'山西',
+                 '山东','广西壮族自治','江西','河南','浙江','安徽',
+                 '湖北','湖南',"贵州",'陕西','江苏','内蒙古自治',
+                 "四川",'海南','山东','甘肃','青海','宁夏回族自治',
+                 "新疆维吾尔自治",'西藏自治','贵州')
         start = response.meta["start"]
         end = response.meta["end"]
         sdate = response.meta["sdate"]
@@ -112,6 +117,12 @@ class HainkySpider(SpiderBase):
         res = node_find.findall('ScheduledBus')
         for d in res:
             s_sta_name = start['station_name']
+            if len(s_sta_name) >= 4:
+                if s_sta_name.startswith(province_list):
+                    for j in province_list:
+                        if s_sta_name.startswith(j):
+                            s_sta_name = s_sta_name.replace(j, '')
+                            break
             s_sta_id = start['czbh']
             d_city_name = end['zdmc']
             d_sta_name = d.find('MDZMC').text

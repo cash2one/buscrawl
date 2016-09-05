@@ -132,7 +132,7 @@ class FjkySpider(SpiderBase):
             for end in end_list:
 #                 end['code'] = end['dest_id']
                 today = datetime.date.today()
-                for j in range(0, 3):
+                for j in range(0, 7):
                     sdate = str(today+datetime.timedelta(days=j))
                     if self.has_done(start['name'], end["name"], sdate):
                         self.logger.info("ignore %s ==> %s %s" % (start['name'],end["name"], sdate))

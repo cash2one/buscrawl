@@ -41,7 +41,6 @@ class XinTuYunSpider(SpiderBase):
 
         crawl_province = {"province_id": '210000', 'province_name': u"辽宁"}
         province_id = crawl_province['province_id']
-        provinceInfo = {"210000": []}
         for city in provinceInfo[province_id]:
             if not self.is_need_crawl(city=city["cityName"]):
                 continue

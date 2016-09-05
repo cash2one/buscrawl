@@ -154,6 +154,7 @@ class HainkySpider(SpiderBase):
             bus_num = d.find('CCBH').text
             full_price = d.find('PJ').text
             left_tickets = d.find('YPZS').text
+            d_city_id = d.find('MDZBH').text
             attrs = dict(
                 s_province = '海南',
                 s_city_name = start['city_name'],
@@ -163,7 +164,7 @@ class HainkySpider(SpiderBase):
                 s_sta_id = s_sta_id,
                 d_city_name = d_city_name,
                 d_city_code= get_pinyin_first_litter(d_city_name),
-                d_city_id = '',
+                d_city_id = d_city_id,
                 d_sta_name = d_sta_name,
                 d_sta_id = '',
                 drv_date = sdate,

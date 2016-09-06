@@ -145,7 +145,7 @@ class ScqcpSpider(SpiderBase):
         for d in res['body']["ticketLines"]:
             drv_datetime = dte.strptime(d["drvDateTime"], "%Y-%m-%d %H:%M")
             drv_date, drv_time = d["drvDateTime"].split(" ")
-            if int(d["amount"]) == 0:
+            if int(d["amount"]) == 0 or "schTypeId" != "0": #过滤不是固定班的班次
                 continue
             attrs = dict(
                 s_province=start["province"],

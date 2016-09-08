@@ -10,6 +10,7 @@ import time
 from datetime import datetime as dte
 from BusCrawl.item import LineItem
 from base import SpiderBase
+from BusCrawl.utils.tool import get_pinyin_first_litter
 
 
 class ZuocheSpider(SpiderBase):
@@ -36,6 +37,8 @@ class ZuocheSpider(SpiderBase):
             end = d
             for i in range(self.start_day(), 8):
                 sdate = (today+datetime.timedelta(days=i)).strftime("%Y-%m-%d")
+                if self.has_done(start["city_name"], end["name"], sdate):
+                    continue
                 params = {
                     "op": "search",
                     "date": sdate,
@@ -55,8 +58,13 @@ class ZuocheSpider(SpiderBase):
                 yield scrapy.Request(url, callback=self.parse_line, meta={"start": start, "end": end, "sdate": sdate})
 
 
-    def get_dest_list(self, province, city, **kwargs):
-        return [{"name": "深圳", "code": 'sz', "dest_id": ""}]
+    def get_dest_list_from_web(self, province, city, **kwargs):
+        lst = []
+        for l in open("guangzhou.dest"):
+            name = unicode(l.strip())
+            print name,
+            lst.append({"name": name, "code": get_pinyin_first_litter(name), "dest_id": ""})
+        return lst
 
     def parse_line(self, response):
         "解析班车"
@@ -93,11 +101,10 @@ class ZuocheSpider(SpiderBase):
             yield scrapy.Request(url, callback=self.parse_line, meta={"start": start, "end": end, "sdate": sdate})
 
 
-        #self.mark_done(start["city_name"], end["name"], sdate)
+        self.mark_done(start["city_name"], end["name"], sdate)
         for d in res["list"]:
             if not d["canbuy"]:
                 continue
-            print d["time"], sdate
             drv_datetime = dte.strptime("%s %s" % (sdate, d["time"]), "%Y-%m-%d %H:%M")
             ctype = d["ctype"]
             clst = ctype.split(" ")
@@ -134,5 +141,4 @@ class ZuocheSpider(SpiderBase):
                 crawl_source = "zuoche",
                 shift_id="",
             )
-            print attrs
             yield LineItem(**attrs)

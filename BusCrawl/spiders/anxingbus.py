@@ -41,18 +41,20 @@ class AnxingBusSpider(SpiderBase):
             'BusCrawl.middleware.BrowserRandomUserAgentMiddleware': 400,
             'BusCrawl.middleware.ProxyMiddleware': 410,
         },
-        # "DOWNLOAD_DELAY": 0.5,
+        "DOWNLOAD_DELAY": 0.6,
         "RANDOMIZE_DOWNLOAD_DELAY": True,
     }
+    base_url = "http://android.anxingbus.com"
+    # BASE_URL = "http://www.anxingbus.com"
 
     def start_requests(self):
-        url = "http://www.anxingbus.com/sell/GetCity"
+        url = self.base_url + "/sell/GetCity"
         yield scrapy.Request(url, callback=self.parse_starting, headers=HEADERS)
 
     def get_dest_list_from_web(self, province, city, unitid=""):
     # def get_dest_list(self, province, city, unitid=""):
         data = {"unitid": unitid, "cityName": city}
-        url = "http://www.anxingbus.com/sell/GetEndStations?"+urllib.urlencode(data)
+        url = self.base_url + "/sell/GetEndStations?"+urllib.urlencode(data)
         r = requests.get(url, headers=HEADERS)
         ret = r.json()
         result = []
@@ -66,7 +68,7 @@ class AnxingBusSpider(SpiderBase):
 
     def parse_starting(self, response):
         ret = json.loads(response.body)
-        url = "http://www.anxingbus.com/sell/GetBus"
+        url = self.base_url + "/sell/GetBus"
 
         today = datetime.date.today()
         for d in ret["data"][0].values():
@@ -112,7 +114,7 @@ class AnxingBusSpider(SpiderBase):
         self.mark_done(start["city_name"], end["name"], sdate)
         self.logger.info("finish %s ==> %s %s" % (start["city_name"], end["name"], sdate))
 
-        for d in res["data"]:
+        for d in res.get("data", []):
             drv_datetime=dte.strptime(d["BusTime"], "%Y-%m-%d %H:%M")
             attrs = dict(
                 s_province=start["province"].rstrip("省"),

@@ -40,7 +40,6 @@ class ShkyzzSpider(SpiderBase):
         city_name = '上海'
         for k, v in res["cityMap"].items():
             dest_list = dest_list.union(set(v))
-        dest_list = []
         url = "http://www.zxjt.sh.cn/ajax/flightJsonAction!search"
         for d in dest_list:
             today = datetime.date.today()

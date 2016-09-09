@@ -4,11 +4,6 @@
 import scrapy
 import json
 import datetime
-import re
-try:
-    import xml.etree.cElementTree as ET
-except ImportError:
-    import xml.etree.ElementTree as ET
 
 from datetime import datetime as dte
 from BusCrawl.item import LineItem
@@ -45,16 +40,15 @@ class ShkyzzSpider(SpiderBase):
         city_name = '上海'
         for k, v in res["cityMap"].items():
             dest_list = dest_list.union(set(v))
-        print dest_list
-        print len(dest_list)
+        dest_list = []
         url = "http://www.zxjt.sh.cn/ajax/flightJsonAction!search"
         for d in dest_list:
             today = datetime.date.today()
-            for i in range(0, 3):
+            for i in range(0, 10):
                 sdate = str(today+datetime.timedelta(days=i))
-#                 if self.has_done(city_name, d, sdate):
-#                     self.logger.info("ignore %s ==> %s %s" % (city_name, d, sdate))
-#                     continue
+                if self.has_done(city_name, d, sdate):
+                    self.logger.info("ignore %s ==> %s %s" % (city_name, d, sdate))
+                    continue
                 fd = {
                   "searchForm.fromRegionName": city_name,
                   "searchForm.arriveRegionName": d,
@@ -77,53 +71,6 @@ class ShkyzzSpider(SpiderBase):
 #         self.mark_done(start, end, sdate)
         res = json.loads(response.body)
         sch_list = res['flightList']
-        {
-        u'arriveStationName': None,
-        u'arriveRegionName': u'泰安',
-        u'arriveRegionId': u'1000001449',
-        u'fromRegionName': u'上海',
-        u'flightCount': 30,
-        u'indexNo': None,
-        u'flightIndex': 0,
-        u'flightOnlineId': u'1609070060211000016',
-        u'onlineDetail': None,
-        u'stationAddress': u'中兴路1666号',
-        u'stationPrintName': u'客运总站',
-        u'endRegionId': u'1000000353',
-        u'vehicleId': None,
-        u'companyId': u'1000001650',
-        u'flightActualDetailId': u'1609070060212',
-        u'flightDate': u'2016-09-07',
-        u'endProvinceId': u'37',
-        u'arriveProvinceName': u'山东',
-        u'vehicleTypeGrade': u'41002',
-        u'onlineCount': None,
-        u'mileage': None,
-        u'flightStatus': u'Y',
-        u'companyName': u'上海白玉兰高速客运有限公司',
-        u'price': 246,
-        u'onlineStatus': u'Y',
-        u'endProvinceName': u'山东',
-        u'fromRegionId': None,
-        u'flightActualId': u'160907006021',
-        u'stationId': u'1000016',
-        u'saledCount': 0,
-        u'stationName': u'上海长途客运总站',
-        u'endRegionName': u'济南',
-        u'fromProvinceId': None,
-        u'flightNo': u'006021',
-        u'fromSystem': u'上海公路客运',
-        u'arriveProvinceId': u'37',
-        u'vehicleTypeBrand': u'40002',
-        u'seatType': None,
-        u'lastCount': 24,
-        u'halfPrice': 123,
-        u'fromProvinceName': None,
-        u'flightOnlineDetailId': u'16090700602121000016',
-        u'vehicleNo': None,
-        u'flightTime': u'20: 50'
-    }
-
         for d in sch_list:
             attrs = dict(
                 s_province='上海',

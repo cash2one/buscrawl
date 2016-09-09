@@ -66,8 +66,8 @@ class ShkyzzSpider(SpiderBase):
         start = response.meta["start"]
         end = response.meta["end"]
         sdate = response.meta["sdate"]
-#         self.logger.info("finish %s ==> %s" % (start, end))
-#         self.mark_done(start, end, sdate)
+        self.logger.info("finish %s ==> %s" % (start, end))
+        self.mark_done(start, end, sdate)
         res = json.loads(response.body)
         sch_list = res['flightList']
         for d in sch_list:

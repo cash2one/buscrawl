@@ -33,8 +33,8 @@ class ScqcpSpider(SpiderBase):
                     "sign": sign,
                     "server": api,
                     "token": "04b8cef68ef4f2d785150eb671999834",
-                    "ip": "192.168.3.116",
-                    "version": "1.5.1",
+                    "ip": "192.168.5.148",
+                    "version": "1.5.2",
                     "signType": "MD5"},
             "body": content
         }
@@ -53,8 +53,8 @@ class ScqcpSpider(SpiderBase):
     def start_requests(self):
         start_url = "http://inner.cdqcp.com/ticket"
         content = {}
-        api = 'getAllStartCity'
-        sign = "754790439CDE44E39D29BA3508BC0CF3"
+        api = "getAllStartCity"
+        sign = "FAB1366B16304EFC1999F7F15BB842A0"
         fd = self.post_data_templ(api, content, sign)
         yield scrapy.Request(start_url,
                              method="POST",

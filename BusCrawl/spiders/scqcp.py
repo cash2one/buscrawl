@@ -74,7 +74,7 @@ class ScqcpSpider(SpiderBase):
                 if not d["is_pre_sell"]:
                     self.logger.error("%s 没开放售票", d["city_name"])
                     continue
-                content = {"cityId": unicode(d["city_id"]), "cityName": unicode(d["city_name"])}
+                content = {"cityId": unicode(d["city_id"]), "cityName": d["city_name"].encode('utf8')}
                 api = "getTargetCity"
                 params = {}
                 params.update(content)
@@ -96,7 +96,6 @@ class ScqcpSpider(SpiderBase):
     def parse_target_city(self, response):
         "解析目的地城市"
         res = json.loads(response.body)
-
         url = "http://inner.cdqcp.com/ticket"
         start = response.meta["start"]
         for d in res['body']["target_city"]:

@@ -90,7 +90,7 @@ class GdswSpider(SpiderBase):
             if not int(d["lefttickets"]):
                 continue
 
-            if float(d["price"]) > 100:  # 价格超100的不卖
+            if float(d["price"]) > 80:  # 价格超100的不卖
                 break
 
             attrs = dict(

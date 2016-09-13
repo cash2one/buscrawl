@@ -240,6 +240,12 @@ class HainkyHeaderMiddleware(object):
         request.headers.setdefault("Content-Type", "application/x-www-form-urlencoded")
 
 
+class ShkyzzHeaderMiddleware(object):
+        def process_request(self, request, spider):
+            request.headers.setdefault("Content-Type", "application/x-www-form-urlencoded")
+            request.headers.setdefault("X-Requested-With", "XMLHttpRequest")
+
+
 class MobileRandomUserAgentMiddleware(UserAgentMiddleware):
     "移动端UserAgent"
 

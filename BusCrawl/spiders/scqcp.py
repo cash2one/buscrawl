@@ -33,8 +33,8 @@ class ScqcpSpider(SpiderBase):
                     "sign": sign,
                     "server": api,
                     "token": "04b8cef68ef4f2d785150eb671999834",
-                    "ip": "192.168.3.116",
-                    "version": "1.5.1",
+                    "ip": "192.168.5.148",
+                    "version": "1.5.2",
                     "signType": "MD5"},
             "body": content
         }
@@ -53,8 +53,8 @@ class ScqcpSpider(SpiderBase):
     def start_requests(self):
         start_url = "http://inner.cdqcp.com/ticket"
         content = {}
-        api = 'getAllStartCity'
-        sign = "754790439CDE44E39D29BA3508BC0CF3"
+        api = "getAllStartCity"
+        sign = "FAB1366B16304EFC1999F7F15BB842A0"
         fd = self.post_data_templ(api, content, sign)
         yield scrapy.Request(start_url,
                              method="POST",
@@ -74,7 +74,7 @@ class ScqcpSpider(SpiderBase):
                 if not d["is_pre_sell"]:
                     self.logger.error("%s 没开放售票", d["city_name"])
                     continue
-                content = {"cityId": unicode(d["city_id"]), "cityName": unicode(d["city_name"])}
+                content = {"cityId": unicode(d["city_id"]), "cityName": d["city_name"].encode('utf8')}
                 api = "getTargetCity"
                 params = {}
                 params.update(content)
@@ -96,7 +96,6 @@ class ScqcpSpider(SpiderBase):
     def parse_target_city(self, response):
         "解析目的地城市"
         res = json.loads(response.body)
-
         url = "http://inner.cdqcp.com/ticket"
         start = response.meta["start"]
         for d in res['body']["target_city"]:
@@ -145,7 +144,7 @@ class ScqcpSpider(SpiderBase):
         for d in res['body']["ticketLines"]:
             drv_datetime = dte.strptime(d["drvDateTime"], "%Y-%m-%d %H:%M")
             drv_date, drv_time = d["drvDateTime"].split(" ")
-            if int(d["amount"]) == 0 or "schTypeId" != "0": #过滤不是固定班的班次
+            if int(d["amount"]) == 0 or d["schTypeId"] != "0": #过滤不是固定班的班次
                 continue
             attrs = dict(
                 s_province=start["province"],

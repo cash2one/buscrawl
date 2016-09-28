@@ -146,7 +146,7 @@ class BjkySpider(SpiderBase):
 #                     end = json.loads(end)
 #                     if self.is_end_city(start, end):
                 today = datetime.date.today()
-                for i in range(1, 8):
+                for i in range(6, 9):
                     sdate = str(today+datetime.timedelta(days=i))
                     if self.has_done(start["name"], end["StopName"], sdate):
                         self.logger.info("ignore %s ==> %s %s" % (start["name"], end["StopName"], sdate))

@@ -89,6 +89,10 @@ class GdswSpider(SpiderBase):
             drv_datetime = dte.strptime("%s %s" % (d["schdate"], d["sendtime"]), "%Y%m%d %H%M")
             if not int(d["lefttickets"]):
                 continue
+
+            if float(d["price"]) > 80:  # 价格超100的不卖
+                break
+
             attrs = dict(
                 s_province = "广东",
                 s_city_id = "",

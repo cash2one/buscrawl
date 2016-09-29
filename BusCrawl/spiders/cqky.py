@@ -37,6 +37,34 @@ class CqkySpider(SpiderBase):
         yield scrapy.Request(start_url,
                              callback=self.parse_start_city,)
 
+    def get_dest_list_from_web(self, province, city, station=""):
+        # 需要子类实现
+        url = "http://www.96096kp.com/UserData/MQCenterSale.aspx"
+        d_list = []
+        for c in [chr(i) for i in range(97, 123)]:
+            params = {
+                "cmd": "QueryNode",
+                "StartStation": "重庆主城" if city=="重庆" else city,
+                "q": c,
+            }
+            headers={
+                "Host": "www.96096kp.com",
+                "Origin": "http://www.96096kp.com",
+                "Referer": "http://www.96096kp.com/TicketMain.aspx",
+                "X-Requested-With": "XMLHttpRequest",
+                "Content-Type": "application/x-www-form-urlencoded",
+                "User-Agent": "Chrome",
+            }
+            r = requests.post(url, headers=headers, data=urllib.urlencode(params))
+            for d in r.json():
+                d_list.append({
+                    "name": d["NDName"],
+                    "code": d["NDCode"],
+                    "dest_id": "",
+                })
+        return d_list
+
+
     def parse_start_city(self, response):
         res = json.loads(re.findall(r"var _stationList=(\S+)</script>", response.body)[0].replace("Pros", '"Pros"').replace("Areas", '"Areas"').replace("Stations", '"Stations"'))
         line_url = "http://www.96096kp.com/UserData/MQCenterSale.aspx"

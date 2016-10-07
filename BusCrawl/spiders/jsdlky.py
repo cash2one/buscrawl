@@ -96,7 +96,7 @@ class JsdlkySpider(SpiderBase):
                     #     "secret_key": md5("&".join(map(lambda a:"%s=%s" % (a[0], a[1]), sorted(params.items(), key=lambda i: i[0])))),
                     # }
                     req_data = {
-                        "ewx": "ROxgn80ecZQrWIzo4Ca89MVgGD4LZ9pGp0PNwOwzlC6k0r9EcmpJGpyt37mOv9LBMl2kG6Wlp9CI0TllRW3Yi3qvIAMPhsGeiQp1wO0MChQ=",
+                        "ewx": "6bjHP03wFIudTp+CXaQoQGwT2PvT3J0CDFbE4FwZ02KMMNcwsVKN6Ab0vbAMwsN0ochYbOMtaa+s/zbq84qvm6HPxOtoklekf6rww16xwzk=",
                         "drive_date": sdate,
                         "rst_name": start["sta_name"],
                         "dst_name": end["city_name"],

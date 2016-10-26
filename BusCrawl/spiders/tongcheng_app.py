@@ -44,6 +44,10 @@ CITYS = {
     "天津": [
         "天津"
     ],
+    "湖北": [
+        "武汉", "黄梅",
+        "天门", "潜江", "宜昌",
+    ],
 }
 
 
@@ -66,21 +70,36 @@ class TongChengSpider(SpiderBase):
     base_url = "http://m.ctrip.com/restapi/busphp/app/index.php"
 
     def get_dest_list_from_web(self, province, city):
-        url = "http://www.chebada.com/Home/GetBusDestinations"
-        for city in [city, city+"市", city+"县", city.rstrip(u"市").rstrip("县")]:
-            r = requests.post(url, headers={"User-Agent": "Chrome", "Content-Type": "application/x-www-form-urlencoded"}, data=urllib.urlencode({"departure": city}))
-            lst = []
-            temp = {}
-            res = r.json()["response"]
-            if "body" not in res:
-                continue
-            for d in res["body"]["destinationList"]:
-                for c in d["cities"]:
-                    if c["name"] in temp:
-                        continue
-                    temp[c["name"]] = 1
-                    lst.append({"name": c["name"], "code": c["shortEnName"]})
-            return lst
+        url = "http://tcmobileapi.17usoft.com/bus/QueryHandler.ashx"
+        data = {"city": city}
+        headers, body = self.get_post_templ("getbusdestinations", data)
+        r = requests.post(url, headers=headers, data=body)
+        res = r.json()
+        lst = []
+        temp = {}
+        for k, dlst in res["response"]["body"].items():
+            for c in dlst:
+                if c["name"] in temp:
+                    continue
+                temp[c["name"]] = 1
+                lst.append({"name": c["name"], "code": c["shortEnName"]})
+        return lst
+
+        # url = "http://www.chebada.com/Home/GetBusDestinations"
+        # for city in [city, city+"市", city+"县", city.rstrip(u"市").rstrip("县")]:
+        #     r = requests.post(url, headers={"User-Agent": "Chrome", "Content-Type": "application/x-www-form-urlencoded"}, data=urllib.urlencode({"departure": city}))
+        #     lst = []
+        #     temp = {}
+        #     res = r.json()["response"]
+        #     if "body" not in res:
+        #         continue
+        #     for d in res["body"]["destinationList"]:
+        #         for c in d["cities"]:
+        #             if c["name"] in temp:
+        #                 continue
+        #             temp[c["name"]] = 1
+        #             lst.append({"name": c["name"], "code": c["shortEnName"]})
+        #     return lst
 
     def start_requests(self):
         # 这是个pc网页页面

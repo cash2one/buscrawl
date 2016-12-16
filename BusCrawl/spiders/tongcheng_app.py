@@ -17,7 +17,7 @@ from base import SpiderBase
 CITYS = {
     "江苏": [
         "苏州",
-        "南京",
+        #"南京",
         "无锡", "常州",
         "南通", "张家港",
         "昆山", "吴江",
@@ -48,6 +48,7 @@ CITYS = {
         "武汉", "黄梅",
         "天门", "潜江", "宜昌",
     ],
+    "重庆": ["重庆", ],
 }
 
 
@@ -206,9 +207,9 @@ class TongChengSpider(SpiderBase):
             # self.logger.error("parse_target_city: Unexpected return, %s, %s %s" % (res["header"], start["name"], end["name"]))
             return
 
-        for d in res["body"]["schedule"]:
-            if not d["coachNo"]:
-                continue
+        for i, d in enumerate(res["body"]["schedule"]):
+            # if not d["coachNo"]:
+            #     continue
             if not d["canBooking"]:
                 continue
             left_tickets = int(d["ticketLeft"]) or 15
@@ -237,7 +238,7 @@ class TongChengSpider(SpiderBase):
                 distance = unicode(d["distance"]),
                 vehicle_type = d["coachType"],
                 seat_type = "",
-                bus_num = d["coachNo"],
+                bus_num = d["coachNo"] or str(i+100),
                 full_price = float(d["ticketPrice"]),
                 half_price = float(d["ticketPrice"])/2,
                 fee = float(d["ticketFee"]),

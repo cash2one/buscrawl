@@ -196,13 +196,13 @@ class TongChengSpider(SpiderBase):
         start = response.meta["start"]
         end= response.meta["end"]
         sdate = response.meta["sdate"]
-        self.mark_done(start["name"], end["name"], sdate)
         self.logger.info("start %s ==> %s" % (start["name"], end["name"]))
         try:
             res = json.loads(response.body)
         except Exception, e:
-            self.logger.error("%s %s", response.body, e)
+            # self.logger.error("%s %s", response.body, e)
             return
+        self.mark_done(start["name"], end["name"], sdate)
         res = res["response"]
         if int(res["header"]["rspCode"]) != 0 or not res["body"]:
             # self.logger.error("parse_target_city: Unexpected return, %s, %s %s" % (res["header"], start["name"], end["name"]))

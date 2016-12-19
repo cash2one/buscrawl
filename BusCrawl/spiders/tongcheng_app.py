@@ -64,6 +64,7 @@ class TongChengSpider(SpiderBase):
             'BusCrawl.middleware.BrowserRandomUserAgentMiddleware': 400,
             'BusCrawl.middleware.ProxyMiddleware': 410,
             'BusCrawl.middleware.TongChengHeaderMiddleware': 410,
+            'BusCrawl.middleware.TongChengProxyMiddleware': 410,
         },
         #"DOWNLOAD_DELAY": 0.2,
         "RANDOMIZE_DOWNLOAD_DELAY": True,

@@ -40,8 +40,8 @@ class SzkySpider(SpiderBase):
         cookies = {}
         valid_code = ''
         if not valid_code:
-            login_form = "http://124.172.118.225/UserData/UserCmd.aspx"
-            valid_url = "http://124.172.118.225/ValidateCode.aspx"
+            login_form = "http://211.162.125.225/UserData/UserCmd.aspx"
+            valid_url = "http://211.162.125.225/ValidateCode.aspx"
             r = requests.get(login_form, headers=headers, cookies=cookies)
             cookies.update(dict(r.cookies))
             for i in range(3):
@@ -56,7 +56,7 @@ class SzkySpider(SpiderBase):
         if valid_code:
             headers = {
                 "User-Agent": headers.get("User-Agent", ""),
-                "Referer": "http://124.172.118.225/User/Default.aspx",
+                "Referer": "http://211.162.125.225/User/Default.aspx",
                 "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
                 "X-Requested-With": "XMLHttpRequest"
             }
@@ -67,7 +67,7 @@ class SzkySpider(SpiderBase):
                 "loginValid": valid_code,
                 "cmd": "login",
             }
-            login_url = "http://124.172.118.225/UserData/UserCmd.aspx"
+            login_url = "http://211.162.125.225/UserData/UserCmd.aspx"
             r = requests.post(login_url, data=urllib.urlencode(params), headers=headers, cookies=cookies)
             ret = json.loads(trans_js_str(r.content))
             success = ret.get("success", True)
@@ -109,10 +109,10 @@ class SzkySpider(SpiderBase):
 #                 for j in letter:
 #                     query = i+j
                 end_list.append(query)
-            line_url = 'http://124.172.118.225/UserData/MQCenterSale.aspx'
+            line_url = 'http://211.162.125.225/UserData/MQCenterSale.aspx'
             headers.update({
                         "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-                        "Referer": "http://124.172.118.225/User/Default.aspx",
+                        "Referer": "http://211.162.125.225/User/Default.aspx",
                         "X-Requested-With": "XMLHttpRequest",
                     })
             dest_list = self.get_dest_list("广东", '深圳')

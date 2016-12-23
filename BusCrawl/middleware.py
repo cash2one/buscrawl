@@ -22,6 +22,15 @@ class CqkyProxyMiddleware(object):
             request.meta['proxy'] = "http://%s" % ipstr
 
 
+class TongChengProxyMiddleware(object):
+    "代理ip切换"
+
+    def process_request(self, request, spider):
+        rds = get_redis()
+        ipstr = rds.srandmember("proxy:tongcheng")
+        if ipstr:
+            request.meta['proxy'] = "http://%s" % ipstr
+
 class ScqcpProxyMiddleware(object):
     "代理ip切换"
 
